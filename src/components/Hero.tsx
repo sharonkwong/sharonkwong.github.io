@@ -52,7 +52,7 @@ export default function Hero() {
                     transition={{ duration: 0.5, delay: 0.4 }}
                 >
                     <Text color="gray.600" textAlign="center" fontSize="lg">
-                        Based in Cupertino, CA
+                        Based in the Bay Area
                     </Text>
                 </MotionBox>
 
