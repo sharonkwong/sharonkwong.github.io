@@ -59,9 +59,6 @@ export default function Contact() {
                     spacing={8}
                     width="100%"
                 >
-                    <Text fontSize="lg" textAlign="center" maxW="xl">
-                        I'm always open to new opportunities and collaborations. Feel free to reach out!
-                    </Text>
 
                     <HStack
                         spacing={{ base: 4, md: 8 }}
