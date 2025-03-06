@@ -70,7 +70,7 @@ export default function About() {
                             boxShadow="md"
                         >
                             <Text fontSize="lg">
-                                Hi there! I'm Sharon, an Associate Product Manager and Full Stack Developer based in Cupertino, CA. I'm passionate about building innovative products and solving complex problems.
+                                Hi there! I'm Sharon, an Associate Product Manager based in Cupertino, CA. I'm passionate about building innovative products and solving complex problems using data.
                             </Text>
                             <Text fontSize="lg">
                                 With experience in product management, software development, and data analysis, I bring a unique blend of technical and strategic skills to every project I work on.
