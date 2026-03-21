@@ -10,15 +10,16 @@ import theme from "./theme";
 function App() {
   return (
     <ChakraProvider theme={theme}>
-      <Box bg="white" minH="100vh">
-        <MoRain />
-        <Navbar />
-        <Hero />
-        <VStack spacing={0}>
-          <Experience />
-          {/* <Hobbies /> */}
-        </VStack>
-        <ScrollToTop />
+      <Box bg="white" minH="100vh" px={{ base: 6, md: 0 }}>
+        <MoRain>
+          <Navbar />
+          <Hero />
+          <VStack spacing={0}>
+            <Experience />
+            {/* <Hobbies /> */}
+          </VStack>
+          <ScrollToTop />
+        </MoRain>
         {/* Footer */}
         <Box
           as="footer"

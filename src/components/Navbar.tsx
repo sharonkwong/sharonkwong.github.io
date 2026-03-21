@@ -12,7 +12,7 @@ export default function Navbar() {
     return (
         <Flex
             position="fixed"
-            top={4}
+            top={{ base: 6, md: 4 }}
             left="50%"
             transform="translateX(-50%)"
             zIndex="sticky"

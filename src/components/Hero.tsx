@@ -2,6 +2,7 @@ import { Box, Container, Heading, Text, VStack, HStack, IconButton, Image } from
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { FaLinkedinIn, FaEnvelope, FaFileAlt, FaGithub } from "react-icons/fa";
+import { MoControls } from "./MoRain";
 
 const ROTATING_PHRASES = [
     "products that matter.",
@@ -22,7 +23,7 @@ export default function Hero() {
     }, []);
 
     return (
-        <Container maxW="4xl" id="hero" pt={{ base: 28, md: 36 }} pb={{ base: 16, md: 24 }}>
+        <Container maxW="4xl" id="hero" pt={{ base: 40, md: 36 }} pb={{ base: 16, md: 24 }}>
             <VStack spacing={6} alignItems="center" textAlign="center">
                 {/* Circle photo */}
                 <motion.div
@@ -184,9 +185,13 @@ export default function Hero() {
                             transition="all 0.2s"
                         />
                     </HStack>
-                    <Text fontSize="s" fontWeight="400" color="gray.500" pt={1} marginTop="10">
+                    <Text fontSize="s" fontWeight="400" color="gray.500" pt={1} marginTop="8">
                         Based in Cupertino, CA
                     </Text>
+                    {/* Mobile only: mo controls */}
+                    <Box display={{ base: "block", md: "none" }} pt={1} marginTop="10">
+                        <MoControls />
+                    </Box>
                 </motion.div>
             </VStack>
         </Container>

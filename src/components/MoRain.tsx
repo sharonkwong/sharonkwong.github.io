@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { IconButton, HStack, Box, Text } from "@chakra-ui/react";
 import { FiRepeat } from "react-icons/fi";
 
 const BATCH_SIZE = 20;
-const MAX_MOS = 200; // hard cap on DOM nodes
+const MAX_MOS = 200;
 
 interface MoItem {
     id: number;
@@ -32,7 +32,71 @@ function createMos(count: number): MoItem[] {
     });
 }
 
-export default function MoRain() {
+interface MoRainContextType {
+    spawnBatch: () => void;
+    toggleLoop: () => void;
+    looping: boolean;
+}
+
+const MoRainContext = createContext<MoRainContextType | null>(null);
+
+export function useMoRain() {
+    return useContext(MoRainContext);
+}
+
+export function MoControls() {
+    const ctx = useMoRain();
+    if (!ctx) return null;
+    const { spawnBatch, toggleLoop, looping } = ctx;
+
+    return (
+        <HStack spacing={1} justify="center">
+            <Box
+                as="button"
+                onClick={spawnBatch}
+                position="relative"
+                overflow="hidden"
+                height="24px"
+                px={3}
+                borderRadius="full"
+                border="1px solid"
+                borderColor="#EAA3C4"
+                bg="transparent"
+                cursor="pointer"
+                transition="all 0.2s"
+                _hover={{ bg: "rgba(234, 163, 196, 0.1)" }}
+                _active={{ transform: "scale(0.95)" }}
+            >
+                <Text
+                    position="relative"
+                    fontSize="xs"
+                    fontWeight="500"
+                    color="#EAA3C4"
+                    whiteSpace="nowrap"
+                >
+                    spawn more mos
+                </Text>
+            </Box>
+            <IconButton
+                aria-label="Toggle loop"
+                icon={<FiRepeat />}
+                onClick={toggleLoop}
+                size="xs"
+                fontSize="sm"
+                borderRadius="full"
+                bg={looping ? "rgba(234, 163, 196, 0.2)" : "transparent"}
+                color={looping ? "#EAA3C4" : "gray.400"}
+                border="1px solid"
+                borderColor={looping ? "#EAA3C4" : "gray.300"}
+                _hover={{ bg: looping ? "rgba(234, 163, 196, 0.25)" : "rgba(0,0,0,0.04)" }}
+                _active={{ bg: "rgba(234, 163, 196, 0.3)" }}
+                transition="all 0.2s"
+            />
+        </HStack>
+    );
+}
+
+export default function MoRain({ children }: { children?: React.ReactNode }) {
     const [mos, setMos] = useState<MoItem[]>(() => createMos(BATCH_SIZE));
     const [looping, setLooping] = useState(false);
     const loopRef = useRef<ReturnType<typeof setInterval>>();
@@ -44,7 +108,6 @@ export default function MoRain() {
     const spawnBatch = useCallback(() => {
         setMos((prev) => {
             const next = [...prev, ...createMos(BATCH_SIZE)];
-            // If over cap, drop oldest to stay under MAX_MOS
             if (next.length > MAX_MOS) return next.slice(next.length - MAX_MOS);
             return next;
         });
@@ -85,8 +148,10 @@ export default function MoRain() {
         };
     }, []);
 
+    const contextValue = { spawnBatch, toggleLoop, looping };
+
     return (
-        <>
+        <MoRainContext.Provider value={contextValue}>
             <style>{`
                 @keyframes moFall {
                     0% {
@@ -102,54 +167,16 @@ export default function MoRain() {
                     }
                 }
             `}</style>
+            {/* Desktop: fixed top-right */}
             <HStack
                 position="fixed"
                 top={5}
                 right={5}
                 zIndex={10000}
                 spacing={1}
+                display={{ base: "none", md: "flex" }}
             >
-                <Box
-                    as="button"
-                    onClick={spawnBatch}
-                    position="relative"
-                    overflow="hidden"
-                    height="24px"
-                    px={3}
-                    borderRadius="full"
-                    border="1px solid"
-                    borderColor="#EAA3C4"
-                    bg="transparent"
-                    cursor="pointer"
-                    transition="all 0.2s"
-                    _hover={{ bg: "rgba(234, 163, 196, 0.1)" }}
-                    _active={{ transform: "scale(0.95)" }}
-                >
-                    <Text
-                        position="relative"
-                        fontSize="xs"
-                        fontWeight="500"
-                        color="#EAA3C4"
-                        whiteSpace="nowrap"
-                    >
-                        spawn more mos
-                    </Text>
-                </Box>
-                <IconButton
-                    aria-label="Toggle loop"
-                    icon={<FiRepeat />}
-                    onClick={toggleLoop}
-                    size="xs"
-                    fontSize="sm"
-                    borderRadius="full"
-                    bg={looping ? "rgba(234, 163, 196, 0.2)" : "transparent"}
-                    color={looping ? "#EAA3C4" : "gray.400"}
-                    border="1px solid"
-                    borderColor={looping ? "#EAA3C4" : "gray.300"}
-                    _hover={{ bg: looping ? "rgba(234, 163, 196, 0.25)" : "rgba(0,0,0,0.04)" }}
-                    _active={{ bg: "rgba(234, 163, 196, 0.3)" }}
-                    transition="all 0.2s"
-                />
+                <MoControls />
             </HStack>
             <div
                 style={{
@@ -182,6 +209,7 @@ export default function MoRain() {
                     />
                 ))}
             </div>
-        </>
+            {children}
+        </MoRainContext.Provider>
     );
 }

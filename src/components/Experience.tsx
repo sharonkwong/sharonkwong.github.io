@@ -79,7 +79,7 @@ const consultingTags = [
 
 export default function Experience() {
     return (
-        <Container maxW="4xl" id="experience" py={{ base: 16, md: 24 }}>
+        <Container maxW="4xl" id="experience" pt={{ base: 40, md: 56 }} pb={{ base: 16, md: 24 }}>
             <VStack spacing={12} alignItems="stretch" w="100%">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
