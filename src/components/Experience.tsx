@@ -89,7 +89,7 @@ export default function Experience() {
                 >
                     <Heading
                         as="h2"
-                        fontSize={{ base: "3xl", md: "4xl" }}
+                        fontSize={{ base: "2xl", md: "3xl" }}
                         fontWeight="700"
                         color="#EAA3C4"
                         textAlign="center"
@@ -133,7 +133,7 @@ export default function Experience() {
                                             />
                                         )}
                                         <Box>
-                                            <Heading as="h3" fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="gray.900">
+                                            <Heading as="h3" fontSize="md" fontWeight="700" color="gray.900">
                                                 {exp.title}
                                             </Heading>
                                             <Text fontSize="md" fontWeight="500" color="#EAA3C4">
@@ -155,7 +155,7 @@ export default function Experience() {
                                             </Text>
                                         </Box>
                                     </HStack>
-                                    <Box textAlign={{ base: "left", md: "right" }} flexShrink={0}>
+                                    <Box textAlign={{ base: "left", md: "right" }} flexShrink={0} display={{ base: "none", md: "block" }}>
                                         <Text fontSize="sm" color="gray.500">
                                             {exp.duration}
                                         </Text>
@@ -214,7 +214,7 @@ export default function Experience() {
                                         flexShrink={0}
                                     />
                                     <Box>
-                                        <Heading as="h3" fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="gray.900">
+                                        <Heading as="h3" fontSize="md" fontWeight="700" color="gray.900">
                                             Social Media Project Management Intern
                                         </Heading>
                                         <Text fontSize="md" fontWeight="500" color="#EAA3C4">
@@ -232,7 +232,7 @@ export default function Experience() {
                                         </Text>
                                     </Box>
                                 </HStack>
-                                <Box textAlign={{ base: "left", md: "right" }} flexShrink={0}>
+                                <Box textAlign={{ base: "left", md: "right" }} flexShrink={0} display={{ base: "none", md: "block" }}>
                                     <Text fontSize="sm" color="gray.500">
                                         November 2021 – July 2022
                                     </Text>
@@ -285,7 +285,7 @@ export default function Experience() {
                                         flexShrink={0}
                                     />
                                     <Box>
-                                        <Heading as="h3" fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="gray.900">
+                                        <Heading as="h3" fontSize="md" fontWeight="700" color="gray.900">
                                             Management Consultant
                                         </Heading>
                                         <Text fontSize="md" fontWeight="500" color="#EAA3C4">
@@ -293,7 +293,7 @@ export default function Experience() {
                                         </Text>
                                     </Box>
                                 </HStack>
-                                <Box textAlign={{ base: "left", md: "right" }} flexShrink={0}>
+                                <Box textAlign={{ base: "left", md: "right" }} flexShrink={0} display={{ base: "none", md: "block" }}>
                                     <Text fontSize="sm" color="gray.500">
                                         September 2021 – June 2022
                                     </Text>
