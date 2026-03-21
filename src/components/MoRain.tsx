@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { IconButton, HStack, Box, Text } from "@chakra-ui/react";
 import { FiRepeat } from "react-icons/fi";
 
-const NUM_MOS = 20;
-const COOLDOWN_MS = 7000; // cooldown between spawns
+const BATCH_SIZE = 20;
+const MAX_MOS = 200; // hard cap on DOM nodes
 
 interface MoItem {
     id: number;
@@ -15,119 +15,65 @@ interface MoItem {
     rotationEnd: number;
 }
 
-interface Batch {
-    id: number;
-    createdAt: number;
-    mos: MoItem[];
-}
+let nextId = 0;
 
-let globalBatchId = 0;
-
-function createBatch(): Batch {
-    globalBatchId += 1;
-    return {
-        id: globalBatchId,
-        createdAt: Date.now(),
-        mos: Array.from({ length: NUM_MOS }, (_, i) => ({
-            id: globalBatchId * NUM_MOS + i,
+function createMos(count: number): MoItem[] {
+    return Array.from({ length: count }, () => {
+        nextId += 1;
+        return {
+            id: nextId,
             x: Math.random() * 95,
             delay: Math.random() * 0.5,
             duration: 2.5 + Math.random() * 2,
             size: 24 + Math.random() * 32,
             rotation: Math.random() * 360,
             rotationEnd: Math.random() * 360 + 180,
-        })),
-    };
+        };
+    });
 }
 
 export default function MoRain() {
-    const [batches, setBatches] = useState<Batch[]>(() => [createBatch()]);
-    const [streamMos, setStreamMos] = useState<MoItem[]>([]);
+    const [mos, setMos] = useState<MoItem[]>(() => createMos(BATCH_SIZE));
     const [looping, setLooping] = useState(false);
-    const [cooldown, setCooldown] = useState(true);
-    const [progress, setProgress] = useState(0);
     const loopRef = useRef<ReturnType<typeof setInterval>>();
-    const streamCleanupRef = useRef<ReturnType<typeof setInterval>>();
-    const cooldownTimerRef = useRef<ReturnType<typeof setTimeout>>();
-    const progressRef = useRef<ReturnType<typeof setInterval>>();
-    const streamIdRef = useRef(100000);
 
-    // Cleanup old batches
-    useEffect(() => {
-        const cleanup = setInterval(() => {
-            const now = Date.now();
-            setBatches((prev) => prev.filter((b) => now - b.createdAt < 7000));
-        }, 2000);
-        return () => clearInterval(cleanup);
-    }, []);
-
-    const startCooldown = useCallback(() => {
-        setCooldown(true);
-        setProgress(0);
-        const startTime = Date.now();
-        progressRef.current = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const pct = Math.min((elapsed / COOLDOWN_MS) * 100, 100);
-            setProgress(pct);
-            if (pct >= 100) {
-                clearInterval(progressRef.current);
-            }
-        }, 30);
-        cooldownTimerRef.current = setTimeout(() => {
-            setCooldown(false);
-            setProgress(100);
-        }, COOLDOWN_MS);
-    }, []);
-
-    // Start cooldown on mount for initial batch
-    useEffect(() => {
-        startCooldown();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const removeMo = useCallback((id: number) => {
+        setMos((prev) => prev.filter((m) => m.id !== id));
     }, []);
 
     const spawnBatch = useCallback(() => {
-        setBatches((prev) => [...prev, createBatch()]);
-        startCooldown();
-    }, [startCooldown]);
-
-    const handleSpawnClick = useCallback(() => {
-        if (cooldown) return;
-        spawnBatch();
-    }, [cooldown, spawnBatch]);
+        setMos((prev) => {
+            const next = [...prev, ...createMos(BATCH_SIZE)];
+            // If over cap, drop oldest to stay under MAX_MOS
+            if (next.length > MAX_MOS) return next.slice(next.length - MAX_MOS);
+            return next;
+        });
+    }, []);
 
     const toggleLoop = useCallback(() => {
         setLooping((prev) => {
             if (!prev) {
-                // Clear any stale intervals first
                 if (loopRef.current) clearInterval(loopRef.current);
-                if (streamCleanupRef.current) clearInterval(streamCleanupRef.current);
-                // Spawn one mo every 200ms for a constant rain
                 loopRef.current = setInterval(() => {
-                    streamIdRef.current += 1;
-                    const mo: MoItem = {
-                        id: streamIdRef.current,
-                        x: Math.random() * 95,
-                        delay: 0,
-                        duration: 2.5 + Math.random() * 2,
-                        size: 24 + Math.random() * 32,
-                        rotation: Math.random() * 360,
-                        rotationEnd: Math.random() * 360 + 180,
-                    };
-                    setStreamMos((prev) => [...prev, mo]);
-                }, 200);
-                // Clean up old stream mos periodically
-                streamCleanupRef.current = setInterval(() => {
-                    setStreamMos((prev) => {
-                        if (prev.length > 50) return prev.slice(prev.length - 50);
-                        return prev;
+                    setMos((prev) => {
+                        nextId += 1;
+                        const mo: MoItem = {
+                            id: nextId,
+                            x: Math.random() * 95,
+                            delay: 0,
+                            duration: 2.5 + Math.random() * 2,
+                            size: 24 + Math.random() * 32,
+                            rotation: Math.random() * 360,
+                            rotationEnd: Math.random() * 360 + 180,
+                        };
+                        const next = [...prev, mo];
+                        if (next.length > MAX_MOS) return next.slice(next.length - MAX_MOS);
+                        return next;
                     });
-                }, 3000);
+                }, 200);
                 return true;
             } else {
                 if (loopRef.current) clearInterval(loopRef.current);
-                if (streamCleanupRef.current) clearInterval(streamCleanupRef.current);
-                // Let remaining mos finish falling, then clean up
-                setTimeout(() => setStreamMos([]), 5000);
                 return false;
             }
         });
@@ -136,9 +82,6 @@ export default function MoRain() {
     useEffect(() => {
         return () => {
             if (loopRef.current) clearInterval(loopRef.current);
-            if (streamCleanupRef.current) clearInterval(streamCleanupRef.current);
-            if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-            if (progressRef.current) clearInterval(progressRef.current);
         };
     }, []);
 
@@ -168,36 +111,25 @@ export default function MoRain() {
             >
                 <Box
                     as="button"
-                    onClick={handleSpawnClick}
+                    onClick={spawnBatch}
                     position="relative"
                     overflow="hidden"
                     height="24px"
                     px={3}
                     borderRadius="full"
                     border="1px solid"
-                    borderColor={cooldown ? "gray.300" : "#EAA3C4"}
+                    borderColor="#EAA3C4"
                     bg="transparent"
-                    cursor={cooldown ? "not-allowed" : "pointer"}
-                    opacity={cooldown ? 0.7 : 1}
+                    cursor="pointer"
                     transition="all 0.2s"
-                    _hover={cooldown ? {} : { bg: "rgba(234, 163, 196, 0.1)" }}
+                    _hover={{ bg: "rgba(234, 163, 196, 0.1)" }}
+                    _active={{ transform: "scale(0.95)" }}
                 >
-                    {/* Loading bar fill */}
-                    <Box
-                        position="absolute"
-                        top={0}
-                        left={0}
-                        height="100%"
-                        width={`${progress}%`}
-                        bg="rgba(234, 163, 196, 0.15)"
-                        transition={progress === 0 ? "none" : "width 0.05s linear"}
-                        borderRadius="full"
-                    />
                     <Text
                         position="relative"
                         fontSize="xs"
                         fontWeight="500"
-                        color={cooldown ? "gray.400" : "#EAA3C4"}
+                        color="#EAA3C4"
                         whiteSpace="nowrap"
                     >
                         spawn more mos
@@ -231,37 +163,19 @@ export default function MoRain() {
                     overflow: "hidden",
                 }}
             >
-                {batches.map((batch) =>
-                    batch.mos.map((mo) => (
-                        <img
-                            key={mo.id}
-                            src="/final-mo.png"
-                            alt=""
-                            style={{
-                                position: "absolute",
-                                left: `${mo.x}vw`,
-                                top: 0,
-                                width: mo.size,
-                                height: "auto",
-                                animation: `moFall ${mo.duration}s ${mo.delay}s ease-in both`,
-                                ["--mo-rot-start" as string]: `${mo.rotation}deg`,
-                                ["--mo-rot-end" as string]: `${mo.rotationEnd}deg`,
-                            }}
-                        />
-                    ))
-                )}
-                {streamMos.map((mo) => (
+                {mos.map((mo) => (
                     <img
-                        key={`stream-${mo.id}`}
+                        key={mo.id}
                         src="/final-mo.png"
                         alt=""
+                        onAnimationEnd={() => removeMo(mo.id)}
                         style={{
                             position: "absolute",
                             left: `${mo.x}vw`,
                             top: 0,
                             width: mo.size,
                             height: "auto",
-                            animation: `moFall ${mo.duration}s 0s ease-in both`,
+                            animation: `moFall ${mo.duration}s ${mo.delay}s ease-in both`,
                             ["--mo-rot-start" as string]: `${mo.rotation}deg`,
                             ["--mo-rot-end" as string]: `${mo.rotationEnd}deg`,
                         }}

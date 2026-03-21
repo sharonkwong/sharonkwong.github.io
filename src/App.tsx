@@ -31,7 +31,7 @@ function App() {
         >
           Sharon Kwong &copy; {new Date().getFullYear()}
           <HStack fontSize="xs" color="gray.300" mt={1} justify="center" spacing={1}>
-            <span>Made w/</span>
+            <span>Made with</span>
             <Image src="/claude.png" alt="Claude" h="12px" display="inline-block" />
             <span>Claude Code</span>
           </HStack>
