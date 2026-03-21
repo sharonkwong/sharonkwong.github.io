@@ -1,6 +1,6 @@
 import { Box, Container, Heading, Text, VStack, HStack, List, ListItem, ListIcon, Image, Link, Badge, Wrap, WrapItem } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { GitHubCalendar } from "react-github-calendar";
 import { BsDot } from "react-icons/bs";
 
 interface ExperienceItem {
@@ -78,32 +78,6 @@ const consultingTags = [
 ];
 
 export default function Experience() {
-    const calendarRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const script = document.createElement("script");
-        script.src = "https://unpkg.com/github-calendar@latest/dist/github-calendar.min.js";
-        script.onload = () => {
-            if (calendarRef.current && (window as any).GitHubCalendar) {
-                (window as any).GitHubCalendar(calendarRef.current, "sharonkwong", {
-                    responsive: true,
-                    tooltips: true,
-                });
-            }
-        };
-        document.head.appendChild(script);
-
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "https://unpkg.com/github-calendar@latest/dist/github-calendar-responsive.css";
-        document.head.appendChild(link);
-
-        return () => {
-            document.head.removeChild(script);
-            document.head.removeChild(link);
-        };
-    }, []);
-
     return (
         <Container maxW="4xl" id="experience" py={{ base: 16, md: 24 }}>
             <VStack spacing={12} alignItems="stretch" w="100%">
@@ -122,39 +96,6 @@ export default function Experience() {
                     >
                         Experience
                     </Heading>
-                </motion.div>
-
-                {/* GitHub Contribution Calendar */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <Box
-                        ref={calendarRef}
-                        w="100%"
-                        fontSize="sm"
-                        color="gray.500"
-                        textAlign="center"
-                        sx={{
-                            "& .calendar": {
-                                fontFamily: "Inter, sans-serif",
-                            },
-                            "& .contrib-legend": {
-                                display: "none",
-                            },
-                            "& .text-muted": {
-                                display: "none",
-                            },
-                            "& rect": {
-                                rx: "3",
-                                ry: "3",
-                            },
-                        }}
-                    >
-                        Loading contributions...
-                    </Box>
                 </motion.div>
 
                 <VStack spacing={10} alignItems="stretch" w="100%">
@@ -335,7 +276,7 @@ export default function Experience() {
                             >
                                 <HStack spacing={3} align="center">
                                     <Image
-                                        src="/images.png"
+                                        src="/ocg.png"
                                         alt="Management Consulting"
                                         w="36px"
                                         h="36px"
@@ -398,6 +339,25 @@ export default function Experience() {
                         </Box>
                     </motion.div>
                 </VStack>
+
+                {/* GitHub Contribution Calendar */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <Box w="100%" overflowX="auto">
+                        <GitHubCalendar
+                            username="sharonkwong"
+                            colorScheme="light"
+                            fontSize={12}
+                            blockSize={12}
+                            blockMargin={4}
+                            blockRadius={3}
+                        />
+                    </Box>
+                </motion.div>
             </VStack>
         </Container>
     );
