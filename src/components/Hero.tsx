@@ -1,7 +1,7 @@
 import { Box, Container, Heading, Text, VStack, HStack, IconButton, Image } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { FaLinkedinIn, FaEnvelope, FaFileAlt } from "react-icons/fa";
+import { FaLinkedinIn, FaEnvelope, FaFileAlt, FaGithub } from "react-icons/fa";
 
 const ROTATING_PHRASES = [
     "products that matter.",
@@ -138,6 +138,23 @@ export default function Hero() {
                             target="_blank"
                             aria-label="LinkedIn"
                             icon={<FaLinkedinIn />}
+                            variant="ghost"
+                            fontSize="xl"
+                            color="#EAA3C4"
+                            _hover={{
+                                color: "#D88BAF",
+                                bg: "rgba(234, 163, 196, 0.1)",
+                            }}
+                            borderRadius="full"
+                            size="lg"
+                            transition="all 0.2s"
+                        />
+                        <IconButton
+                            as="a"
+                            href="https://github.com/sharonkwong"
+                            target="_blank"
+                            aria-label="GitHub"
+                            icon={<FaGithub />}
                             variant="ghost"
                             fontSize="xl"
                             color="#EAA3C4"
