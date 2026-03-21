@@ -6,34 +6,28 @@ const theme = extendTheme({
         useSystemColorMode: false,
     },
     fonts: {
-        heading: "Inter, sans-serif",
-        body: "Inter, sans-serif",
+        heading: "'Inter', sans-serif",
+        body: "'Inter', sans-serif",
     },
     colors: {
         brand: {
-            50: "#f0f9ff",
-            100: "#e0f2fe",
-            200: "#bae6fd",
-            300: "#7dd3fc",
-            400: "#38bdf8",
-            500: "#0ea5e9",
-            600: "#0284c7",
-            700: "#0369a1",
-            800: "#075985",
-            900: "#0c4a6e",
-        },
-    },
-    components: {
-        Button: {
-            defaultProps: {
-                colorScheme: "brand",
-            },
+            50: "#FFF5F9",
+            100: "#FFE8F0",
+            200: "#FFD1E1",
+            300: "#FFEDBC", // third
+            400: "#FABDB2", // secondary
+            500: "#EAA3C4", // primary
+            600: "#D88BAF",
+            700: "#C4739A",
+            800: "#A85A82",
+            900: "#8C4169",
         },
     },
     styles: {
         global: {
             body: {
-                bg: "gray.50",
+                bg: "white",
+                color: "gray.800",
             },
         },
     },

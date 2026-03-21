@@ -1,55 +1,41 @@
-import { ChakraProvider, Box, VStack } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { ChakraProvider, Box, VStack, HStack, Image } from "@chakra-ui/react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import About from "./components/About";
 import Experience from "./components/Experience";
-import Projects from "./components/Projects";
-import Skills from "./components/Skills";
-import Contact from "./components/Contact";
-import EasterEgg from "./components/EasterEgg";
+// import Hobbies from "./components/Hobbies";
+import ScrollToTop from "./components/ScrollToTop";
+import MoRain from "./components/MoRain";
 import theme from "./theme";
 
 function App() {
-  const [showEasterEgg, setShowEasterEgg] = useState(false);
-  const [, setKonami] = useState<string[]>([]);
-
-  // Konami code easter egg
-  useEffect(() => {
-    const konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      setKonami((prev) => {
-        const newKonami = [...prev, event.key];
-        if (newKonami.length > konamiCode.length) {
-          newKonami.shift();
-        }
-
-        if (JSON.stringify(newKonami) === JSON.stringify(konamiCode)) {
-          setShowEasterEgg(true);
-        }
-
-        return newKonami;
-      });
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   return (
     <ChakraProvider theme={theme}>
-      <Box bg="gray.50" minH="100vh">
+      <Box bg="white" minH="100vh">
+        <MoRain />
         <Navbar />
-        <VStack spacing={20} py={20}>
-          <Hero />
-          <About />
+        <Hero />
+        <VStack spacing={0}>
           <Experience />
-          <Projects />
-          <Skills />
-          <Contact />
+          {/* <Hobbies /> */}
         </VStack>
-        {showEasterEgg && <EasterEgg onClose={() => setShowEasterEgg(false)} />}
+        <ScrollToTop />
+        {/* Footer */}
+        <Box
+          as="footer"
+          py={8}
+          textAlign="center"
+          color="gray.400"
+          fontSize="sm"
+          borderTop="1px solid"
+          borderColor="gray.100"
+        >
+          Sharon Kwong &copy; {new Date().getFullYear()}
+          <HStack fontSize="xs" color="gray.300" mt={1} justify="center" spacing={1}>
+            <span>Made w/</span>
+            <Image src="/claude.png" alt="Claude" h="12px" display="inline-block" />
+            <span>Claude Code</span>
+          </HStack>
+        </Box>
       </Box>
     </ChakraProvider>
   );

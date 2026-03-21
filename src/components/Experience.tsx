@@ -1,144 +1,344 @@
-import {
-    Box,
-    Container,
-    Heading,
-    VStack,
-    Text,
-    useColorModeValue,
-    List,
-    ListItem,
-    ListIcon,
-} from "@chakra-ui/react";
+import { Box, Container, Heading, Text, VStack, HStack, List, ListItem, ListIcon, Image, Link, Badge, Wrap, WrapItem } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { MdWorkOutline } from "react-icons/md";
-import { useInView } from "react-intersection-observer";
+import { BsDot } from "react-icons/bs";
 
-const MotionBox = motion(Box);
+interface ExperienceItem {
+    title: string;
+    company: string;
+    logo: string;
+    logoSize?: string;
+    link?: string;
+    linkLabel?: string;
+    location: string;
+    duration: string;
+    highlights: string[];
+}
 
-const experiences = [
+const experiences: ExperienceItem[] = [
     {
         title: "Associate Product Manager",
-        company: "Frequence (Acquired by Madhive)",
+        company: "Madhive",
+        logo: "/madhive-fq.png",
+        link: "madhive.com",
         location: "Mountain View, CA",
         duration: "July 2024 – Present",
         highlights: [
-            "Led a complete revamp of the reporting architecture, enhancing scalability and reducing future developer effort by 13x",
-            "Drove the launch of a new omnichannel adtech product, Digital Out-of-Home, contributing to $2M+ in revenue",
-            "Manage a high-performing scrum team of four developers and three QA engineers",
-            "Oversaw initiatives from discovery to launch"
-        ]
+            "Led a complete revamp of the reporting architecture, enhancing scalability and reducing future developer effort by 13x, driving consensus across sales, client success, operations, engineering, and product",
+            "Drove the launch of Digital Out-of-Home across 6 teams, covering the full product cycle from campaign insertion order to reporting, contributing to $19M+ in revenue and growing",
+            "Managing two high-performing teams, owning both data pipelines/ETLs and frontend components of enterprise analytics dashboards with a revenue-driven sprint backlog",
+            "Owning end-to-end product documentation (PRDs, one-pagers, technical specs, data flow diagrams) to deliver enterprise solutions on time",
+        ],
     },
     {
-        title: "Co-Founder",
+        title: "Co-founder",
         company: "Kalendir",
+        logo: "/kalendir.png",
+        logoSize: "28px",
+        link: "kalendir.com",
         location: "Cupertino, CA",
         duration: "December 2024 – Present",
         highlights: [
-            "Built and launched a SaaS appointment scheduling tool using Django + React",
-            "Developed interactive dashboards in Tableau and Power BI",
-            "Developed core features including landing page, digital storefront, and reporting modules"
-        ]
+            "Shipped a fully functional MVP (desktop web, iOS, and Android) within 3 months — by month 4, customers were fully relying on the platform to manage clients, appointments, and day-to-day operations",
+            "Building a SaaS appointment scheduling tool using Django & React, enabling businesses across 15+ industries and hundreds of users to create customizable booking flows",
+            "Planning product roadmap and ensuring strong market fit through competitor research, door-to-door sales, client conversations, and demos",
+            "Designing database models, contributing heavily to frontend development, and leveraging AI tools (Figma Make, Claude Code, Cursor) to streamline design and implementation",
+            "Developed interactive Grafana dashboards using PostgreSQL, tracking outreach, customer retention, and revenue growth",
+        ],
     },
     {
-        title: "Co-Founder",
+        title: "Co-founder",
         company: "ReferralHub",
+        logo: "/referralhub.png",
+        link: "referralhub.dev",
         location: "Cupertino, CA",
         duration: "December 2023 – June 2024",
         highlights: [
-            "Co-founded and launched platform with 200% average week-over-week user growth",
-            "Developed customer-facing features using React, TypeScript, and Python",
-            "Managed Agile sprints and go-to-market strategy"
-        ]
-    }
+            "Co-founded and scaled a platform from 0 to 1, achieving 200% average weekly user growth and generating thousands in sales within the first month (featured by Bloomberg!)",
+            "Developed customer-facing features using React, TypeScript, and Python, including in-chat payments, user onboarding, and marketplace features",
+            "Managed Agile sprints, go-to-market strategy, and created internal Grafana dashboards using PostgreSQL, 3x-ing user acquisition rate",
+            "Utilized Canva and Figma to create wireframes and user interaction mockups for critical features",
+        ],
+    },
+];
+
+const consultingClients = [
+    { name: "Abby's Legendary Pizza", logo: "/abbys_legendary_pizza-removebg-preview.png" },
+    { name: "North Coast Container", logo: "/North-Coast-Container-logo.webp" },
+    { name: "Camp Lutherwood", logo: "/camp lutherwood.png" },
+    { name: "University of Oregon", logo: "/University-of-Oregon.png" },
+    { name: "Maple Microdevelopment", logo: "/maple microdevelopment.webp" },
+];
+
+const consultingTags = [
+    { label: "Real estate expansion", color: "#E8967A" },
+    { label: "Production optimization", color: "#D88BAF" },
+    { label: "Market entry", color: "#E8967A" },
+    { label: "New program development", color: "#D88BAF" },
 ];
 
 export default function Experience() {
-    const [ref, inView] = useInView({
-        threshold: 0.1,
-        triggerOnce: true,
-    });
-
     return (
-        <Container maxW="4xl" id="experience">
-            <VStack spacing={12} alignItems="stretch">
-                <Heading
-                    as="h2"
-                    size="xl"
-                    textAlign="center"
-                    bgGradient="linear(to-r, brand.400, brand.600)"
-                    bgClip="text"
+        <Container maxW="4xl" id="experience" py={{ base: 16, md: 24 }}>
+            <VStack spacing={12} alignItems="stretch" w="100%">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6 }}
                 >
-                    Experience
-                </Heading>
+                    <Heading
+                        as="h2"
+                        fontSize={{ base: "3xl", md: "4xl" }}
+                        fontWeight="700"
+                        color="#EAA3C4"
+                        textAlign="center"
+                    >
+                        Experience
+                    </Heading>
+                </motion.div>
 
-                <VStack
-                    ref={ref}
-                    spacing={8}
-                    alignItems="stretch"
-                    position="relative"
-                    _before={{
-                        content: "\"\"",
-                        position: "absolute",
-                        left: "50%",
-                        height: "100%",
-                        width: "2px",
-                        bg: "brand.200",
-                        transform: "translateX(-50%)",
-                    }}
-                >
+                <VStack spacing={10} alignItems="stretch" w="100%">
                     {experiences.map((exp, index) => (
-                        <MotionBox
+                        <motion.div
                             key={index}
-                            initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                            animate={inView ? { opacity: 1, x: 0 } : {}}
-                            transition={{ duration: 0.5, delay: index * 0.2 }}
-                            bg={useColorModeValue("white", "gray.800")}
-                            p={6}
-                            borderRadius="lg"
-                            boxShadow="md"
-                            position="relative"
-                            ml={index % 2 === 0 ? "0" : "auto"}
-                            mr={index % 2 === 0 ? "auto" : "0"}
-                            width="90%"
-                            _before={{
-                                content: "\"\"",
-                                position: "absolute",
-                                top: "50%",
-                                right: index % 2 === 0 ? "-10px" : "auto",
-                                left: index % 2 === 0 ? "auto" : "-10px",
-                                width: "20px",
-                                height: "20px",
-                                bg: "brand.400",
-                                borderRadius: "full",
-                                transform: "translateY(-50%)",
-                            }}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-50px" }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
                         >
-                            <VStack align="stretch" spacing={4}>
-                                <Box>
-                                    <Heading size="md" color="brand.500">
-                                        {exp.title}
-                                    </Heading>
-                                    <Text fontSize="lg" fontWeight="medium">
-                                        {exp.company}
-                                    </Text>
-                                    <Text color="gray.500">
-                                        {exp.location} | {exp.duration}
-                                    </Text>
-                                </Box>
+                            <Box
+                                pl={6}
+                                borderLeft="2px solid"
+                                borderColor="gray.100"
+                                _hover={{ borderLeft: "4px solid", borderColor: "#EAA3C4" }}
+                                transition="all 0.3s"
+                            >
+                                <HStack
+                                    justify="space-between"
+                                    align="flex-start"
+                                    flexWrap="wrap"
+                                    gap={1}
+                                >
+                                    <HStack spacing={3} align="center">
+                                        {exp.logo && (
+                                            <Image
+                                                src={exp.logo}
+                                                alt={exp.company}
+                                                w={exp.logoSize || "36px"}
+                                                h={exp.logoSize || "36px"}
+                                                objectFit="contain"
+                                                borderRadius="md"
+                                                flexShrink={0}
+                                            />
+                                        )}
+                                        <Box>
+                                            <Heading as="h3" fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="gray.900">
+                                                {exp.title}
+                                            </Heading>
+                                            <Text fontSize="md" fontWeight="500" color="#EAA3C4">
+                                                {exp.company}
+                                                {exp.link && (
+                                                    <>
+                                                        <Text as="span" color="gray.400" fontWeight="400">{" "}· </Text>
+                                                        <Link
+                                                            href={exp.link.startsWith("http") ? exp.link : `https://${exp.link}`}
+                                                            isExternal
+                                                            color="gray.400"
+                                                            fontWeight="400"
+                                                            _hover={{ color: "gray.600", textDecoration: "underline" }}
+                                                        >
+                                                            {exp.linkLabel || exp.link}
+                                                        </Link>
+                                                    </>
+                                                )}
+                                            </Text>
+                                        </Box>
+                                    </HStack>
+                                    <Box textAlign={{ base: "left", md: "right" }} flexShrink={0}>
+                                        <Text fontSize="sm" color="gray.500">
+                                            {exp.duration}
+                                        </Text>
+                                        <Text fontSize="sm" color="gray.400">
+                                            {exp.location}
+                                        </Text>
+                                    </Box>
+                                </HStack>
 
-                                <List spacing={2}>
+                                <List spacing={2} mt={4}>
                                     {exp.highlights.map((highlight, idx) => (
-                                        <ListItem key={idx} display="flex" alignItems="center">
-                                            <ListIcon as={MdWorkOutline} color="brand.500" />
-                                            <Text>{highlight}</Text>
+                                        <ListItem
+                                            key={idx}
+                                            display="flex"
+                                            alignItems="flex-start"
+                                            fontSize="sm"
+                                            color="gray.600"
+                                            lineHeight="1.6"
+                                        >
+                                            <ListIcon as={BsDot} color="gray.400" fontSize="2xl" mt="-2px" flexShrink={0} />
+                                            {highlight}
                                         </ListItem>
                                     ))}
                                 </List>
-                            </VStack>
-                        </MotionBox>
+                            </Box>
+                        </motion.div>
                     ))}
+                    {/* NBC Sports */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                    >
+                        <Box
+                            pl={6}
+                            borderLeft="2px solid"
+                            borderColor="gray.100"
+                            _hover={{ borderLeft: "4px solid", borderColor: "#EAA3C4" }}
+                            transition="all 0.3s"
+                        >
+                            <HStack
+                                justify="space-between"
+                                align="flex-start"
+                                flexWrap="wrap"
+                                gap={1}
+                            >
+                                <HStack spacing={3} align="center">
+                                    <Image
+                                        src="/nbcsports.png"
+                                        alt="NBC Sports"
+                                        w="36px"
+                                        h="36px"
+                                        objectFit="contain"
+                                        borderRadius="md"
+                                        flexShrink={0}
+                                    />
+                                    <Box>
+                                        <Heading as="h3" fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="gray.900">
+                                            Social Media Project Management Intern
+                                        </Heading>
+                                        <Text fontSize="md" fontWeight="500" color="#EAA3C4">
+                                            NBC Sports
+                                            <Text as="span" color="gray.400" fontWeight="400">{" "}· </Text>
+                                            <Link
+                                                href="https://www.canva.com/design/DAFHeLbJnbA/Z3rraybpXOgbV7Ny6DRekg/view"
+                                                isExternal
+                                                color="gray.400"
+                                                fontWeight="400"
+                                                _hover={{ color: "gray.600", textDecoration: "underline" }}
+                                            >
+                                                summary deck
+                                            </Link>
+                                        </Text>
+                                    </Box>
+                                </HStack>
+                                <Box textAlign={{ base: "left", md: "right" }} flexShrink={0}>
+                                    <Text fontSize="sm" color="gray.500">
+                                        November 2021 – July 2022
+                                    </Text>
+                                    <Text fontSize="sm" color="gray.400">
+                                        Eugene, OR
+                                    </Text>
+                                </Box>
+                            </HStack>
+
+                            <List spacing={2} mt={4}>
+                                <ListItem display="flex" alignItems="flex-start" fontSize="sm" color="gray.600" lineHeight="1.6">
+                                    <ListIcon as={BsDot} color="gray.400" fontSize="2xl" mt="-2px" flexShrink={0} />
+                                    Collaborated with NBC Sports and Olympics executives and NIL influencers to implement strategies to increase Track and Field engagement with the younger generation
+                                </ListItem>
+                                <ListItem display="flex" alignItems="flex-start" fontSize="sm" color="gray.600" lineHeight="1.6">
+                                    <ListIcon as={BsDot} color="gray.400" fontSize="2xl" mt="-2px" flexShrink={0} />
+                                    Led graphic design, video editing, and app development for the Prefontaine Classic and World Championships, resulting in 900K+ engagements across Instagram Reels and TikTok
+                                </ListItem>
+                            </List>
+                        </Box>
+                    </motion.div>
+                    {/* Management Consultant section */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                    >
+                        <Box
+                            pl={6}
+                            borderLeft="2px solid"
+                            borderColor="gray.100"
+                            _hover={{ borderLeft: "4px solid", borderColor: "#EAA3C4" }}
+                            transition="all 0.3s"
+                        >
+                            <HStack
+                                justify="space-between"
+                                align="flex-start"
+                                flexWrap="wrap"
+                                gap={1}
+                            >
+                                <HStack spacing={3} align="center">
+                                    <Image
+                                        src="/ocg.png"
+                                        alt="Management Consulting"
+                                        w="36px"
+                                        h="36px"
+                                        objectFit="contain"
+                                        borderRadius="md"
+                                        flexShrink={0}
+                                    />
+                                    <Box>
+                                        <Heading as="h3" fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="gray.900">
+                                            Management Consultant
+                                        </Heading>
+                                        <Text fontSize="md" fontWeight="500" color="#EAA3C4">
+                                            Past Clients
+                                        </Text>
+                                    </Box>
+                                </HStack>
+                                <Box textAlign={{ base: "left", md: "right" }} flexShrink={0}>
+                                    <Text fontSize="sm" color="gray.500">
+                                        September 2021 – June 2022
+                                    </Text>
+                                    <Text fontSize="sm" color="gray.400">
+                                        Eugene, OR
+                                    </Text>
+                                </Box>
+                            </HStack>
+
+                            <HStack mt={6} flexWrap="wrap" alignItems="center" justify="space-between" pl={6} gap={4}>
+                                {consultingClients.map((client) => (
+                                    <Image
+                                        key={client.name}
+                                        src={client.logo}
+                                        alt={client.name}
+                                        objectFit="contain"
+                                        h={{ base: "45px", md: "60px" }}
+                                        maxW={{ base: "120px", md: "160px" }}
+                                        title={client.name}
+                                    />
+                                ))}
+                            </HStack>
+
+                            <Wrap spacing={2} mt={5} pl={6}>
+                                {consultingTags.map((tag) => (
+                                    <WrapItem key={tag.label}>
+                                        <Badge
+                                            px={3}
+                                            py={1}
+                                            borderRadius="full"
+                                            fontSize="xs"
+                                            fontWeight="500"
+                                            bg={`${tag.color}30`}
+                                            color={tag.color}
+                                            border="1px solid"
+                                            borderColor={`${tag.color}60`}
+                                        >
+                                            {tag.label}
+                                        </Badge>
+                                    </WrapItem>
+                                ))}
+                            </Wrap>
+                        </Box>
+                    </motion.div>
                 </VStack>
             </VStack>
         </Container>
     );
-} 
+}

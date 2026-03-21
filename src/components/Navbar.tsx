@@ -1,54 +1,58 @@
-import { Box, Flex, Button, useColorModeValue, Stack, HStack } from "@chakra-ui/react";
+import { Flex, Button, Stack, HStack } from "@chakra-ui/react";
 import { Link } from "react-scroll";
 import { NavItem } from "../types";
 
 const NAV_ITEMS: NavItem[] = [
-    { label: "About", section: "about" },
     { label: "Experience", section: "experience" },
-    { label: "Projects", section: "projects" },
-    { label: "Skills", section: "skills" },
-    { label: "Contact", section: "contact" },
+    // { label: "Hobbies", section: "hobbies" },
+    { label: "Contact", section: "hero" },
 ];
 
 export default function Navbar() {
-    const bg = useColorModeValue("white", "gray.800");
-
     return (
-        <Box
+        <Flex
             position="fixed"
-            top={0}
-            left={0}
-            right={0}
-            bg={bg}
-            px={4}
-            boxShadow="sm"
+            top={4}
+            left="50%"
+            transform="translateX(-50%)"
             zIndex="sticky"
+            className="liquid-glass-nav"
+            px={2}
+            py={1}
+            alignItems="center"
+            justifyContent="center"
         >
-            <Flex h={16} alignItems="center" justifyContent="space-between" maxW="6xl" mx="auto">
-                <Link to="hero" smooth={true} duration={500} offset={-80}>
-                    <Button variant="ghost" fontSize="lg" fontWeight="bold">
-                        SK
-                    </Button>
-                </Link>
-
-                <HStack spacing={8} alignItems="center">
-                    <Stack direction="row" spacing={4}>
-                        {NAV_ITEMS.map((navItem) => (
-                            <Link
-                                key={navItem.label}
-                                to={navItem.section}
-                                smooth={true}
-                                duration={500}
-                                offset={-80}
+            <HStack spacing={0} alignItems="center">
+                <Stack direction="row" spacing={0}>
+                    {NAV_ITEMS.map((navItem) => (
+                        <Link
+                            key={navItem.label}
+                            to={navItem.section}
+                            smooth={true}
+                            duration={500}
+                            offset={-80}
+                        >
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                fontWeight="500"
+                                fontSize="sm"
+                                color="gray.700"
+                                _hover={{
+                                    color: "#ea8cb8",
+                                    bg: "rgba(234, 163, 196, 0.15)",
+                                }}
+                                borderRadius="full"
+                                px={5}
+                                h={9}
+                                transition="all 0.2s"
                             >
-                                <Button variant="ghost" size="sm">
-                                    {navItem.label}
-                                </Button>
-                            </Link>
-                        ))}
-                    </Stack>
-                </HStack>
-            </Flex>
-        </Box>
+                                {navItem.label}
+                            </Button>
+                        </Link>
+                    ))}
+                </Stack>
+            </HStack>
+        </Flex>
     );
-} 
+}

@@ -1,98 +1,66 @@
-import {
-    Container,
-    Heading,
-    VStack,
-    HStack,
-    Text,
-    Button,
-    useColorModeValue,
-    Icon,
-} from "@chakra-ui/react";
-import { FaLinkedin, FaGithub, FaEnvelope, FaPhone } from "react-icons/fa";
-
-
-const contactInfo = [
-    {
-        icon: FaEnvelope,
-        label: "Email",
-        value: "sharonjkwong@gmail.com",
-        href: "mailto:sharonjkwong@gmail.com",
-    },
-    {
-        icon: FaPhone,
-        label: "Phone",
-        value: "(408) 702-7692",
-        href: "tel:+14087027692",
-    },
-    {
-        icon: FaLinkedin,
-        label: "LinkedIn",
-        value: "linkedin.com/in/sharonjkwong",
-        href: "https://linkedin.com/in/sharonjkwong",
-    },
-    {
-        icon: FaGithub,
-        label: "GitHub",
-        value: "github.com/sharonkwong",
-        href: "https://github.com/sharonkwong",
-    },
-];
+import { Box, Container, Heading, Text, VStack, HStack, IconButton } from "@chakra-ui/react";
+import { motion } from "framer-motion";
+import { FaLinkedinIn, FaEnvelope } from "react-icons/fa";
 
 export default function Contact() {
-    const buttonBg = useColorModeValue("brand.500", "brand.200");
-    const buttonColor = useColorModeValue("white", "gray.800");
-
     return (
-        <Container maxW="4xl" id="contact">
-            <VStack spacing={12}>
-                <Heading
-                    as="h2"
-                    size="xl"
-                    bgGradient="linear(to-r, brand.400, brand.600)"
-                    bgClip="text"
-                    textAlign="center"
-                >
-                    Get in Touch
-                </Heading>
-
-                <VStack
-                    spacing={8}
-                    width="100%"
-                >
-
-                    <HStack
-                        spacing={{ base: 4, md: 8 }}
-                        flexWrap="wrap"
-                        justify="center"
-                        width="100%"
+        <Container maxW="6xl" id="contact" py={{ base: 16, md: 24 }}>
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6 }}
+            >
+                <VStack spacing={6} alignItems="center" textAlign="center">
+                    <Heading
+                        as="h2"
+                        fontSize={{ base: "3xl", md: "4xl" }}
+                        fontWeight="700"
+                        color="gray.900"
                     >
-                        {contactInfo.map((contact) => (
-                            <Button
-                                key={contact.label}
-                                as="a"
-                                href={contact.href}
-                                target={contact.icon !== FaPhone ? "_blank" : undefined}
-                                leftIcon={<Icon as={contact.icon} />}
-                                size="lg"
-                                variant="solid"
-                                bg={buttonBg}
-                                color={buttonColor}
-                                _hover={{
-                                    transform: "translateY(-2px)",
-                                    boxShadow: "lg",
-                                }}
-                                m={2}
-                            >
-                                {contact.label}
-                            </Button>
-                        ))}
-                    </HStack>
-
-                    <Text fontSize="sm" color="gray.500" textAlign="center">
-                        Based in Cupertino, CA • Available for remote opportunities
+                        Let's Connect
+                    </Heading>
+                    <Box w="60px" h="3px" bgGradient="linear(to-r, #EAA3C4, #FABDB2)" borderRadius="full" />
+                    <Text color="gray.500" fontSize="lg" maxW="500px" pt={2}>
+                        I'm always open to chatting about product, building, or new opportunities.
                     </Text>
+                    <HStack spacing={4} pt={4}>
+                        <IconButton
+                            as="a"
+                            href="mailto:sharonjkwong@gmail.com"
+                            aria-label="Email"
+                            icon={<FaEnvelope />}
+                            fontSize="xl"
+                            color="gray.600"
+                            bg="gray.50"
+                            _hover={{
+                                color: "white",
+                                bg: "#EAA3C4",
+                            }}
+                            borderRadius="full"
+                            size="lg"
+                            transition="all 0.2s"
+                        />
+                        <IconButton
+                            as="a"
+                            href="https://linkedin.com/in/sharonjkwong"
+                            target="_blank"
+                            aria-label="LinkedIn"
+                            icon={<FaLinkedinIn />}
+                            fontSize="xl"
+                            color="gray.600"
+                            bg="gray.50"
+                            _hover={{
+                                color: "white",
+                                bg: "#EAA3C4",
+                            }}
+                            borderRadius="full"
+                            size="lg"
+                            transition="all 0.2s"
+                        />
+                    </HStack>
                 </VStack>
-            </VStack>
+            </motion.div>
         </Container>
     );
-} 
+}
