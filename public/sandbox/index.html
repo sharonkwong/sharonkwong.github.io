@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+  <title>Sandbox</title>
+  <style>
+    :root {
+      --brand: #EAA3C4;
+      --border: #E9E9EC;
+      --muted: #8A8A93;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 24px 64px;
+      background: #fff;
+      color: #2D3748;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 9px;
+    }
+
+    p.sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 24px;
+    }
+
+    p.sub code {
+      background: #F6F6F8;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .controls span {
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+
+    button {
+      font: inherit;
+      font-size: 13px;
+      color: #4A5568;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    button:hover {
+      border-color: var(--brand);
+      color: #2D3748;
+    }
+
+    button[aria-pressed="true"] {
+      border-color: var(--brand);
+      background: #FFF5F9;
+      color: #A85A82;
+    }
+
+    .frame {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      transition: max-width 0.2s ease;
+    }
+
+    footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #B8B8C0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Sandbox</h1>
+      <span class="tag">Unlisted</span>
+    </header>
+    <p class="sub">Embed test bench for the Kalendir booking widget &mdash; <code>sssalon.kalendir.com/book</code></p>
+
+    <div class="controls">
+      <span>Width</span>
+      <button data-w="390" aria-pressed="false">Mobile 390</button>
+      <button data-w="768" aria-pressed="false">Tablet 768</button>
+      <button data-w="1024" aria-pressed="false">Laptop 1024</button>
+      <button data-w="0" aria-pressed="true">Full</button>
+      <button id="reload">Reload frame</button>
+    </div>
+
+    <div class="frame" id="frame">
+      <iframe
+        src="https://sssalon.kalendir.com/book"
+        title="Book an appointment"
+        style="width: 100%; height: 800px; border: 0; border-radius: 8px;"
+        allow="payment"
+        loading="lazy"
+      ></iframe>
+    </div>
+
+    <footer>Not linked from the site and excluded from search indexing.</footer>
+  </div>
+
+  <script>
+    const frame = document.getElementById('frame');
+    const widthButtons = document.querySelectorAll('button[data-w]');
+
+    widthButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const w = Number(btn.dataset.w);
+        frame.style.maxWidth = w ? w + 'px' : '100%';
+        widthButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      });
+    });
+
+    document.getElementById('reload').addEventListener('click', () => {
+      const iframe = frame.querySelector('iframe');
+      iframe.src = iframe.src;
+    });
+  </script>
+</body>
+
+</html>
