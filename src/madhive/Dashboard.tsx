@@ -58,6 +58,26 @@ export default function Dashboard({
     ),
     [channels, curves, vCeil, budget, constants.emailSpendCap]
   );
+  // Re-run the same allocator at the bounds of each channel's lift interval.
+  // The point estimate is one draw; the recommendation should be reported as a
+  // range, not a number, when the interval is wide.
+  const planAt = (which: "Low" | "High") =>
+    allocate(
+      channels.map((c) => {
+        const ci = which === "Low" ? c.conversionsIncrLow : c.conversionsIncrHigh;
+        return {
+          key: c.key,
+          spend: c.spend,
+          curve: { K: c.halfSaturationSpend, Cmax: (ci * (c.halfSaturationSpend + c.spend)) / c.spend },
+          cap: c.key === "email"
+            ? { value: constants.emailSpendCap, reason: "list-burn cap" } : undefined,
+        };
+      }),
+      vCeil, budget
+    );
+  const planLow = useMemo(() => planAt("Low"), [channels, vCeil, budget, constants.emailSpendCap]);
+  const planHigh = useMemo(() => planAt("High"), [channels, vCeil, budget, constants.emailSpendCap]);
+
   const planConv = plan.rows.reduce((s, r) => s + r.proposedConversions, 0);
   const nowConv = plan.rows.reduce((s, r) => s + r.currentConversions, 0);
   const budgetBinds = plan.effectiveCeiling < vCeil - 0.01;
@@ -441,6 +461,100 @@ export default function Dashboard({
           </Box>
         </Panel>
       </Grid>
+
+      {/* ---------------- lift confidence ---------------- */}
+      <Box mt={4}>
+        <Panel
+          title="How much of this should you believe?"
+          sub="Incrementality is measured, not observed — every estimate has an interval. Re-running the same allocation at the edges of each interval shows which recommendations are solid and which are guesses with a number attached."
+        >
+          <Box overflowX="auto">
+            <Box as="table" w="100%" minW="820px" fontSize="13px" style={{ borderCollapse: "collapse" }}>
+              <Box as="thead">
+                <Box as="tr">
+                  {["Channel", "Lift", "95% interval", "Test design", "Recommended change", "Range across the interval"]
+                    .map((hd, i) => (
+                    <Box as="th" key={hd} textAlign={i === 1 || i === 2 ? "right" : "left"}
+                      fontFamily="mono" fontSize="9.5px" letterSpacing="0.11em" textTransform="uppercase"
+                      color={MUTED} fontWeight={600} py={2.5} px={3} borderBottom="1px solid"
+                      borderColor="gray.300" bg="gray.50" whiteSpace="nowrap">{hd}</Box>
+                  ))}
+                </Box>
+              </Box>
+              <Box as="tbody">
+                {channels.map((c) => {
+                  const row = plan.rows.find((r) => r.key === c.key)!;
+                  const lo = planLow.rows.find((r) => r.key === c.key)!;
+                  const hi = planHigh.rows.find((r) => r.key === c.key)!;
+                  const spread = Math.abs(hi.delta - lo.delta);
+                  const shaky = spread > Math.abs(row.delta) * 0.5;
+                  const width = (c.lift.ciHigh - c.lift.ciLow) * 100;
+                  return (
+                    <Box as="tr" key={c.key} _hover={{ bg: "gray.50" }}>
+                      <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                        fontWeight={600} color={INK}>
+                        <HStack spacing={2}>
+                          <Box w="8px" h="8px" borderRadius="2px" bg={c.color} />
+                          <Text>{c.label}</Text>
+                        </HStack>
+                      </Box>
+                      <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                        textAlign="right" fontFamily="mono" fontWeight={700} color={INK}>
+                        {(c.lift.point * 100).toFixed(1)}%
+                      </Box>
+                      <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                        textAlign="right" fontFamily="mono" color={width > 15 ? "red.500" : "gray.600"}>
+                        {(c.lift.ciLow * 100).toFixed(0)}–{(c.lift.ciHigh * 100).toFixed(0)}%
+                        <Text as="span" color={MUTED} fontSize="11px"> ±{(width / 2).toFixed(0)}pts</Text>
+                      </Box>
+                      <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE} color="gray.600">
+                        <Text fontWeight={600} color={INK} fontSize="12.5px">{c.lift.method}</Text>
+                        <Text fontSize="11.5px" color={MUTED}>{c.lift.units}</Text>
+                      </Box>
+                      <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                        fontFamily="mono" fontWeight={700}
+                        color={row.delta > 0 ? "green.600" : "red.500"}>
+                        {row.delta > 0 ? "+" : "−"}{money(Math.abs(row.delta))}
+                      </Box>
+                      <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                        fontFamily="mono" color={shaky ? "red.500" : "gray.600"}>
+                        {lo.delta > 0 ? "+" : "−"}{money(Math.abs(lo.delta))} to{" "}
+                        {hi.delta > 0 ? "+" : "−"}{money(Math.abs(hi.delta))}
+                        {shaky && (
+                          <Text as="span" fontFamily="var(--font)" fontSize="11px" ml={2}
+                            fontWeight={700}>← unstable</Text>
+                        )}
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          </Box>
+          <Box mt={4}>
+            <Callout tag="What this changes" tone="warn">
+              <p>
+                The <em>direction</em> holds everywhere — cut display, grow video — but the{" "}
+                <strong>size of the video move does not</strong>. Depending on where video's true
+                lift sits in its interval, the right increase is anywhere from{" "}
+                <strong>{money(Math.abs(planLow.rows.find((r) => r.key === "video")!.delta))}</strong> to{" "}
+                <strong>{money(Math.abs(planHigh.rows.find((r) => r.key === "video")!.delta))}</strong>.
+              </p>
+              <p>
+                That is not a data problem, it's a <strong>design</strong> problem: video's lift comes
+                from 18 matched DMA pairs, so there are only 18 units of randomisation no matter how
+                many impressions ran. Display and email randomise at the user level and their
+                intervals are a quarter as wide.
+              </p>
+              <p>
+                <strong>So the honest recommendation is staged.</strong> Move the amount that is safe
+                at the bottom of the interval now, and buy a better-powered video test before
+                committing the rest.
+              </p>
+            </Callout>
+          </Box>
+        </Panel>
+      </Box>
 
       {/* ---------------- trend ---------------- */}
       <Box mt={4}>

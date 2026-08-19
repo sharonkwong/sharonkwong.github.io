@@ -44,22 +44,66 @@ SUBSCRIBER_VALUE = A["subscriberValue"]
 START = date(2026, 7, 19)
 DAYS = 30
 
+# ------------------------------------------------------------- lift tests
+# Incrementality is the second load-bearing assumption after the ceiling, so it
+# carries its design and its confidence interval. A point estimate with no
+# interval is false precision — and the whole reallocation rests on these.
+#
+#   incremental = (rate_test - rate_control) x N_test
+#   rate        = incremental / attributed
+#
+# Design differs by channel because what is feasible differs. User-level
+# withholding is easy in email and possible via ghost bids in programmatic; CTV
+# generally cannot withhold per household across publishers, so it falls back to
+# matched geos — which have far fewer units of randomisation and therefore much
+# wider intervals, even on large impression counts.
+LIFT = {
+    "display": dict(
+        method="Ghost bids",
+        design="Control users entered the auction and were recorded as won, then served nothing. "
+               "Matched on targeting and auction dynamics.",
+        window="4 weeks, 22 Jun – 19 Jul 2026",
+        controlShare=0.10, units="30.2M impressions, user-level randomisation",
+        point=0.270, ciLow=0.241, ciHigh=0.302, pValue="<0.001"),
+    "video": dict(
+        method="Matched-market geo holdout",
+        design="18 matched DMA pairs, channel dark in one of each pair. Household-level "
+               "withholding is not possible across CTV publishers.",
+        window="4 weeks, 22 Jun – 19 Jul 2026",
+        controlShare=0.50, units="18 matched DMA pairs — only 18 units of randomisation",
+        point=0.854, ciLow=0.718, ciHigh=0.960, pValue="0.003"),
+    "email": dict(
+        method="Randomised list holdout",
+        design="8% of subscribers withheld from every send in the window, randomised at the "
+               "subscriber level and re-randomised each send.",
+        window="4 weeks, 22 Jun – 19 Jul 2026",
+        controlShare=0.08, units="460K subscribers, subscriber-level randomisation",
+        point=0.250, ciLow=0.214, ciHigh=0.287, pValue="<0.001"),
+}
+
 # ---------------------------------------------------------------- channels
 CHANNELS = [
     dict(key="display", label="Display", color="#2a78d6",
          spend=148000, impressions=30204000, cpm=4.90, clicks=27184,
-         conversionsLast=3910, conversionsIncr=1055, halfSaturationSpend=150000,
+         conversionsLast=3910, halfSaturationSpend=150000,
          reach=1240000, note="64% of spend is retargeting — that's why lift is low."),
     dict(key="video", label="Online video", color="#eb6834",
          spend=232000, impressions=10357000, cpm=22.40, clicks=9640,
-         conversionsLast=4240, conversionsIncr=3620, halfSaturationSpend=1000000,
+         conversionsLast=4240, halfSaturationSpend=1000000,
          reach=742000, note="The only channel buying genuinely new reach."),
     dict(key="email", label="Email", color="#1baf7a",
          spend=22000, impressions=1798000, cpm=12.24, clicks=37600,
-         conversionsLast=5880, conversionsIncr=1470, halfSaturationSpend=20000,
+         conversionsLast=5880, halfSaturationSpend=20000,
          reach=460000, note="Cheapest per conversion, but the list is finite."),
 ]
 for c in CHANNELS:
+    # Incremental conversions are DERIVED from the lift point estimate, not typed
+    # in separately — so the ratio on the page and the test result cannot diverge.
+    lift = LIFT[c["key"]]
+    c["lift"] = lift
+    c["conversionsIncr"] = round(c["conversionsLast"] * lift["point"])
+    c["conversionsIncrLow"] = round(c["conversionsLast"] * lift["ciLow"])
+    c["conversionsIncrHigh"] = round(c["conversionsLast"] * lift["ciHigh"])
     # Hill response curve: conversions(s) = Cmax*s/(K+s). K is the fitted
     # half-saturation spend; Cmax falls out of the observed (spend, conversions).
     K = c["halfSaturationSpend"]

@@ -1,6 +1,18 @@
 export type ChannelKey = "display" | "video" | "email";
 export type AttrModel = "last" | "incr";
 
+export interface LiftTest {
+  method: string;
+  design: string;
+  window: string;
+  controlShare: number;
+  units: string;
+  point: number;
+  ciLow: number;
+  ciHigh: number;
+  pValue: string;
+}
+
 export interface Channel {
   key: ChannelKey;
   label: string;
@@ -12,6 +24,9 @@ export interface Channel {
   ctr: number;
   conversionsLast: number;
   conversionsIncr: number;
+  conversionsIncrLow: number;
+  conversionsIncrHigh: number;
+  lift: LiftTest;
   incrementalityRate: number;
   cpaLast: number;
   cpic: number;

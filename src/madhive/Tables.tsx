@@ -20,8 +20,11 @@ const ACTIONS = [
   { action: "Stop reporting email open rate",
     why: "Inflated 15–20 pts by Apple MPP. It has been driving false “our email is working” reads all year.",
     worth: "Trust", tone: "neutral", owner: "Analytics" },
-  { action: "Re-run the lift test in 6 weeks",
-    why: "Incrementality shifts as the mix changes. These ratios have a shelf life.",
+  { action: "Buy a better-powered video lift test before the full budget move",
+    why: "Video's lift is measured on 18 DMA pairs, so its interval is 24 points wide. The right increase is anywhere from +$21K to +$117K. Stage the move: commit what is safe at the bottom of the interval, test, then commit the rest.",
+    worth: "de-risks $95K", tone: "good", owner: "Analytics" },
+  { action: "Re-run all three lift tests quarterly",
+    why: "Incrementality shifts with creative, season and saturation. These ratios have a shelf life.",
     worth: "—", tone: "neutral", owner: "Analytics" },
 ];
 

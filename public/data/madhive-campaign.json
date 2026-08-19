@@ -65,17 +65,30 @@
    "cpm": 4.9,
    "clicks": 27184,
    "conversionsLast": 3910,
-   "conversionsIncr": 1055,
    "halfSaturationSpend": 150000,
    "reach": 1240000,
    "note": "64% of spend is retargeting \u2014 that's why lift is low.",
-   "maxConversions": 2124.3,
-   "marginalCpic": 278.69,
-   "floorCpic": 70.61,
+   "lift": {
+    "method": "Ghost bids",
+    "design": "Control users entered the auction and were recorded as won, then served nothing. Matched on targeting and auction dynamics.",
+    "window": "4 weeks, 22 Jun \u2013 19 Jul 2026",
+    "controlShare": 0.1,
+    "units": "30.2M impressions, user-level randomisation",
+    "point": 0.27,
+    "ciLow": 0.241,
+    "ciHigh": 0.302,
+    "pValue": "<0.001"
+   },
+   "conversionsIncr": 1056,
+   "conversionsIncrLow": 942,
+   "conversionsIncrHigh": 1181,
+   "maxConversions": 2126.3,
+   "marginalCpic": 278.43,
+   "floorCpic": 70.55,
    "ctr": 0.0009,
    "incrementalityRate": 0.27,
    "cpaLast": 37.85,
-   "cpic": 140.28,
+   "cpic": 140.15,
    "frequency": 24.4
   },
   {
@@ -87,17 +100,30 @@
    "cpm": 22.4,
    "clicks": 9640,
    "conversionsLast": 4240,
-   "conversionsIncr": 3620,
    "halfSaturationSpend": 1000000,
    "reach": 742000,
    "note": "The only channel buying genuinely new reach.",
-   "maxConversions": 19223.4,
-   "marginalCpic": 78.96,
-   "floorCpic": 52.02,
+   "lift": {
+    "method": "Matched-market geo holdout",
+    "design": "18 matched DMA pairs, channel dark in one of each pair. Household-level withholding is not possible across CTV publishers.",
+    "window": "4 weeks, 22 Jun \u2013 19 Jul 2026",
+    "controlShare": 0.5,
+    "units": "18 matched DMA pairs \u2014 only 18 units of randomisation",
+    "point": 0.854,
+    "ciLow": 0.718,
+    "ciHigh": 0.96,
+    "pValue": "0.003"
+   },
+   "conversionsIncr": 3621,
+   "conversionsIncrLow": 3044,
+   "conversionsIncrHigh": 4070,
+   "maxConversions": 19228.8,
+   "marginalCpic": 78.93,
+   "floorCpic": 52.01,
    "ctr": 0.00093,
    "incrementalityRate": 0.854,
    "cpaLast": 54.72,
-   "cpic": 64.09,
+   "cpic": 64.07,
    "frequency": 14.0
   },
   {
@@ -109,10 +135,23 @@
    "cpm": 12.24,
    "clicks": 37600,
    "conversionsLast": 5880,
-   "conversionsIncr": 1470,
    "halfSaturationSpend": 20000,
    "reach": 460000,
    "note": "Cheapest per conversion, but the list is finite.",
+   "lift": {
+    "method": "Randomised list holdout",
+    "design": "8% of subscribers withheld from every send in the window, randomised at the subscriber level and re-randomised each send.",
+    "window": "4 weeks, 22 Jun \u2013 19 Jul 2026",
+    "controlShare": 0.08,
+    "units": "460K subscribers, subscriber-level randomisation",
+    "point": 0.25,
+    "ciLow": 0.214,
+    "ciHigh": 0.287,
+    "pValue": "<0.001"
+   },
+   "conversionsIncr": 1470,
+   "conversionsIncrLow": 1258,
+   "conversionsIncrHigh": 1688,
    "maxConversions": 2806.4,
    "marginalCpic": 31.43,
    "floorCpic": 7.13,
@@ -130,7 +169,7 @@
     "spend": 5067.89,
     "impressions": 1034261,
     "conversionsLast": 133.9,
-    "conversionsIncr": 36.1
+    "conversionsIncr": 36.2
    },
    "video": {
     "spend": 7390.34,
@@ -157,7 +196,7 @@
     "spend": 7006.69,
     "impressions": 312795,
     "conversionsLast": 128.1,
-    "conversionsIncr": 109.3
+    "conversionsIncr": 109.4
    },
    "email": {
     "spend": 1759.22,
@@ -172,7 +211,7 @@
     "spend": 4647.73,
     "impressions": 948513,
     "conversionsLast": 122.8,
-    "conversionsIncr": 33.1
+    "conversionsIncr": 33.2
    },
    "video": {
     "spend": 6375.48,
@@ -220,7 +259,7 @@
     "spend": 7551.42,
     "impressions": 337112,
     "conversionsLast": 138.0,
-    "conversionsIncr": 117.8
+    "conversionsIncr": 117.9
    },
    "email": {
     "spend": 1921.48,
@@ -256,7 +295,7 @@
     "spend": 5389.39,
     "impressions": 1099872,
     "conversionsLast": 142.4,
-    "conversionsIncr": 38.4
+    "conversionsIncr": 38.5
    },
    "video": {
     "spend": 7793.8,
@@ -277,7 +316,7 @@
     "spend": 4842.5,
     "impressions": 988264,
     "conversionsLast": 127.9,
-    "conversionsIncr": 34.5
+    "conversionsIncr": 34.6
    },
    "video": {
     "spend": 7510.81,
@@ -298,7 +337,7 @@
     "spend": 5000.99,
     "impressions": 1020608,
     "conversionsLast": 132.1,
-    "conversionsIncr": 35.6
+    "conversionsIncr": 35.7
    },
    "video": {
     "spend": 7466.24,
@@ -319,13 +358,13 @@
     "spend": 4733.78,
     "impressions": 966075,
     "conversionsLast": 125.1,
-    "conversionsIncr": 33.7
+    "conversionsIncr": 33.8
    },
    "video": {
     "spend": 6777.27,
     "impressions": 302552,
     "conversionsLast": 123.9,
-    "conversionsIncr": 105.7
+    "conversionsIncr": 105.8
    },
    "email": {
     "spend": 201.43,
@@ -361,13 +400,13 @@
     "spend": 4872.17,
     "impressions": 994318,
     "conversionsLast": 128.7,
-    "conversionsIncr": 34.7
+    "conversionsIncr": 34.8
    },
    "video": {
     "spend": 7768.69,
     "impressions": 346812,
     "conversionsLast": 142.0,
-    "conversionsIncr": 121.2
+    "conversionsIncr": 121.3
    },
    "email": {
     "spend": 1970.24,
@@ -403,7 +442,7 @@
     "spend": 5475.78,
     "impressions": 1117502,
     "conversionsLast": 144.7,
-    "conversionsIncr": 39.0
+    "conversionsIncr": 39.1
    },
    "video": {
     "spend": 8145.58,
@@ -472,7 +511,7 @@
     "spend": 7276.53,
     "impressions": 324841,
     "conversionsLast": 133.0,
-    "conversionsIncr": 113.5
+    "conversionsIncr": 113.6
    },
    "email": {
     "spend": 204.97,
@@ -487,7 +526,7 @@
     "spend": 4523.76,
     "impressions": 923214,
     "conversionsLast": 119.5,
-    "conversionsIncr": 32.2
+    "conversionsIncr": 32.3
    },
    "video": {
     "spend": 7068.17,
@@ -508,13 +547,13 @@
     "spend": 4662.27,
     "impressions": 951481,
     "conversionsLast": 123.2,
-    "conversionsIncr": 33.2
+    "conversionsIncr": 33.3
    },
    "video": {
     "spend": 7853.55,
     "impressions": 350600,
     "conversionsLast": 143.5,
-    "conversionsIncr": 122.5
+    "conversionsIncr": 122.6
    },
    "email": {
     "spend": 1980.57,
@@ -571,7 +610,7 @@
     "spend": 4634.22,
     "impressions": 945757,
     "conversionsLast": 122.4,
-    "conversionsIncr": 33.0
+    "conversionsIncr": 33.1
    },
    "video": {
     "spend": 7649.75,
@@ -598,7 +637,7 @@
     "spend": 7968.23,
     "impressions": 355719,
     "conversionsLast": 145.6,
-    "conversionsIncr": 124.3
+    "conversionsIncr": 124.4
    },
    "email": {
     "spend": 1936.47,
@@ -613,13 +652,13 @@
     "spend": 4731.58,
     "impressions": 965625,
     "conversionsLast": 125.0,
-    "conversionsIncr": 33.7
+    "conversionsIncr": 33.8
    },
    "video": {
     "spend": 7781.4,
     "impressions": 347379,
     "conversionsLast": 142.2,
-    "conversionsIncr": 121.4
+    "conversionsIncr": 121.5
    },
    "email": {
     "spend": 212.21,
@@ -682,7 +721,7 @@
     "spend": 9243.15,
     "impressions": 412635,
     "conversionsLast": 168.9,
-    "conversionsIncr": 144.2
+    "conversionsIncr": 144.3
    },
    "email": {
     "spend": 258.87,
@@ -703,7 +742,7 @@
     "spend": 9293.76,
     "impressions": 414894,
     "conversionsLast": 169.9,
-    "conversionsIncr": 145.0
+    "conversionsIncr": 145.1
    },
    "email": {
     "spend": 249.04,
@@ -718,13 +757,13 @@
     "spend": 4674.46,
     "impressions": 953969,
     "conversionsLast": 123.5,
-    "conversionsIncr": 33.3
+    "conversionsIncr": 33.4
    },
    "video": {
     "spend": 7871.09,
     "impressions": 351383,
     "conversionsLast": 143.9,
-    "conversionsIncr": 122.8
+    "conversionsIncr": 122.9
    },
    "email": {
     "spend": 224.46,
@@ -745,7 +784,7 @@
     "spend": 8019.54,
     "impressions": 358010,
     "conversionsLast": 146.6,
-    "conversionsIncr": 125.1
+    "conversionsIncr": 125.2
    },
    "email": {
     "spend": 1937.48,
