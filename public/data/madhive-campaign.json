@@ -1,0 +1,1339 @@
+{
+ "meta": {
+  "advertiser": "Cascade Auto Group",
+  "descriptor": "4 rooftops \u00b7 Portland\u2013Vancouver DMA",
+  "flightStart": "2026-07-19",
+  "flightEnd": "2026-08-17",
+  "generatedAt": "2026-08-19T06:00:00-07:00",
+  "owner": "Media Analytics",
+  "goal": "Figure out which channels are working best so we can run more of them.",
+  "synthetic": true,
+  "sources": [
+   "Display CPM $3.12 GDN / $8.20 PMP; 72% cross-network viewability (2026)",
+   "MRC viewability: 50% of pixels for 1s (display), 2s (video)",
+   "Skippable in-stream VCR 60%+; non-skippable 90%+ (2026)",
+   "Email: 43.46% avg open inflated 15\u201320pts by Apple MPP; 2.09% click on delivered; 6.81% median CTOR; 0.46% unsubscribe"
+  ]
+ },
+ "constants": {
+  "valuePerConversion": 340,
+  "ceiling": 95,
+  "subscriberValue": 38,
+  "dedupedHouseholds": 986000
+ },
+ "channels": [
+  {
+   "key": "display",
+   "label": "Display",
+   "color": "#2a78d6",
+   "spend": 148000,
+   "impressions": 30204000,
+   "cpm": 4.9,
+   "clicks": 27184,
+   "conversionsLast": 3910,
+   "conversionsIncr": 1055,
+   "marginalCpic": 198,
+   "reach": 1240000,
+   "note": "64% of spend is retargeting \u2014 that's why lift is low.",
+   "ctr": 0.0009,
+   "incrementalityRate": 0.27,
+   "cpaLast": 37.85,
+   "cpic": 140.28,
+   "frequency": 24.4
+  },
+  {
+   "key": "video",
+   "label": "Online video",
+   "color": "#eb6834",
+   "spend": 232000,
+   "impressions": 10357000,
+   "cpm": 22.4,
+   "clicks": 9640,
+   "conversionsLast": 4240,
+   "conversionsIncr": 3620,
+   "marginalCpic": 71,
+   "reach": 742000,
+   "note": "The only channel buying genuinely new reach.",
+   "ctr": 0.00093,
+   "incrementalityRate": 0.854,
+   "cpaLast": 54.72,
+   "cpic": 64.09,
+   "frequency": 14.0
+  },
+  {
+   "key": "email",
+   "label": "Email",
+   "color": "#1baf7a",
+   "spend": 22000,
+   "impressions": 1798000,
+   "cpm": 12.24,
+   "clicks": 37600,
+   "conversionsLast": 5880,
+   "conversionsIncr": 1470,
+   "marginalCpic": 31,
+   "reach": 460000,
+   "note": "Cheapest per conversion, but the list is finite.",
+   "ctr": 0.02091,
+   "incrementalityRate": 0.25,
+   "cpaLast": 3.74,
+   "cpic": 14.97,
+   "frequency": 3.9
+  }
+ ],
+ "daily": [
+  {
+   "date": "2026-07-19",
+   "display": {
+    "spend": 5067.89,
+    "impressions": 1034261,
+    "conversionsLast": 133.9,
+    "conversionsIncr": 36.1
+   },
+   "video": {
+    "spend": 7390.34,
+    "impressions": 329921,
+    "conversionsLast": 135.1,
+    "conversionsIncr": 115.3
+   },
+   "email": {
+    "spend": 235.54,
+    "impressions": 19250,
+    "conversionsLast": 63.0,
+    "conversionsIncr": 15.7
+   }
+  },
+  {
+   "date": "2026-07-20",
+   "display": {
+    "spend": 5104.36,
+    "impressions": 1041704,
+    "conversionsLast": 134.9,
+    "conversionsIncr": 36.4
+   },
+   "video": {
+    "spend": 7006.69,
+    "impressions": 312795,
+    "conversionsLast": 128.1,
+    "conversionsIncr": 109.3
+   },
+   "email": {
+    "spend": 1759.22,
+    "impressions": 143776,
+    "conversionsLast": 470.2,
+    "conversionsIncr": 117.5
+   }
+  },
+  {
+   "date": "2026-07-21",
+   "display": {
+    "spend": 4647.73,
+    "impressions": 948513,
+    "conversionsLast": 122.8,
+    "conversionsIncr": 33.1
+   },
+   "video": {
+    "spend": 6375.48,
+    "impressions": 284616,
+    "conversionsLast": 116.5,
+    "conversionsIncr": 99.5
+   },
+   "email": {
+    "spend": 202.42,
+    "impressions": 16543,
+    "conversionsLast": 54.1,
+    "conversionsIncr": 13.5
+   }
+  },
+  {
+   "date": "2026-07-22",
+   "display": {
+    "spend": 4573.32,
+    "impressions": 933329,
+    "conversionsLast": 120.8,
+    "conversionsIncr": 32.6
+   },
+   "video": {
+    "spend": 6809.92,
+    "impressions": 304010,
+    "conversionsLast": 124.5,
+    "conversionsIncr": 106.3
+   },
+   "email": {
+    "spend": 222.95,
+    "impressions": 18221,
+    "conversionsLast": 59.6,
+    "conversionsIncr": 14.9
+   }
+  },
+  {
+   "date": "2026-07-23",
+   "display": {
+    "spend": 5102.02,
+    "impressions": 1041226,
+    "conversionsLast": 134.8,
+    "conversionsIncr": 36.4
+   },
+   "video": {
+    "spend": 7551.42,
+    "impressions": 337112,
+    "conversionsLast": 138.0,
+    "conversionsIncr": 117.8
+   },
+   "email": {
+    "spend": 1921.48,
+    "impressions": 157037,
+    "conversionsLast": 513.6,
+    "conversionsIncr": 128.4
+   }
+  },
+  {
+   "date": "2026-07-24",
+   "display": {
+    "spend": 5618.87,
+    "impressions": 1146706,
+    "conversionsLast": 148.4,
+    "conversionsIncr": 40.1
+   },
+   "video": {
+    "spend": 7837.05,
+    "impressions": 349864,
+    "conversionsLast": 143.2,
+    "conversionsIncr": 122.3
+   },
+   "email": {
+    "spend": 233.12,
+    "impressions": 19052,
+    "conversionsLast": 62.3,
+    "conversionsIncr": 15.6
+   }
+  },
+  {
+   "date": "2026-07-25",
+   "display": {
+    "spend": 5389.39,
+    "impressions": 1099872,
+    "conversionsLast": 142.4,
+    "conversionsIncr": 38.4
+   },
+   "video": {
+    "spend": 7793.8,
+    "impressions": 347933,
+    "conversionsLast": 142.4,
+    "conversionsIncr": 121.6
+   },
+   "email": {
+    "spend": 248.28,
+    "impressions": 20291,
+    "conversionsLast": 66.4,
+    "conversionsIncr": 16.6
+   }
+  },
+  {
+   "date": "2026-07-26",
+   "display": {
+    "spend": 4842.5,
+    "impressions": 988264,
+    "conversionsLast": 127.9,
+    "conversionsIncr": 34.5
+   },
+   "video": {
+    "spend": 7510.81,
+    "impressions": 335300,
+    "conversionsLast": 137.3,
+    "conversionsIncr": 117.2
+   },
+   "email": {
+    "spend": 237.9,
+    "impressions": 19443,
+    "conversionsLast": 63.6,
+    "conversionsIncr": 15.9
+   }
+  },
+  {
+   "date": "2026-07-27",
+   "display": {
+    "spend": 5000.99,
+    "impressions": 1020608,
+    "conversionsLast": 132.1,
+    "conversionsIncr": 35.6
+   },
+   "video": {
+    "spend": 7466.24,
+    "impressions": 333310,
+    "conversionsLast": 136.5,
+    "conversionsIncr": 116.5
+   },
+   "email": {
+    "spend": 1829.53,
+    "impressions": 149523,
+    "conversionsLast": 489.0,
+    "conversionsIncr": 122.2
+   }
+  },
+  {
+   "date": "2026-07-28",
+   "display": {
+    "spend": 4733.78,
+    "impressions": 966075,
+    "conversionsLast": 125.1,
+    "conversionsIncr": 33.7
+   },
+   "video": {
+    "spend": 6777.27,
+    "impressions": 302552,
+    "conversionsLast": 123.9,
+    "conversionsIncr": 105.7
+   },
+   "email": {
+    "spend": 201.43,
+    "impressions": 16462,
+    "conversionsLast": 53.8,
+    "conversionsIncr": 13.5
+   }
+  },
+  {
+   "date": "2026-07-29",
+   "display": {
+    "spend": 4500.5,
+    "impressions": 918467,
+    "conversionsLast": 118.9,
+    "conversionsIncr": 32.1
+   },
+   "video": {
+    "spend": 6887.35,
+    "impressions": 307467,
+    "conversionsLast": 125.9,
+    "conversionsIncr": 107.5
+   },
+   "email": {
+    "spend": 218.24,
+    "impressions": 17836,
+    "conversionsLast": 58.3,
+    "conversionsIncr": 14.6
+   }
+  },
+  {
+   "date": "2026-07-30",
+   "display": {
+    "spend": 4872.17,
+    "impressions": 994318,
+    "conversionsLast": 128.7,
+    "conversionsIncr": 34.7
+   },
+   "video": {
+    "spend": 7768.69,
+    "impressions": 346812,
+    "conversionsLast": 142.0,
+    "conversionsIncr": 121.2
+   },
+   "email": {
+    "spend": 1970.24,
+    "impressions": 161023,
+    "conversionsLast": 526.6,
+    "conversionsIncr": 131.6
+   }
+  },
+  {
+   "date": "2026-07-31",
+   "display": {
+    "spend": 5593.03,
+    "impressions": 1141432,
+    "conversionsLast": 147.8,
+    "conversionsIncr": 39.9
+   },
+   "video": {
+    "spend": 8415.53,
+    "impressions": 375688,
+    "conversionsLast": 153.8,
+    "conversionsIncr": 131.3
+   },
+   "email": {
+    "spend": 240.66,
+    "impressions": 19669,
+    "conversionsLast": 64.3,
+    "conversionsIncr": 16.1
+   }
+  },
+  {
+   "date": "2026-08-01",
+   "display": {
+    "spend": 5475.78,
+    "impressions": 1117502,
+    "conversionsLast": 144.7,
+    "conversionsIncr": 39.0
+   },
+   "video": {
+    "spend": 8145.58,
+    "impressions": 363637,
+    "conversionsLast": 148.9,
+    "conversionsIncr": 127.1
+   },
+   "email": {
+    "spend": 243.63,
+    "impressions": 19911,
+    "conversionsLast": 65.1,
+    "conversionsIncr": 16.3
+   }
+  },
+  {
+   "date": "2026-08-02",
+   "display": {
+    "spend": 4686.64,
+    "impressions": 956455,
+    "conversionsLast": 123.8,
+    "conversionsIncr": 33.4
+   },
+   "video": {
+    "spend": 7562.12,
+    "impressions": 337590,
+    "conversionsLast": 138.2,
+    "conversionsIncr": 118.0
+   },
+   "email": {
+    "spend": 235.52,
+    "impressions": 19249,
+    "conversionsLast": 62.9,
+    "conversionsIncr": 15.7
+   }
+  },
+  {
+   "date": "2026-08-03",
+   "display": {
+    "spend": 4811.65,
+    "impressions": 981966,
+    "conversionsLast": 127.1,
+    "conversionsIncr": 34.3
+   },
+   "video": {
+    "spend": 7796.89,
+    "impressions": 348070,
+    "conversionsLast": 142.5,
+    "conversionsIncr": 121.7
+   },
+   "email": {
+    "spend": 1896.43,
+    "impressions": 154990,
+    "conversionsLast": 506.9,
+    "conversionsIncr": 126.7
+   }
+  },
+  {
+   "date": "2026-08-04",
+   "display": {
+    "spend": 4776.69,
+    "impressions": 974831,
+    "conversionsLast": 126.2,
+    "conversionsIncr": 34.1
+   },
+   "video": {
+    "spend": 7276.53,
+    "impressions": 324841,
+    "conversionsLast": 133.0,
+    "conversionsIncr": 113.5
+   },
+   "email": {
+    "spend": 204.97,
+    "impressions": 16751,
+    "conversionsLast": 54.8,
+    "conversionsIncr": 13.7
+   }
+  },
+  {
+   "date": "2026-08-05",
+   "display": {
+    "spend": 4523.76,
+    "impressions": 923214,
+    "conversionsLast": 119.5,
+    "conversionsIncr": 32.2
+   },
+   "video": {
+    "spend": 7068.17,
+    "impressions": 315539,
+    "conversionsLast": 129.2,
+    "conversionsIncr": 110.3
+   },
+   "email": {
+    "spend": 212.73,
+    "impressions": 17386,
+    "conversionsLast": 56.9,
+    "conversionsIncr": 14.2
+   }
+  },
+  {
+   "date": "2026-08-06",
+   "display": {
+    "spend": 4662.27,
+    "impressions": 951481,
+    "conversionsLast": 123.2,
+    "conversionsIncr": 33.2
+   },
+   "video": {
+    "spend": 7853.55,
+    "impressions": 350600,
+    "conversionsLast": 143.5,
+    "conversionsIncr": 122.5
+   },
+   "email": {
+    "spend": 1980.57,
+    "impressions": 161867,
+    "conversionsLast": 529.4,
+    "conversionsIncr": 132.3
+   }
+  },
+  {
+   "date": "2026-08-07",
+   "display": {
+    "spend": 5453.35,
+    "impressions": 1112926,
+    "conversionsLast": 144.1,
+    "conversionsIncr": 38.9
+   },
+   "video": {
+    "spend": 8912.86,
+    "impressions": 397890,
+    "conversionsLast": 162.9,
+    "conversionsIncr": 139.1
+   },
+   "email": {
+    "spend": 250.39,
+    "impressions": 20464,
+    "conversionsLast": 66.9,
+    "conversionsIncr": 16.7
+   }
+  },
+  {
+   "date": "2026-08-08",
+   "display": {
+    "spend": 5570.1,
+    "impressions": 1136752,
+    "conversionsLast": 147.2,
+    "conversionsIncr": 39.7
+   },
+   "video": {
+    "spend": 8669.81,
+    "impressions": 387040,
+    "conversionsLast": 158.4,
+    "conversionsIncr": 135.3
+   },
+   "email": {
+    "spend": 243.61,
+    "impressions": 19910,
+    "conversionsLast": 65.1,
+    "conversionsIncr": 16.3
+   }
+  },
+  {
+   "date": "2026-08-09",
+   "display": {
+    "spend": 4634.22,
+    "impressions": 945757,
+    "conversionsLast": 122.4,
+    "conversionsIncr": 33.0
+   },
+   "video": {
+    "spend": 7649.75,
+    "impressions": 341502,
+    "conversionsLast": 139.8,
+    "conversionsIncr": 119.4
+   },
+   "email": {
+    "spend": 230.04,
+    "impressions": 18801,
+    "conversionsLast": 61.5,
+    "conversionsIncr": 15.4
+   }
+  },
+  {
+   "date": "2026-08-10",
+   "display": {
+    "spend": 4589.93,
+    "impressions": 936717,
+    "conversionsLast": 121.3,
+    "conversionsIncr": 32.7
+   },
+   "video": {
+    "spend": 7968.23,
+    "impressions": 355719,
+    "conversionsLast": 145.6,
+    "conversionsIncr": 124.3
+   },
+   "email": {
+    "spend": 1936.47,
+    "impressions": 158263,
+    "conversionsLast": 517.6,
+    "conversionsIncr": 129.4
+   }
+  },
+  {
+   "date": "2026-08-11",
+   "display": {
+    "spend": 4731.58,
+    "impressions": 965625,
+    "conversionsLast": 125.0,
+    "conversionsIncr": 33.7
+   },
+   "video": {
+    "spend": 7781.4,
+    "impressions": 347379,
+    "conversionsLast": 142.2,
+    "conversionsIncr": 121.4
+   },
+   "email": {
+    "spend": 212.21,
+    "impressions": 17344,
+    "conversionsLast": 56.7,
+    "conversionsIncr": 14.2
+   }
+  },
+  {
+   "date": "2026-08-12",
+   "display": {
+    "spend": 4602.03,
+    "impressions": 939187,
+    "conversionsLast": 121.6,
+    "conversionsIncr": 32.8
+   },
+   "video": {
+    "spend": 7406.96,
+    "impressions": 330663,
+    "conversionsLast": 135.4,
+    "conversionsIncr": 115.6
+   },
+   "email": {
+    "spend": 209.45,
+    "impressions": 17118,
+    "conversionsLast": 56.0,
+    "conversionsIncr": 14.0
+   }
+  },
+  {
+   "date": "2026-08-13",
+   "display": {
+    "spend": 4530.73,
+    "impressions": 924636,
+    "conversionsLast": 119.7,
+    "conversionsIncr": 32.3
+   },
+   "video": {
+    "spend": 7890.01,
+    "impressions": 352228,
+    "conversionsLast": 144.2,
+    "conversionsIncr": 123.1
+   },
+   "email": {
+    "spend": 1953.09,
+    "impressions": 159621,
+    "conversionsLast": 522.0,
+    "conversionsIncr": 130.5
+   }
+  },
+  {
+   "date": "2026-08-14",
+   "display": {
+    "spend": 5229.81,
+    "impressions": 1067304,
+    "conversionsLast": 138.2,
+    "conversionsIncr": 37.3
+   },
+   "video": {
+    "spend": 9243.15,
+    "impressions": 412635,
+    "conversionsLast": 168.9,
+    "conversionsIncr": 144.2
+   },
+   "email": {
+    "spend": 258.87,
+    "impressions": 21157,
+    "conversionsLast": 69.2,
+    "conversionsIncr": 17.3
+   }
+  },
+  {
+   "date": "2026-08-15",
+   "display": {
+    "spend": 5598.85,
+    "impressions": 1142620,
+    "conversionsLast": 147.9,
+    "conversionsIncr": 39.9
+   },
+   "video": {
+    "spend": 9293.76,
+    "impressions": 414894,
+    "conversionsLast": 169.9,
+    "conversionsIncr": 145.0
+   },
+   "email": {
+    "spend": 249.04,
+    "impressions": 20353,
+    "conversionsLast": 66.6,
+    "conversionsIncr": 16.6
+   }
+  },
+  {
+   "date": "2026-08-16",
+   "display": {
+    "spend": 4674.46,
+    "impressions": 953969,
+    "conversionsLast": 123.5,
+    "conversionsIncr": 33.3
+   },
+   "video": {
+    "spend": 7871.09,
+    "impressions": 351383,
+    "conversionsLast": 143.9,
+    "conversionsIncr": 122.8
+   },
+   "email": {
+    "spend": 224.46,
+    "impressions": 18344,
+    "conversionsLast": 60.0,
+    "conversionsIncr": 15.0
+   }
+  },
+  {
+   "date": "2026-08-17",
+   "display": {
+    "spend": 4401.61,
+    "impressions": 898284,
+    "conversionsLast": 116.3,
+    "conversionsIncr": 31.4
+   },
+   "video": {
+    "spend": 8019.54,
+    "impressions": 358010,
+    "conversionsLast": 146.6,
+    "conversionsIncr": 125.1
+   },
+   "email": {
+    "spend": 1937.48,
+    "impressions": 158345,
+    "conversionsLast": 517.8,
+    "conversionsIncr": 129.5
+   }
+  }
+ ],
+ "marginal": {
+  "display": [
+   {
+    "spendK": 30,
+    "multiple": 0.203,
+    "marginalCpic": 52,
+    "isCurrent": false
+   },
+   {
+    "spendK": 60,
+    "multiple": 0.405,
+    "marginalCpic": 79,
+    "isCurrent": false
+   },
+   {
+    "spendK": 100,
+    "multiple": 0.676,
+    "marginalCpic": 128,
+    "isCurrent": false
+   },
+   {
+    "spendK": 148,
+    "multiple": 1.0,
+    "marginalCpic": 198,
+    "isCurrent": true
+   },
+   {
+    "spendK": 200,
+    "multiple": 1.351,
+    "marginalCpic": 286,
+    "isCurrent": false
+   }
+  ],
+  "video": [
+   {
+    "spendK": 100,
+    "multiple": 0.431,
+    "marginalCpic": 38,
+    "isCurrent": false
+   },
+   {
+    "spendK": 160,
+    "multiple": 0.69,
+    "marginalCpic": 49,
+    "isCurrent": false
+   },
+   {
+    "spendK": 232,
+    "multiple": 1.0,
+    "marginalCpic": 71,
+    "isCurrent": true
+   },
+   {
+    "spendK": 311,
+    "multiple": 1.341,
+    "marginalCpic": 92,
+    "isCurrent": false
+   },
+   {
+    "spendK": 380,
+    "multiple": 1.638,
+    "marginalCpic": 124,
+    "isCurrent": false
+   }
+  ],
+  "email": [
+   {
+    "spendK": 10,
+    "multiple": 0.455,
+    "marginalCpic": 12,
+    "isCurrent": false
+   },
+   {
+    "spendK": 16,
+    "multiple": 0.727,
+    "marginalCpic": 19,
+    "isCurrent": false
+   },
+   {
+    "spendK": 22,
+    "multiple": 1.0,
+    "marginalCpic": 31,
+    "isCurrent": true
+   },
+   {
+    "spendK": 28,
+    "multiple": 1.273,
+    "marginalCpic": 68,
+    "isCurrent": false
+   },
+   {
+    "spendK": 34,
+    "multiple": 1.545,
+    "marginalCpic": 147,
+    "isCurrent": false
+   }
+  ]
+ },
+ "reallocation": [
+  {
+   "channel": "Display",
+   "key": "display",
+   "now": 148000,
+   "proposed": 65000,
+   "rationale": "Marginal cost is $198 \u2014 more than double the ceiling. Cut, don't kill: at $65K it drops back under."
+  },
+  {
+   "channel": "Online video",
+   "key": "video",
+   "now": 232000,
+   "proposed": 311000,
+   "rationale": "Marginal cost is $71 with headroom to about 1.35x current spend before it hits the ceiling."
+  },
+  {
+   "channel": "Email",
+   "key": "email",
+   "now": 22000,
+   "proposed": 26000,
+   "rationale": "Hold send frequency at 4/month. The extra budget buys segmentation and creative, not volume."
+  }
+ ],
+ "video": {
+  "quartiles": [
+   {
+    "stage": "Start",
+    "nonskip": 100.0,
+    "skip": 100.0
+   },
+   {
+    "stage": "25%",
+    "nonskip": 97.8,
+    "skip": 71.4
+   },
+   {
+    "stage": "50%",
+    "nonskip": 96.1,
+    "skip": 66.2
+   },
+   {
+    "stage": "75%",
+    "nonskip": 95.2,
+    "skip": 63.9
+   },
+   {
+    "stage": "100%",
+    "nonskip": 94.6,
+    "skip": 62.8
+   }
+  ],
+  "types": [
+   {
+    "type": "Non-skippable + bumper",
+    "spend": 109200,
+    "impressions": 3900000,
+    "cpm": 28.0,
+    "vcr": 94.6,
+    "cpcv": 0.03,
+    "viewability": 78.4,
+    "cpic": 58.1
+   },
+   {
+    "type": "Skippable in-stream",
+    "spend": 122800,
+    "impressions": 6457000,
+    "cpm": 19.02,
+    "vcr": 62.8,
+    "cpcv": 0.03,
+    "viewability": 66.9,
+    "cpic": 71.4
+   }
+  ],
+  "dropoff": [
+   {
+    "stage": "Start \u2192 25%",
+    "nonskip": -2.2,
+    "skip": -28.6
+   },
+   {
+    "stage": "25% \u2192 50%",
+    "nonskip": -1.7,
+    "skip": -5.2
+   },
+   {
+    "stage": "50% \u2192 75%",
+    "nonskip": -0.9,
+    "skip": -2.3
+   },
+   {
+    "stage": "75% \u2192 100%",
+    "nonskip": -0.6,
+    "skip": -1.1
+   }
+  ]
+ },
+ "email": {
+  "funnel": [
+   {
+    "stage": "Sent",
+    "value": 1840000,
+    "note": null,
+    "suspect": false
+   },
+   {
+    "stage": "Delivered",
+    "value": 1798000,
+    "note": "97.7% of sent",
+    "suspect": false
+   },
+   {
+    "stage": "Opens \u2014 reported",
+    "value": 782000,
+    "note": "43.5% \u00b7 inflated by Apple MPP",
+    "suspect": true
+   },
+   {
+    "stage": "Opens \u2014 modelled human",
+    "value": 502000,
+    "note": "27.9% \u00b7 what we actually use",
+    "suspect": false
+   },
+   {
+    "stage": "Clicks",
+    "value": 37600,
+    "note": "2.09% of delivered",
+    "suspect": false
+   },
+   {
+    "stage": "Conversions",
+    "value": 5880,
+    "note": "last-touch",
+    "suspect": false
+   },
+   {
+    "stage": "Incremental",
+    "value": 1470,
+    "note": "25% of last-touch",
+    "suspect": false
+   }
+  ],
+  "listHealth": [
+   {
+    "metric": "Active subscribers",
+    "value": 460000,
+    "benchmark": null
+   },
+   {
+    "metric": "New subscribers",
+    "value": 18400,
+    "benchmark": null
+   },
+   {
+    "metric": "Unsubscribes",
+    "value": -8272,
+    "benchmark": "0.46%"
+   },
+   {
+    "metric": "Bounced / cleaned",
+    "value": -2100,
+    "benchmark": "2.3%"
+   },
+   {
+    "metric": "Net monthly change",
+    "value": 8028,
+    "benchmark": null
+   }
+  ],
+  "frequency": [
+   {
+    "sends": 2,
+    "incremental": 890,
+    "unsubRate": 0.31,
+    "netList": 12900
+   },
+   {
+    "sends": 3,
+    "incremental": 1240,
+    "unsubRate": 0.38,
+    "netList": 10800
+   },
+   {
+    "sends": 4,
+    "incremental": 1470,
+    "unsubRate": 0.46,
+    "netList": 8028
+   },
+   {
+    "sends": 5,
+    "incremental": 1588,
+    "unsubRate": 0.81,
+    "netList": 1600
+   },
+   {
+    "sends": 6,
+    "incremental": 1642,
+    "unsubRate": 1.34,
+    "netList": -8900
+   },
+   {
+    "sends": 8,
+    "incremental": 1655,
+    "unsubRate": 2.21,
+    "netList": -28400
+   }
+  ]
+ },
+ "display": {
+  "viewability": [
+   {
+    "marketplace": "Private marketplace",
+    "rate": 84.6,
+    "spend": 52100,
+    "isBenchmark": false,
+    "wasted": 8023
+   },
+   {
+    "marketplace": "Native placements",
+    "rate": 81.0,
+    "spend": 16500,
+    "isBenchmark": false,
+    "wasted": 3135
+   },
+   {
+    "marketplace": "Cross-network avg 2026",
+    "rate": 72.0,
+    "spend": null,
+    "isBenchmark": true,
+    "wasted": null
+   },
+   {
+    "marketplace": "Open exchange",
+    "rate": 61.2,
+    "spend": 79400,
+    "isBenchmark": false,
+    "wasted": 30807
+   }
+  ],
+  "metrics": [
+   {
+    "metric": "Click-through rate",
+    "value": "0.09%",
+    "reads": "In line with display norms. Not comparable to email's 2.09% \u2014 different denominator, different audience."
+   },
+   {
+    "metric": "Avg time in view",
+    "value": "6.2s",
+    "reads": "Healthy. Impressions that are viewable are getting real dwell."
+   },
+   {
+    "metric": "Invalid traffic (IVT)",
+    "value": "2.1%",
+    "reads": "Under the 3% action threshold. Not the problem here."
+   },
+   {
+    "metric": "Retargeting share of spend",
+    "value": "64%",
+    "reads": "The reason incrementality is only 27%. We pay to reach people already in-market."
+   }
+  ]
+ },
+ "creatives": [
+  {
+   "id": "em-1",
+   "channel": "email",
+   "name": "Service reminder \u2014 45k mile",
+   "spend": 5200,
+   "units": 412000,
+   "completion": null,
+   "conversions": 2140,
+   "cpic": 12.4,
+   "verdict": "scale",
+   "placements": [
+    {
+     "name": "Segment: owners 30\u201350k mi",
+     "spend": 3100,
+     "units": 248000,
+     "conversions": 1380,
+     "cpic": 2.25
+    },
+    {
+     "name": "Segment: lapsed 12mo+",
+     "spend": 2100,
+     "units": 164000,
+     "conversions": 760,
+     "cpic": 2.76
+    }
+   ]
+  },
+  {
+   "id": "em-2",
+   "channel": "email",
+   "name": "Lease-end offer",
+   "spend": 6800,
+   "units": 388000,
+   "completion": null,
+   "conversions": 1610,
+   "cpic": 16.8,
+   "verdict": "scale",
+   "placements": [
+    {
+     "name": "Lease ending \u226490d",
+     "spend": 4200,
+     "units": 201000,
+     "conversions": 1090,
+     "cpic": 3.85
+    },
+    {
+     "name": "Lease ending 91\u2013180d",
+     "spend": 2600,
+     "units": 187000,
+     "conversions": 520,
+     "cpic": 5.0
+    }
+   ]
+  },
+  {
+   "id": "vd-1",
+   "channel": "video",
+   "name": "Summer Event :15 \u2014 non-skip",
+   "spend": 64800,
+   "units": 2310000,
+   "completion": 95.1,
+   "conversions": 1290,
+   "cpic": 50.2,
+   "verdict": "scale",
+   "placements": [
+    {
+     "name": "Local broadcaster app",
+     "spend": 31200,
+     "units": 1090000,
+     "conversions": 690,
+     "cpic": 45.22
+    },
+    {
+     "name": "Premium AVOD",
+     "spend": 22400,
+     "units": 798000,
+     "conversions": 412,
+     "cpic": 54.37
+    },
+    {
+     "name": "FAST \u2014 news",
+     "spend": 11200,
+     "units": 422000,
+     "conversions": 188,
+     "cpic": 59.57
+    }
+   ]
+  },
+  {
+   "id": "vd-2",
+   "channel": "video",
+   "name": "Test Drive :30 \u2014 non-skip",
+   "spend": 44400,
+   "units": 1590000,
+   "completion": 93.8,
+   "conversions": 842,
+   "cpic": 52.7,
+   "verdict": "scale",
+   "placements": [
+    {
+     "name": "Premium AVOD",
+     "spend": 26100,
+     "units": 934000,
+     "conversions": 510,
+     "cpic": 51.18
+    },
+    {
+     "name": "FAST \u2014 entertainment",
+     "spend": 18300,
+     "units": 656000,
+     "conversions": 332,
+     "cpic": 55.12
+    }
+   ]
+  },
+  {
+   "id": "vd-3",
+   "channel": "video",
+   "name": "Brand Anthem :30 \u2014 skippable",
+   "spend": 71200,
+   "units": 3742000,
+   "completion": 61.2,
+   "conversions": 996,
+   "cpic": 71.5,
+   "verdict": "fix",
+   "placements": [
+    {
+     "name": "Web pre-roll",
+     "spend": 42800,
+     "units": 2250000,
+     "conversions": 588,
+     "cpic": 72.79
+    },
+    {
+     "name": "Mobile in-app",
+     "spend": 28400,
+     "units": 1492000,
+     "conversions": 408,
+     "cpic": 69.61
+    }
+   ]
+  },
+  {
+   "id": "vd-4",
+   "channel": "video",
+   "name": "Inventory :15 \u2014 skippable",
+   "spend": 51600,
+   "units": 2715000,
+   "completion": 64.9,
+   "conversions": 492,
+   "cpic": 104.9,
+   "verdict": "pause",
+   "placements": [
+    {
+     "name": "Web pre-roll",
+     "spend": 30900,
+     "units": 1626000,
+     "conversions": 301,
+     "cpic": 102.66
+    },
+    {
+     "name": "Mobile in-app",
+     "spend": 20700,
+     "units": 1089000,
+     "conversions": 191,
+     "cpic": 108.38
+    }
+   ]
+  },
+  {
+   "id": "dp-1",
+   "channel": "display",
+   "name": "Prospecting \u2014 in-market auto",
+   "spend": 48200,
+   "units": 10600000,
+   "completion": null,
+   "conversions": 398,
+   "cpic": 121.1,
+   "verdict": "hold",
+   "placements": [
+    {
+     "name": "PMP",
+     "spend": 29600,
+     "units": 6100000,
+     "conversions": 268,
+     "cpic": 110.45
+    },
+    {
+     "name": "Open exchange",
+     "spend": 18600,
+     "units": 4500000,
+     "conversions": 130,
+     "cpic": 143.08
+    }
+   ]
+  },
+  {
+   "id": "dp-2",
+   "channel": "display",
+   "name": "Native \u2014 model comparison",
+   "spend": 16500,
+   "units": 2704000,
+   "completion": null,
+   "conversions": 142,
+   "cpic": 116.2,
+   "verdict": "hold",
+   "placements": [
+    {
+     "name": "Native exchange",
+     "spend": 16500,
+     "units": 2704000,
+     "conversions": 142,
+     "cpic": 116.2
+    }
+   ]
+  },
+  {
+   "id": "dp-3",
+   "channel": "display",
+   "name": "Retarget \u2014 VDP abandoners",
+   "spend": 61400,
+   "units": 11800000,
+   "completion": null,
+   "conversions": 402,
+   "cpic": 152.7,
+   "verdict": "cut",
+   "placements": [
+    {
+     "name": "Open exchange",
+     "spend": 38900,
+     "units": 7900000,
+     "conversions": 231,
+     "cpic": 168.4
+    },
+    {
+     "name": "PMP",
+     "spend": 22500,
+     "units": 3900000,
+     "conversions": 171,
+     "cpic": 131.58
+    }
+   ]
+  },
+  {
+   "id": "dp-4",
+   "channel": "display",
+   "name": "Conquest \u2014 competitor owners",
+   "spend": 21900,
+   "units": 5100000,
+   "completion": null,
+   "conversions": 113,
+   "cpic": 193.8,
+   "verdict": "pause",
+   "placements": [
+    {
+     "name": "Open exchange",
+     "spend": 21900,
+     "units": 5100000,
+     "conversions": 113,
+     "cpic": 193.81
+    }
+   ]
+  }
+ ]
+}
