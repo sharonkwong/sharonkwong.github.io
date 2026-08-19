@@ -12,6 +12,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         madhive: 'madhive/index.html',
+        modeling: 'madhive/modeling/index.html',
       },
     },
   },

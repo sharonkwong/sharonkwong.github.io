@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <title>How the numbers are built — Cascade Auto Group</title>
+    <meta name="description" content="Source files to ingestion to bronze, silver, gold and the cached reporting layer — traced through the lift metric." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      (function () {
+        var KEY = "mh-stale-reload";
+        window.addEventListener("error", function (e) {
+          var t = e.target;
+          if (t && t.tagName === "SCRIPT" && !sessionStorage.getItem(KEY)) {
+            sessionStorage.setItem(KEY, "1");
+            location.replace(location.pathname + "?r=" + Date.now());
+          }
+        }, true);
+        window.addEventListener("load", function () {
+          if (document.getElementById("root").childElementCount > 0) {
+            sessionStorage.removeItem(KEY);
+          }
+        });
+      })();
+    </script>
+    <script type="module" src="/src/madhive/modeling.tsx"></script>
+  </body>
+</html>
