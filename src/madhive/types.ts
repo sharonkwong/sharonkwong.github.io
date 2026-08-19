@@ -1,5 +1,21 @@
 export type ChannelKey = "display" | "video" | "email";
 
+export interface LiftTest {
+  method: string;
+  design: string;
+  units: string;
+  exposedRate: number;
+  controlRate: number;
+  ciLow: number;
+  ciHigh: number;
+  why: string;
+  /** Share of credited conversions the advertising actually caused. */
+  incrementality: number;
+  incremental: number;
+  /** Conversions that would have happened without the ads. */
+  baseline: number;
+}
+
 export interface Channel {
   key: ChannelKey;
   label: string;
@@ -19,6 +35,7 @@ export interface Channel {
   convRate: number;
   reach: number;
   reachUnit: string;
+  lift: LiftTest;
   frequency: number;
 }
 

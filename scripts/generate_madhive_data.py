@@ -42,6 +42,41 @@ START = date(2026, 6, 19)
 DAYS = 60
 WINDOW = 30
 
+# ------------------------------------------------------------- lift tests
+# A holdout answers a question attribution cannot: would this person have
+# converted anyway? A control group is withheld from the ads; the gap between
+# how often the exposed group converts and how often the control group converts
+# is what the advertising actually caused.
+#
+#   incremental = (rate_exposed - rate_control) x exposed
+#   lift        = incremental / attributed conversions
+#
+# Design differs by channel because what is feasible differs. Where the control
+# converts nearly as often as the exposed group, most of the credited
+# conversions were going to happen regardless.
+LIFT = {
+    "display": dict(
+        method="Ghost bids",
+        design="Control users entered the auction and were recorded as won, then served "
+               "nothing — matched on targeting and auction dynamics.",
+        units="user-level randomisation",
+        exposedRate=0.00315, controlRate=0.00230, ciLow=0.241, ciHigh=0.302,
+        why="64% of display spend is retargeting, so the control group was already shopping."),
+    "video": dict(
+        method="Matched-market geo holdout",
+        design="18 matched DMA pairs with the channel dark in one of each pair. Household-level "
+               "withholding is not possible across CTV publishers.",
+        units="18 matched DMA pairs",
+        exposedRate=0.00571, controlRate=0.00083, ciLow=0.718, ciHigh=0.960,
+        why="Prospecting reach — the control group mostly was not in market."),
+    "email": dict(
+        method="Randomised list holdout",
+        design="8% of subscribers withheld from every send in the window, re-randomised each send.",
+        units="subscriber-level randomisation",
+        exposedRate=0.01278, controlRate=0.00959, ciLow=0.214, ciHigh=0.287,
+        why="The list is existing customers, who return on their own service cycle."),
+}
+
 # ---------------------------------------------------------------- channels
 # halfSaturationSpend (K) is the fitted response-curve parameter: the spend at
 # which a channel delivers half of everything it could ever deliver. Everything
@@ -59,6 +94,12 @@ CHANNELS = [
          halfSaturationSpend=20000, reach=460000, reachUnit="subscribers"),
 ]
 for c in CHANNELS:
+    lift = dict(LIFT[c["key"]])
+    lift["incrementality"] = round(
+        (lift["exposedRate"] - lift["controlRate"]) / lift["exposedRate"], 3)
+    lift["incremental"] = round(c["conversions"] * lift["incrementality"])
+    lift["baseline"] = c["conversions"] - lift["incremental"]
+    c["lift"] = lift
     K, s, n = c["halfSaturationSpend"], c["spend"], c["conversions"]
     c["maxConversions"] = round(n * (K + s) / s, 1)
     c["marginalCpa"] = round((K + s) ** 2 / (c["maxConversions"] * K), 2)

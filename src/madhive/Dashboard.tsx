@@ -260,6 +260,80 @@ export default function Dashboard({
             </Box>
           </Panel>
         </Grid>
+
+        {/* ---- lift ---- */}
+        <Box mt={4}>
+          <Panel
+            title="How many of these conversions did the ads actually cause?"
+            sub="A control group was held out of each channel. The gap between how often exposed people converted and how often the control converted is what the advertising caused — the rest was going to happen anyway."
+          >
+            <Box display="flex" flexDirection="column" gap={4}>
+              {channels.map((c) => {
+                const L = c.lift;
+                const maxConv = Math.max(...channels.map((x) => x.conversions));
+                const w = (c.conversions / maxConv) * 100;
+                const causedPct = L.incrementality * 100;
+                return (
+                  <Box key={c.key} opacity={dim(c.key) ? 0.35 : 1} transition="opacity .2s">
+                    <HStack justify="space-between" mb={1.5} align="baseline" wrap="wrap" gap={2}>
+                      <HStack spacing={2}>
+                        <Box w="9px" h="9px" borderRadius="2px" bg={c.color} />
+                        <Text fontSize="13.5px" fontWeight={700} color={INK}>{c.label}</Text>
+                        <Text fontFamily="mono" fontSize="11.5px" color={MUTED}>
+                          {nf(c.conversions)} conversions credited
+                        </Text>
+                      </HStack>
+                      <Text fontFamily="mono" fontSize="11.5px" color={MUTED}>
+                        exposed {(L.exposedRate * 100).toFixed(3)}% vs control{" "}
+                        {(L.controlRate * 100).toFixed(3)}%
+                      </Text>
+                    </HStack>
+                    <Box display="flex" h="26px" w={`${w}%`} minW="120px" borderRadius="4px"
+                      overflow="hidden" gap="2px">
+                      <Box flex={`0 0 ${causedPct}%`} bg={c.color} display="flex"
+                        alignItems="center" justifyContent="center" minW={0}
+                        fontFamily="mono" fontSize="10.5px" fontWeight={700} color="white">
+                        {causedPct > 14 ? `${causedPct.toFixed(0)}%` : ""}
+                      </Box>
+                      <Box flex="1" bg="gray.200" minW={0} />
+                    </Box>
+                    <HStack spacing={4} mt={1.5} wrap="wrap">
+                      <Text fontFamily="mono" fontSize="11.5px" color={INK} fontWeight={700}>
+                        {nf(L.incremental)} caused by the ads
+                      </Text>
+                      <Text fontFamily="mono" fontSize="11.5px" color={MUTED}>
+                        {nf(L.baseline)} would have happened anyway
+                      </Text>
+                      <Text fontSize="11.5px" color={MUTED}>{L.why}</Text>
+                    </HStack>
+                  </Box>
+                );
+              })}
+            </Box>
+
+            <Box mt={5} pt={4} borderTop="1px solid" borderColor={RULE}>
+              <HStack spacing={5} wrap="wrap" mb={3}>
+                <HStack spacing={2}>
+                  <Box w="11px" h="11px" borderRadius="2px" bg="gray.600" />
+                  <Text fontSize="12px" color="gray.600">Caused by the ads</Text>
+                </HStack>
+                <HStack spacing={2}>
+                  <Box w="11px" h="11px" borderRadius="2px" bg="gray.200" />
+                  <Text fontSize="12px" color="gray.600">Would have happened anyway</Text>
+                </HStack>
+              </HStack>
+              <Text fontSize="13.5px" color="gray.700" lineHeight={1.6} maxW="82ch">
+                <strong>Email looks like the best channel and is mostly taking credit.</strong>{" "}
+                Its control group converted at {(byKey.email.lift.controlRate * 100).toFixed(2)}%
+                against {(byKey.email.lift.exposedRate * 100).toFixed(2)}% for people who got the
+                emails — so {nf(byKey.email.lift.baseline)} of its{" "}
+                {nf(byKey.email.conversions)} conversions were existing customers returning on
+                their own. Online video is the reverse: its control barely converted at all, so
+                almost everything it is credited with, it earned.
+              </Text>
+            </Box>
+          </Panel>
+        </Box>
       </Box>
     </>
   );
