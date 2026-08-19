@@ -13,6 +13,31 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Assets are content-hashed and old ones are eventually pruned, so a
+      // browser holding a cached copy of this page after a deploy can request a
+      // bundle that no longer exists — which renders a blank page. Catch the
+      // failed script load and reload once past the HTTP cache.
+      (function () {
+        var KEY = "mh-stale-reload";
+        window.addEventListener(
+          "error",
+          function (e) {
+            var t = e.target;
+            if (t && t.tagName === "SCRIPT" && !sessionStorage.getItem(KEY)) {
+              sessionStorage.setItem(KEY, "1");
+              location.replace(location.pathname + "?r=" + Date.now());
+            }
+          },
+          true
+        );
+        window.addEventListener("load", function () {
+          if (document.getElementById("root").childElementCount > 0) {
+            sessionStorage.removeItem(KEY);
+          }
+        });
+      })();
+    </script>
     <script type="module" src="/src/madhive/main.tsx"></script>
   </body>
 </html>
