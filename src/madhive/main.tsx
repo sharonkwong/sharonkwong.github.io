@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import Dashboard from "./Dashboard";
 import Diagnostics from "./Diagnostics";
 import Tables from "./Tables";
+import { CreativeRanking } from "./Creatives";
 import { useCampaignData, useViewState } from "./data";
 import theme from "../theme";
 import { INK, MUTED } from "./ui";
@@ -53,10 +54,11 @@ function Page() {
           </Flex>
           <Text as="h1" fontSize={{ base: "30px", md: "44px" }} fontWeight={800}
             letterSpacing="-0.032em" lineHeight={1.05} color={INK} maxW="20ch" mb={3}>
-            Which channel should get the next dollar?
+Which ads are actually selling pizza?
           </Text>
           <Text fontSize={{ base: "15px", md: "17px" }} color="gray.600" maxW="60ch">
-            Display, online video and email — what each is delivering, and where the next
+Display, online video and email for a six-shop pizza chain — what each one is
+            bringing in, how much of it the advertising actually caused, and where the next
             dollar should go.
           </Text>
         </Box>
@@ -67,21 +69,17 @@ function Page() {
           setChannel={(c) => setView({ channel: c })}
         />
         <Diagnostics data={data} />
-        <Tables
-          data={data}
-          channel={view.channel}
-          setChannel={(c) => setView({ channel: c })}
-        />
+        <CreativeRanking data={data} />
+        <Tables data={data} />
 
         {/* footer */}
         <Box mt={16} pt={5} borderTop="2px solid" borderColor={INK}>
           <Text fontFamily="mono" fontSize="11px" color={MUTED} lineHeight={1.8}>
-            Synthetic demonstration data for a fictional advertiser. No real advertiser, publisher or
+            Synthetic demonstration data for a fictional pizza chain. No real advertiser, publisher or
             campaign data appears on this page. Modelled on published 2026 benchmarks:
           </Text>
           <Box as="ul" pl={5} mt={2} fontFamily="mono" fontSize="11px" color={MUTED} lineHeight={1.8}>
             {meta.sources.map((s) => <li key={s}>{s}</li>)}
-            <li>{data.reach.source} — IP-to-household accuracy</li>
           </Box>
           <Text fontFamily="mono" fontSize="11px" color={MUTED} mt={3}>
             <Text as="a" href="./modeling/" textDecoration="underline" _hover={{ color: INK }}>

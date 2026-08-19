@@ -1,4 +1,4 @@
-import { Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { Box, Flex, HStack, Text, Tooltip } from "@chakra-ui/react";
 import type { ReactNode } from "react";
 
 export const INK = "gray.800";
@@ -50,6 +50,59 @@ export function Panel({
   );
 }
 
+/* ------------------------------------------------------------ info tip */
+/**
+ * Hover/focus explainer. It is a real <button> so it also opens on keyboard
+ * focus and on tap — a hover-only tooltip is invisible on a phone.
+ */
+export function InfoTip({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <Tooltip
+      label={children}
+      hasArrow
+      placement="top"
+      openDelay={120}
+      closeOnClick={false}
+      bg="gray.800"
+      color="white"
+      fontSize="12px"
+      fontWeight={400}
+      lineHeight={1.55}
+      letterSpacing="0"
+      textTransform="none"
+      px={3}
+      py={2}
+      borderRadius="7px"
+      maxW="290px"
+    >
+      <Box
+        as="button"
+        type="button"
+        aria-label={`What is ${label}?`}
+        display="inline-flex"
+        alignItems="center"
+        justifyContent="center"
+        w="13px"
+        h="13px"
+        flex="0 0 auto"
+        borderRadius="full"
+        border="1px solid"
+        borderColor="gray.300"
+        color="gray.400"
+        fontSize="9px"
+        fontWeight={700}
+        fontFamily="serif"
+        lineHeight={1}
+        transition="all .15s"
+        _hover={{ color: "gray.600", borderColor: "gray.400" }}
+        _focusVisible={{ outline: "2px solid", outlineColor: "blue.400", outlineOffset: "1px" }}
+      >
+        i
+      </Box>
+    </Tooltip>
+  );
+}
+
 /* ----------------------------------------------------------------- kpi */
 export function Kpi({
   label,
@@ -58,6 +111,7 @@ export function Kpi({
   tone,
   delta,
   lowerIsBetter,
+  tip,
 }: {
   label: string;
   value: string;
@@ -67,20 +121,25 @@ export function Kpi({
   delta?: number;
   /** For cost metrics, a fall is an improvement. */
   lowerIsBetter?: boolean;
+  /** What the metric is, and how it is worked out when it is derived. */
+  tip?: ReactNode;
 }) {
   const good = delta === undefined ? null : lowerIsBetter ? delta < 0 : delta > 0;
   return (
     <Box bg="white" p={4}>
-      <Text
-        fontSize="9.5px"
-        letterSpacing="0.12em"
-        textTransform="uppercase"
-        color={MUTED}
-        fontWeight={600}
-        mb={2}
-      >
-        {label}
-      </Text>
+      <Flex align="center" gap="5px" mb={2} minH="14px">
+        <Text
+          fontSize="9.5px"
+          letterSpacing="0.12em"
+          textTransform="uppercase"
+          color={MUTED}
+          fontWeight={600}
+          lineHeight={1.2}
+        >
+          {label}
+        </Text>
+        {tip && <InfoTip label={label}>{tip}</InfoTip>}
+      </Flex>
       <Text
         fontSize={{ base: "19px", md: "22px" }}
         fontWeight={700}
@@ -111,7 +170,7 @@ export function KpiRow({ children }: { children: ReactNode }) {
   return (
     <Box
       display="grid"
-      gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)", xl: "repeat(6, 1fr)" }}
+      gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(5, 1fr)" }}
       gap="1px"
       bg={RULE}
       border="1px solid"

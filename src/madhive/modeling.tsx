@@ -359,16 +359,16 @@ function Page() {
             <Panel title="gold.lift_result — the whole metric in six columns" sub="Everything on the lift panel is derived from this.">
               <Box as="pre" overflowX="auto" bg="gray.50" border="1px solid" borderColor={RULE}
                 borderRadius="6px" p={4} fontFamily={MONO} fontSize="12.5px" lineHeight={1.7}>
-{`test_id   channel  arm       units    converted   window_state
-────────────────────────────────────────────────────────────────
-LT-0142   email    exposed   423,200     5,880      final
-LT-0142   email    control    36,800       353      final
+{`test_id   channel  arm       units    ordered   window_state
+──────────────────────────────────────────────────────────────
+LT-0142   email    exposed   62,000     2,980     final
+LT-0142   email    control    8,600       310     final
 
-  exposed rate = 5,880 / 423,200 = 1.278%
-  control rate =   353 /  36,800 = 0.959%
-  lift         = (1.278 − 0.959) / 1.278 = 25.0%
-  caused       = 5,880 × 25.0% = 1,470
-  anyway       = 5,880 − 1,470 = 4,410`}
+  exposed rate = 2,980 / 62,000 = 4.806%
+  control rate =   310 /  8,600 = 3.605%
+  lift         = (4.806 − 3.605) / 4.806 = 25.0%
+  caused       = 2,980 × 25.0% = 745
+  anyway       = 2,980 − 745  = 2,235`}
               </Box>
               <Text fontSize="13px" color={MUTED} mt={3} lineHeight={1.6}>
                 Two rows produce every number on the lift widget. Storing the rate rather than the
@@ -441,7 +441,7 @@ LT-0142   email    control    36,800       353      final
             rows={[
               ["Top-line metrics", "Daily, 06:00", "Rolling last 30 days", "Expected — the window moved."],
               ["Daily trend", "Daily, 06:00", "Last 30 days", "Expected, except for the trailing 7 days, which can restate as late events land."],
-              ["Cost of next conversion", "Daily, 06:00", "Current spend level", "Expected — it is a function of today's spend."],
+              ["Cost of the next order", "Daily, 06:00", "Current spend level", "Expected — it is a function of today’s spend."],
               ["Lift", <>On test maturity<br /><Text as="span" fontSize="11px" color={MUTED}>weeks, not days</Text></>,
                 "A fixed past test window",
                 <Text as="span" color="red.500" fontWeight={600}>Not expected. A final lift number moving means something upstream was rewritten.</Text>],

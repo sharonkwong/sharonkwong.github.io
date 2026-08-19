@@ -1,7 +1,7 @@
 {
  "meta": {
-  "advertiser": "Cascade Auto Group",
-  "descriptor": "4 rooftops \u00b7 Portland-Vancouver DMA",
+  "advertiser": "Bella Vita Pizza",
+  "descriptor": "6 shops \u00b7 Portland, OR",
   "flightStart": "2026-07-19",
   "flightEnd": "2026-08-17",
   "generatedAt": "2026-08-19T06:00:00-07:00",
@@ -11,1431 +11,1424 @@
    "Display CPM $3.12 GDN / $8.20 PMP; 72% cross-network viewability (2026)",
    "MRC viewability: 50% of pixels for 1s (display), 2s (video)",
    "Skippable in-stream VCR 60%+; non-skippable 90%+ (2026)",
-   "Email: 43.46% avg open inflated 15-20pts by Apple MPP; 2.09% click on delivered; 0.46% unsubscribe",
-   "CIMM / Go Addressable (2025): IP-to-household accuracy 13-16%"
+   "Email: 43.46% avg open inflated 15-20pts by Apple MPP; 2.09% click on delivered; 0.46% unsubscribe"
   ]
  },
  "assumptions": [
   {
    "key": "leadValue",
-   "label": "Gross profit per qualified lead",
-   "value": 340,
+   "label": "Profit per online order",
+   "value": 22,
    "unit": "$",
    "adjustable": true,
-   "basis": "Advertiser-supplied: 12% lead-to-sale close rate x $2,833 average front+back gross per unit. Their finance team's number \u2014 we take it as an input."
+   "basis": "Owner-supplied: $34 average ticket less food, packaging and delivery cost, plus the second order a new customer places within 90 days. Their number, not ours \u2014 we take it as an input."
   },
   {
    "key": "targetReturn",
-   "label": "Required return on media",
-   "value": 3.5,
+   "label": "Required return on ad spend",
+   "value": 2.0,
    "unit": "x",
    "adjustable": true,
-   "basis": "Dealer group's internal capital hurdle: media must return 3.5x contribution to beat their next-best use of the same dollar. Policy, not measurement."
+   "basis": "The owner wants every $1 of advertising to return $2 of profit before it is worth doing. A policy choice, not a measurement."
   },
   {
    "key": "emailSpendCap",
    "label": "Email spend ceiling",
-   "value": 30000,
+   "value": 5600,
    "unit": "$",
    "adjustable": false,
-   "basis": "List-burn constraint. Past ~4 sends/subscriber/month the unsubscribe rate passes 0.5% and net list growth turns negative, so extra budget cannot buy more sends and the response curve stops applying."
+   "basis": "List-burn constraint. Past ~4 emails a month the unsubscribe rate passes 0.5% and the list starts shrinking, so extra budget cannot buy more sends and the response curve stops applying."
   }
  ],
  "constants": {
-  "leadValue": 340,
-  "targetReturn": 3.5,
-  "emailSpendCap": 30000,
-  "subscriberValue": 38
+  "leadValue": 22,
+  "targetReturn": 2.0,
+  "emailSpendCap": 5600,
+  "subscriberValue": 9
  },
  "channels": [
   {
    "key": "display",
    "label": "Display",
    "color": "#2a78d6",
-   "spend": 148000,
-   "impressions": 30204000,
-   "clicks": 27184,
-   "conversions": 3910,
-   "halfSaturationSpend": 150000,
-   "reach": 1240000,
-   "reachUnit": "cookies / device IDs",
+   "spend": 9800,
+   "impressions": 2100000,
+   "clicks": 1890,
+   "conversions": 1240,
+   "halfSaturationSpend": 12000,
+   "reach": 380000,
+   "reachUnit": "devices",
    "lift": {
     "method": "Ghost bids",
     "design": "Control users entered the auction and were recorded as won, then served nothing \u2014 matched on targeting and auction dynamics.",
     "units": "user-level randomisation",
-    "exposedRate": 0.00315,
-    "controlRate": 0.0023,
+    "exposedRate": 0.00326,
+    "controlRate": 0.00238,
     "ciLow": 0.241,
     "ciHigh": 0.302,
-    "why": "64% of display spend is retargeting, so the control group was already shopping.",
+    "why": "Most display spend retargets people who already left an order in the cart.",
     "incrementality": 0.27,
-    "incremental": 1056,
-    "baseline": 2854
+    "incremental": 335,
+    "baseline": 905
    },
-   "maxConversions": 7872.8,
-   "marginalCpa": 75.2,
-   "floorCpa": 19.05,
-   "cpa": 37.85,
-   "cpm": 4.9,
-   "cpc": 5.44,
+   "maxConversions": 2758.4,
+   "marginalCpa": 14.36,
+   "floorCpa": 4.35,
+   "cpa": 7.9,
+   "cpm": 4.67,
+   "cpc": 5.19,
    "ctr": 0.0009,
-   "convRate": 0.1438,
-   "frequency": 24.4
+   "convRate": 0.6561,
+   "frequency": 5.5
   },
   {
    "key": "video",
    "label": "Online video",
    "color": "#eb6834",
-   "spend": 232000,
-   "impressions": 10357000,
-   "clicks": 9640,
-   "conversions": 4240,
-   "halfSaturationSpend": 1000000,
-   "reach": 742000,
-   "reachUnit": "IP households",
+   "spend": 14200,
+   "impressions": 640000,
+   "clicks": 590,
+   "conversions": 1510,
+   "halfSaturationSpend": 200000,
+   "reach": 210000,
+   "reachUnit": "households",
    "lift": {
     "method": "Matched-market geo holdout",
     "design": "18 matched DMA pairs with the channel dark in one of each pair. Household-level withholding is not possible across CTV publishers.",
-    "units": "18 matched DMA pairs",
-    "exposedRate": 0.00571,
-    "controlRate": 0.00083,
+    "units": "22 matched ZIP pairs",
+    "exposedRate": 0.00719,
+    "controlRate": 0.00108,
     "ciLow": 0.718,
     "ciHigh": 0.96,
-    "why": "Prospecting reach \u2014 the control group mostly was not in market.",
-    "incrementality": 0.855,
-    "incremental": 3625,
-    "baseline": 615
+    "why": "Reaching people who were not already thinking about dinner.",
+    "incrementality": 0.85,
+    "incremental": 1284,
+    "baseline": 226
    },
-   "maxConversions": 22515.9,
-   "marginalCpa": 67.41,
-   "floorCpa": 44.41,
-   "cpa": 54.72,
-   "cpm": 22.4,
+   "maxConversions": 22777.6,
+   "marginalCpa": 10.07,
+   "floorCpa": 8.78,
+   "cpa": 9.4,
+   "cpm": 22.19,
    "cpc": 24.07,
-   "ctr": 0.00093,
-   "convRate": 0.4398,
-   "frequency": 14.0
+   "ctr": 0.00092,
+   "convRate": 2.5593,
+   "frequency": 3.0
   },
   {
    "key": "email",
    "label": "Email",
    "color": "#1baf7a",
-   "spend": 22000,
-   "impressions": 1798000,
-   "clicks": 37600,
-   "conversions": 5880,
-   "halfSaturationSpend": 20000,
-   "reach": 460000,
+   "spend": 4000,
+   "impressions": 186000,
+   "clicks": 3900,
+   "conversions": 2980,
+   "halfSaturationSpend": 3000,
+   "reach": 62000,
    "reachUnit": "subscribers",
    "lift": {
     "method": "Randomised list holdout",
     "design": "8% of subscribers withheld from every send in the window, re-randomised each send.",
     "units": "subscriber-level randomisation",
-    "exposedRate": 0.01278,
-    "controlRate": 0.00959,
+    "exposedRate": 0.04806,
+    "controlRate": 0.03605,
     "ciLow": 0.214,
     "ciHigh": 0.287,
-    "why": "The list is existing customers, who return on their own service cycle.",
+    "why": "The list is regulars, and regulars order pizza on their own schedule.",
     "incrementality": 0.25,
-    "incremental": 1470,
-    "baseline": 4410
+    "incremental": 745,
+    "baseline": 2235
    },
-   "maxConversions": 11225.5,
-   "marginalCpa": 7.86,
-   "floorCpa": 1.78,
-   "cpa": 3.74,
-   "cpm": 12.24,
-   "cpc": 0.59,
-   "ctr": 0.02091,
-   "convRate": 0.1564,
-   "frequency": 3.9
+   "maxConversions": 5215.0,
+   "marginalCpa": 3.13,
+   "floorCpa": 0.58,
+   "cpa": 1.34,
+   "cpm": 21.51,
+   "cpc": 1.03,
+   "ctr": 0.02097,
+   "convRate": 0.7641,
+   "frequency": 3.0
   }
  ],
  "daily": [
   {
    "date": "2026-06-19",
    "display": {
-    "spend": 5285.55,
-    "impressions": 1078680,
-    "clicks": 971,
-    "conversions": 174.3
+    "spend": 349.99,
+    "impressions": 74998,
+    "clicks": 67,
+    "conversions": 55.3
    },
    "video": {
-    "spend": 6888.5,
-    "impressions": 307518,
-    "clicks": 286,
-    "conversions": 157.1
+    "spend": 421.62,
+    "impressions": 19003,
+    "clicks": 18,
+    "conversions": 56.0
    },
    "email": {
-    "spend": 262.44,
-    "impressions": 21448,
-    "clicks": 449,
-    "conversions": 88.4
+    "spend": 47.72,
+    "impressions": 2219,
+    "clicks": 47,
+    "conversions": 44.8
    }
   },
   {
    "date": "2026-06-20",
    "display": {
-    "spend": 5376.57,
-    "impressions": 1097257,
-    "clicks": 988,
-    "conversions": 152.4
+    "spend": 356.02,
+    "impressions": 76289,
+    "clicks": 69,
+    "conversions": 48.3
    },
    "video": {
-    "spend": 6492.77,
-    "impressions": 289852,
-    "clicks": 270,
-    "conversions": 127.3
+    "spend": 397.4,
+    "impressions": 17911,
+    "clicks": 17,
+    "conversions": 45.3
    },
    "email": {
-    "spend": 1932.24,
-    "impressions": 157917,
-    "clicks": 3302,
-    "conversions": 559.6
+    "spend": 351.32,
+    "impressions": 16336,
+    "clicks": 343,
+    "conversions": 283.6
    }
   },
   {
    "date": "2026-06-21",
    "display": {
-    "spend": 4839.64,
-    "impressions": 987679,
-    "clicks": 889,
-    "conversions": 127.8
+    "spend": 320.46,
+    "impressions": 68671,
+    "clicks": 62,
+    "conversions": 40.5
    },
    "video": {
-    "spend": 5812.99,
-    "impressions": 259505,
-    "clicks": 242,
-    "conversions": 106.2
+    "spend": 355.8,
+    "impressions": 16036,
+    "clicks": 15,
+    "conversions": 37.8
    },
    "email": {
-    "spend": 221.7,
-    "impressions": 18119,
-    "clicks": 379,
-    "conversions": 59.8
+    "spend": 40.31,
+    "impressions": 1874,
+    "clicks": 39,
+    "conversions": 30.3
    }
   },
   {
    "date": "2026-06-22",
    "display": {
-    "spend": 4730.56,
-    "impressions": 965418,
-    "clicks": 869,
-    "conversions": 119.4
+    "spend": 313.24,
+    "impressions": 67123,
+    "clicks": 60,
+    "conversions": 37.9
    },
    "video": {
-    "spend": 6248.02,
-    "impressions": 278926,
-    "clicks": 260,
-    "conversions": 109.1
+    "spend": 382.42,
+    "impressions": 17236,
+    "clicks": 16,
+    "conversions": 38.9
    },
    "email": {
-    "spend": 247.85,
-    "impressions": 20256,
-    "clicks": 424,
-    "conversions": 63.9
+    "spend": 45.06,
+    "impressions": 2095,
+    "clicks": 44,
+    "conversions": 32.4
    }
   },
   {
    "date": "2026-06-23",
    "display": {
-    "spend": 5357.58,
-    "impressions": 1093380,
-    "clicks": 984,
-    "conversions": 107.2
+    "spend": 354.76,
+    "impressions": 76020,
+    "clicks": 68,
+    "conversions": 34.0
    },
    "video": {
-    "spend": 6993.6,
-    "impressions": 312210,
-    "clicks": 291,
-    "conversions": 96.8
+    "spend": 428.06,
+    "impressions": 19293,
+    "clicks": 18,
+    "conversions": 34.5
    },
    "email": {
-    "spend": 2132.79,
-    "impressions": 174307,
-    "clicks": 3645,
-    "conversions": 436.1
+    "spend": 387.78,
+    "impressions": 18032,
+    "clicks": 378,
+    "conversions": 221.0
    }
   },
   {
    "date": "2026-06-24",
    "display": {
-    "spend": 5920.1,
-    "impressions": 1208180,
-    "clicks": 1087,
-    "conversions": 152.1
+    "spend": 392.01,
+    "impressions": 84001,
+    "clicks": 76,
+    "conversions": 48.2
    },
    "video": {
-    "spend": 7170.6,
-    "impressions": 320112,
-    "clicks": 298,
-    "conversions": 127.4
+    "spend": 438.89,
+    "impressions": 19781,
+    "clicks": 18,
+    "conversions": 45.4
    },
    "email": {
-    "spend": 254.87,
-    "impressions": 20830,
-    "clicks": 436,
-    "conversions": 66.9
+    "spend": 46.34,
+    "impressions": 2155,
+    "clicks": 45,
+    "conversions": 33.9
    }
   },
   {
    "date": "2026-06-25",
    "display": {
-    "spend": 5597.03,
-    "impressions": 1142247,
-    "clicks": 1028,
-    "conversions": 162.4
+    "spend": 370.61,
+    "impressions": 79417,
+    "clicks": 71,
+    "conversions": 51.5
    },
    "video": {
-    "spend": 7049.57,
-    "impressions": 314708,
-    "clicks": 293,
-    "conversions": 141.5
+    "spend": 431.48,
+    "impressions": 19447,
+    "clicks": 18,
+    "conversions": 50.4
    },
    "email": {
-    "spend": 272.91,
-    "impressions": 22305,
-    "clicks": 466,
-    "conversions": 80.9
+    "spend": 49.62,
+    "impressions": 2307,
+    "clicks": 48,
+    "conversions": 41.0
    }
   },
   {
    "date": "2026-06-26",
    "display": {
-    "spend": 5036.08,
-    "impressions": 1027768,
-    "clicks": 925,
-    "conversions": 143.1
+    "spend": 333.47,
+    "impressions": 71458,
+    "clicks": 64,
+    "conversions": 45.4
    },
    "video": {
-    "spend": 6873.48,
-    "impressions": 306848,
-    "clicks": 286,
-    "conversions": 135.1
+    "spend": 420.7,
+    "impressions": 18961,
+    "clicks": 17,
+    "conversions": 48.1
    },
    "email": {
-    "spend": 264.85,
-    "impressions": 21646,
-    "clicks": 453,
-    "conversions": 76.9
+    "spend": 48.15,
+    "impressions": 2239,
+    "clicks": 47,
+    "conversions": 39.0
    }
   },
   {
    "date": "2026-06-27",
    "display": {
-    "spend": 5280.12,
-    "impressions": 1077572,
-    "clicks": 970,
-    "conversions": 169.2
+    "spend": 349.63,
+    "impressions": 74921,
+    "clicks": 67,
+    "conversions": 53.7
    },
    "video": {
-    "spend": 6856.32,
-    "impressions": 306082,
-    "clicks": 285,
-    "conversions": 152.0
+    "spend": 419.65,
+    "impressions": 18914,
+    "clicks": 17,
+    "conversions": 54.1
    },
    "email": {
-    "spend": 2019.82,
-    "impressions": 165075,
-    "clicks": 3452,
-    "conversions": 661.2
+    "spend": 367.24,
+    "impressions": 17077,
+    "clicks": 358,
+    "conversions": 335.1
    }
   },
   {
    "date": "2026-06-28",
    "display": {
-    "spend": 4979.0,
-    "impressions": 1016121,
-    "clicks": 915,
-    "conversions": 129.2
+    "spend": 329.69,
+    "impressions": 70648,
+    "clicks": 64,
+    "conversions": 41.0
    },
    "video": {
-    "spend": 6124.08,
-    "impressions": 273393,
-    "clicks": 254,
-    "conversions": 109.9
+    "spend": 374.84,
+    "impressions": 16894,
+    "clicks": 16,
+    "conversions": 39.2
    },
    "email": {
-    "spend": 219.76,
-    "impressions": 17960,
-    "clicks": 376,
-    "conversions": 58.3
+    "spend": 39.96,
+    "impressions": 1858,
+    "clicks": 39,
+    "conversions": 29.5
    }
   },
   {
    "date": "2026-06-29",
    "display": {
-    "spend": 4670.08,
-    "impressions": 953076,
-    "clicks": 858,
-    "conversions": 102.7
+    "spend": 309.24,
+    "impressions": 66265,
+    "clicks": 60,
+    "conversions": 32.6
    },
    "video": {
-    "spend": 6199.33,
-    "impressions": 276752,
-    "clicks": 258,
-    "conversions": 94.3
+    "spend": 379.44,
+    "impressions": 17102,
+    "clicks": 16,
+    "conversions": 33.6
    },
    "email": {
-    "spend": 240.94,
-    "impressions": 19691,
-    "clicks": 412,
-    "conversions": 54.1
+    "spend": 43.81,
+    "impressions": 2037,
+    "clicks": 43,
+    "conversions": 27.4
    }
   },
   {
    "date": "2026-06-30",
    "display": {
-    "spend": 5102.33,
-    "impressions": 1041288,
-    "clicks": 937,
-    "conversions": 126.1
+    "spend": 337.86,
+    "impressions": 72398,
+    "clicks": 65,
+    "conversions": 40.0
    },
    "video": {
-    "spend": 7085.87,
-    "impressions": 316329,
-    "clicks": 294,
-    "conversions": 121.1
+    "spend": 433.7,
+    "impressions": 19547,
+    "clicks": 18,
+    "conversions": 43.1
    },
    "email": {
-    "spend": 2191.47,
-    "impressions": 179103,
-    "clicks": 3745,
-    "conversions": 553.2
+    "spend": 398.45,
+    "impressions": 18528,
+    "clicks": 388,
+    "conversions": 280.3
    }
   },
   {
    "date": "2026-07-01",
    "display": {
-    "spend": 5924.98,
-    "impressions": 1209177,
-    "clicks": 1088,
-    "conversions": 134.7
+    "spend": 392.33,
+    "impressions": 84071,
+    "clicks": 76,
+    "conversions": 42.7
    },
    "video": {
-    "spend": 7648.28,
-    "impressions": 341437,
-    "clicks": 318,
-    "conversions": 120.3
+    "spend": 468.13,
+    "impressions": 21099,
+    "clicks": 19,
+    "conversions": 42.8
    },
    "email": {
-    "spend": 264.12,
-    "impressions": 21586,
-    "clicks": 451,
-    "conversions": 61.4
+    "spend": 48.02,
+    "impressions": 2233,
+    "clicks": 47,
+    "conversions": 31.1
    }
   },
   {
    "date": "2026-07-02",
    "display": {
-    "spend": 5742.78,
-    "impressions": 1171993,
-    "clicks": 1055,
-    "conversions": 163.2
+    "spend": 380.27,
+    "impressions": 81485,
+    "clicks": 73,
+    "conversions": 51.8
    },
    "video": {
-    "spend": 7281.1,
-    "impressions": 325045,
-    "clicks": 303,
-    "conversions": 143.1
+    "spend": 445.65,
+    "impressions": 20086,
+    "clicks": 19,
+    "conversions": 51.0
    },
    "email": {
-    "spend": 266.01,
-    "impressions": 21741,
-    "clicks": 455,
-    "conversions": 77.2
+    "spend": 48.37,
+    "impressions": 2249,
+    "clicks": 47,
+    "conversions": 39.1
    }
   },
   {
    "date": "2026-07-03",
    "display": {
-    "spend": 4872.83,
-    "impressions": 994453,
-    "clicks": 895,
-    "conversions": 157.5
+    "spend": 322.66,
+    "impressions": 69142,
+    "clicks": 62,
+    "conversions": 49.9
    },
    "video": {
-    "spend": 6788.93,
-    "impressions": 303073,
-    "clicks": 282,
-    "conversions": 151.8
+    "spend": 415.53,
+    "impressions": 18728,
+    "clicks": 17,
+    "conversions": 54.0
    },
    "email": {
-    "spend": 260.99,
-    "impressions": 21330,
-    "clicks": 446,
-    "conversions": 86.2
+    "spend": 47.45,
+    "impressions": 2207,
+    "clicks": 46,
+    "conversions": 43.7
    }
   },
   {
    "date": "2026-07-04",
    "display": {
-    "spend": 5074.93,
-    "impressions": 1035698,
-    "clicks": 932,
-    "conversions": 139.4
+    "spend": 336.04,
+    "impressions": 72009,
+    "clicks": 65,
+    "conversions": 44.2
    },
    "video": {
-    "spend": 7076.26,
-    "impressions": 315900,
-    "clicks": 294,
-    "conversions": 134.4
+    "spend": 433.12,
+    "impressions": 19521,
+    "clicks": 18,
+    "conversions": 47.9
    },
    "email": {
-    "spend": 2102.68,
-    "impressions": 171846,
-    "clicks": 3594,
-    "conversions": 590.1
+    "spend": 382.31,
+    "impressions": 17777,
+    "clicks": 373,
+    "conversions": 299.0
    }
   },
   {
    "date": "2026-07-05",
    "display": {
-    "spend": 5065.31,
-    "impressions": 1033734,
-    "clicks": 930,
-    "conversions": 142.0
+    "spend": 335.41,
+    "impressions": 71873,
+    "clicks": 65,
+    "conversions": 45.0
    },
    "video": {
-    "spend": 6536.48,
-    "impressions": 291803,
-    "clicks": 272,
-    "conversions": 126.7
+    "spend": 400.08,
+    "impressions": 18032,
+    "clicks": 17,
+    "conversions": 45.1
    },
    "email": {
-    "spend": 223.81,
-    "impressions": 18292,
-    "clicks": 383,
-    "conversions": 64.1
+    "spend": 40.69,
+    "impressions": 1892,
+    "clicks": 40,
+    "conversions": 32.5
    }
   },
   {
    "date": "2026-07-06",
    "display": {
-    "spend": 4730.85,
-    "impressions": 965476,
-    "clicks": 869,
-    "conversions": 111.7
+    "spend": 313.26,
+    "impressions": 67127,
+    "clicks": 60,
+    "conversions": 35.4
    },
    "video": {
-    "spend": 6267.23,
-    "impressions": 279783,
-    "clicks": 260,
-    "conversions": 102.3
+    "spend": 383.6,
+    "impressions": 17289,
+    "clicks": 16,
+    "conversions": 36.4
    },
    "email": {
-    "spend": 233.01,
-    "impressions": 19043,
-    "clicks": 398,
-    "conversions": 56.2
+    "spend": 42.37,
+    "impressions": 1970,
+    "clicks": 41,
+    "conversions": 28.5
    }
   },
   {
    "date": "2026-07-07",
    "display": {
-    "spend": 4870.8,
-    "impressions": 994038,
-    "clicks": 895,
-    "conversions": 99.1
+    "spend": 322.53,
+    "impressions": 69113,
+    "clicks": 62,
+    "conversions": 31.4
    },
    "video": {
-    "spend": 7038.42,
-    "impressions": 314211,
-    "clicks": 292,
-    "conversions": 99.1
+    "spend": 430.8,
+    "impressions": 19416,
+    "clicks": 18,
+    "conversions": 35.3
    },
    "email": {
-    "spend": 2199.26,
-    "impressions": 179740,
-    "clicks": 3759,
-    "conversions": 457.2
+    "spend": 399.87,
+    "impressions": 18594,
+    "clicks": 390,
+    "conversions": 231.7
    }
   },
   {
    "date": "2026-07-08",
    "display": {
-    "spend": 5786.49,
-    "impressions": 1180913,
-    "clicks": 1063,
-    "conversions": 156.0
+    "spend": 383.16,
+    "impressions": 82106,
+    "clicks": 74,
+    "conversions": 49.5
    },
    "video": {
-    "spend": 8032.26,
-    "impressions": 358578,
-    "clicks": 334,
-    "conversions": 149.8
+    "spend": 491.63,
+    "impressions": 22158,
+    "clicks": 20,
+    "conversions": 53.3
    },
    "email": {
-    "spend": 276.24,
-    "impressions": 22576,
-    "clicks": 472,
-    "conversions": 76.1
+    "spend": 50.22,
+    "impressions": 2335,
+    "clicks": 49,
+    "conversions": 38.6
    }
   },
   {
    "date": "2026-07-09",
    "display": {
-    "spend": 5900.09,
-    "impressions": 1204097,
-    "clicks": 1084,
-    "conversions": 161.2
+    "spend": 390.68,
+    "impressions": 83718,
+    "clicks": 75,
+    "conversions": 51.1
    },
    "video": {
-    "spend": 7696.24,
-    "impressions": 343577,
-    "clicks": 320,
-    "conversions": 145.5
+    "spend": 471.06,
+    "impressions": 21231,
+    "clicks": 20,
+    "conversions": 51.8
    },
    "email": {
-    "spend": 265.24,
-    "impressions": 21677,
-    "clicks": 453,
-    "conversions": 74.0
+    "spend": 48.22,
+    "impressions": 2242,
+    "clicks": 47,
+    "conversions": 37.5
    }
   },
   {
    "date": "2026-07-10",
    "display": {
-    "spend": 4839.66,
-    "impressions": 987682,
-    "clicks": 889,
-    "conversions": 143.9
+    "spend": 320.46,
+    "impressions": 68671,
+    "clicks": 62,
+    "conversions": 45.6
    },
    "video": {
-    "spend": 6749.57,
-    "impressions": 301316,
-    "clicks": 280,
-    "conversions": 138.8
+    "spend": 413.12,
+    "impressions": 18619,
+    "clicks": 17,
+    "conversions": 49.4
    },
    "email": {
-    "spend": 253.06,
-    "impressions": 20682,
-    "clicks": 432,
-    "conversions": 76.9
+    "spend": 46.01,
+    "impressions": 2139,
+    "clicks": 45,
+    "conversions": 39.0
    }
   },
   {
    "date": "2026-07-11",
    "display": {
-    "spend": 4827.65,
-    "impressions": 985233,
-    "clicks": 887,
-    "conversions": 154.8
+    "spend": 319.67,
+    "impressions": 68500,
+    "clicks": 62,
+    "conversions": 49.1
    },
    "video": {
-    "spend": 7125.52,
-    "impressions": 318099,
-    "clicks": 296,
-    "conversions": 158.0
+    "spend": 436.13,
+    "impressions": 19657,
+    "clicks": 18,
+    "conversions": 56.3
    },
    "email": {
-    "spend": 2149.9,
-    "impressions": 175706,
-    "clicks": 3674,
-    "conversions": 704.2
+    "spend": 390.89,
+    "impressions": 18176,
+    "clicks": 381,
+    "conversions": 356.9
    }
   },
   {
    "date": "2026-07-12",
    "display": {
-    "spend": 5041.18,
-    "impressions": 1028810,
-    "clicks": 926,
-    "conversions": 122.9
+    "spend": 333.81,
+    "impressions": 71530,
+    "clicks": 64,
+    "conversions": 39.0
    },
    "video": {
-    "spend": 6949.15,
-    "impressions": 310225,
-    "clicks": 289,
-    "conversions": 117.2
+    "spend": 425.34,
+    "impressions": 19170,
+    "clicks": 18,
+    "conversions": 41.7
    },
    "email": {
-    "spend": 232.75,
-    "impressions": 19022,
-    "clicks": 398,
-    "conversions": 58.0
+    "spend": 42.32,
+    "impressions": 1968,
+    "clicks": 41,
+    "conversions": 29.4
    }
   },
   {
    "date": "2026-07-13",
    "display": {
-    "spend": 4862.15,
-    "impressions": 992272,
-    "clicks": 893,
-    "conversions": 115.2
+    "spend": 321.95,
+    "impressions": 68990,
+    "clicks": 62,
+    "conversions": 36.5
    },
    "video": {
-    "spend": 6505.31,
-    "impressions": 290412,
-    "clicks": 270,
-    "conversions": 106.6
+    "spend": 398.17,
+    "impressions": 17946,
+    "clicks": 17,
+    "conversions": 38.0
    },
    "email": {
-    "spend": 228.04,
-    "impressions": 18637,
-    "clicks": 390,
-    "conversions": 55.2
+    "spend": 41.46,
+    "impressions": 1928,
+    "clicks": 40,
+    "conversions": 28.0
    }
   },
   {
    "date": "2026-07-14",
    "display": {
-    "spend": 4737.3,
-    "impressions": 966794,
-    "clicks": 870,
-    "conversions": 112.6
+    "spend": 313.69,
+    "impressions": 67218,
+    "clicks": 60,
+    "conversions": 35.7
    },
    "video": {
-    "spend": 6945.0,
-    "impressions": 310041,
-    "clicks": 289,
-    "conversions": 114.2
+    "spend": 425.08,
+    "impressions": 19159,
+    "clicks": 18,
+    "conversions": 40.7
    },
    "email": {
-    "spend": 2157.19,
-    "impressions": 176301,
-    "clicks": 3687,
-    "conversions": 523.9
+    "spend": 392.22,
+    "impressions": 18238,
+    "clicks": 382,
+    "conversions": 265.5
    }
   },
   {
    "date": "2026-07-15",
    "display": {
-    "spend": 5541.02,
-    "impressions": 1130818,
-    "clicks": 1018,
-    "conversions": 123.9
+    "spend": 366.91,
+    "impressions": 78623,
+    "clicks": 71,
+    "conversions": 39.3
    },
    "video": {
-    "spend": 8235.19,
-    "impressions": 367637,
-    "clicks": 342,
-    "conversions": 127.4
+    "spend": 504.05,
+    "impressions": 22718,
+    "clicks": 21,
+    "conversions": 45.4
    },
    "email": {
-    "spend": 286.68,
-    "impressions": 23429,
-    "clicks": 490,
-    "conversions": 65.5
+    "spend": 52.12,
+    "impressions": 2424,
+    "clicks": 51,
+    "conversions": 33.2
    }
   },
   {
    "date": "2026-07-16",
    "display": {
-    "spend": 5975.84,
-    "impressions": 1219555,
-    "clicks": 1098,
-    "conversions": 180.4
+    "spend": 395.7,
+    "impressions": 84792,
+    "clicks": 76,
+    "conversions": 57.2
    },
    "video": {
-    "spend": 8211.92,
-    "impressions": 366599,
-    "clicks": 341,
-    "conversions": 171.5
+    "spend": 502.63,
+    "impressions": 22654,
+    "clicks": 21,
+    "conversions": 61.1
    },
    "email": {
-    "spend": 271.65,
-    "impressions": 22202,
-    "clicks": 464,
-    "conversions": 83.8
+    "spend": 49.39,
+    "impressions": 2297,
+    "clicks": 48,
+    "conversions": 42.5
    }
   },
   {
    "date": "2026-07-17",
    "display": {
-    "spend": 4924.31,
-    "impressions": 1004958,
-    "clicks": 904,
-    "conversions": 151.0
+    "spend": 326.07,
+    "impressions": 69872,
+    "clicks": 63,
+    "conversions": 47.9
    },
    "video": {
-    "spend": 6856.3,
-    "impressions": 306081,
-    "clicks": 285,
-    "conversions": 145.4
+    "spend": 419.65,
+    "impressions": 18914,
+    "clicks": 17,
+    "conversions": 51.8
    },
    "email": {
-    "spend": 245.01,
-    "impressions": 20024,
-    "clicks": 419,
-    "conversions": 76.8
+    "spend": 44.55,
+    "impressions": 2071,
+    "clicks": 43,
+    "conversions": 38.9
    }
   },
   {
    "date": "2026-07-18",
    "display": {
-    "spend": 4621.33,
-    "impressions": 943126,
-    "clicks": 849,
-    "conversions": 129.3
+    "spend": 306.01,
+    "impressions": 65573,
+    "clicks": 59,
+    "conversions": 41.0
    },
    "video": {
-    "spend": 7051.19,
-    "impressions": 314781,
-    "clicks": 293,
-    "conversions": 136.5
+    "spend": 431.58,
+    "impressions": 19452,
+    "clicks": 18,
+    "conversions": 48.6
    },
    "email": {
-    "spend": 2145.58,
-    "impressions": 175353,
-    "clicks": 3667,
-    "conversions": 613.3
+    "spend": 390.11,
+    "impressions": 18140,
+    "clicks": 380,
+    "conversions": 310.8
    }
   },
   {
    "date": "2026-07-19",
    "display": {
-    "spend": 4897.27,
-    "impressions": 999441,
-    "clicks": 900,
-    "conversions": 140.9
+    "spend": 324.28,
+    "impressions": 69488,
+    "clicks": 63,
+    "conversions": 44.7
    },
    "video": {
-    "spend": 7255.49,
-    "impressions": 323901,
-    "clicks": 301,
-    "conversions": 144.4
+    "spend": 444.09,
+    "impressions": 20015,
+    "clicks": 18,
+    "conversions": 51.4
    },
    "email": {
-    "spend": 243.33,
-    "impressions": 19887,
-    "clicks": 416,
-    "conversions": 71.5
+    "spend": 44.24,
+    "impressions": 2057,
+    "clicks": 43,
+    "conversions": 36.2
    }
   },
   {
    "date": "2026-07-20",
    "display": {
-    "spend": 4984.46,
-    "impressions": 1017235,
-    "clicks": 916,
-    "conversions": 108.4
+    "spend": 330.05,
+    "impressions": 70725,
+    "clicks": 64,
+    "conversions": 34.4
    },
    "video": {
-    "spend": 6894.63,
-    "impressions": 307792,
-    "clicks": 286,
-    "conversions": 103.7
+    "spend": 422.0,
+    "impressions": 19020,
+    "clicks": 18,
+    "conversions": 36.9
    },
    "email": {
-    "spend": 228.76,
-    "impressions": 18696,
-    "clicks": 391,
-    "conversions": 50.8
+    "spend": 41.59,
+    "impressions": 1934,
+    "clicks": 41,
+    "conversions": 25.8
    }
   },
   {
    "date": "2026-07-21",
    "display": {
-    "spend": 4733.0,
-    "impressions": 965916,
-    "clicks": 869,
-    "conversions": 103.5
+    "spend": 313.4,
+    "impressions": 67157,
+    "clicks": 60,
+    "conversions": 32.8
    },
    "video": {
-    "spend": 6924.69,
-    "impressions": 309134,
-    "clicks": 288,
-    "conversions": 104.7
+    "spend": 423.84,
+    "impressions": 19103,
+    "clicks": 18,
+    "conversions": 37.3
    },
    "email": {
-    "spend": 2087.77,
-    "impressions": 170628,
-    "clicks": 3568,
-    "conversions": 466.4
+    "spend": 379.59,
+    "impressions": 17651,
+    "clicks": 370,
+    "conversions": 236.4
    }
   },
   {
    "date": "2026-07-22",
    "display": {
-    "spend": 5269.56,
-    "impressions": 1075417,
-    "clicks": 968,
-    "conversions": 141.7
+    "spend": 348.93,
+    "impressions": 74771,
+    "clicks": 67,
+    "conversions": 44.9
    },
    "video": {
-    "spend": 8245.25,
-    "impressions": 368086,
-    "clicks": 343,
-    "conversions": 153.3
+    "spend": 504.67,
+    "impressions": 22746,
+    "clicks": 21,
+    "conversions": 54.6
    },
    "email": {
-    "spend": 291.58,
-    "impressions": 23830,
-    "clicks": 498,
-    "conversions": 80.1
+    "spend": 53.01,
+    "impressions": 2465,
+    "clicks": 52,
+    "conversions": 40.6
    }
   },
   {
    "date": "2026-07-23",
    "display": {
-    "spend": 5913.45,
-    "impressions": 1206824,
-    "clicks": 1086,
-    "conversions": 155.1
+    "spend": 391.57,
+    "impressions": 83907,
+    "clicks": 76,
+    "conversions": 49.2
    },
    "video": {
-    "spend": 8696.23,
-    "impressions": 388219,
-    "clicks": 361,
-    "conversions": 157.8
+    "spend": 532.27,
+    "impressions": 23990,
+    "clicks": 22,
+    "conversions": 56.2
    },
    "email": {
-    "spend": 283.25,
-    "impressions": 23150,
-    "clicks": 484,
-    "conversions": 75.9
+    "spend": 51.5,
+    "impressions": 2395,
+    "clicks": 50,
+    "conversions": 38.5
    }
   },
   {
    "date": "2026-07-24",
    "display": {
-    "spend": 5064.88,
-    "impressions": 1033647,
-    "clicks": 930,
-    "conversions": 160.0
+    "spend": 335.38,
+    "impressions": 71867,
+    "clicks": 65,
+    "conversions": 50.7
    },
    "video": {
-    "spend": 7150.68,
-    "impressions": 319222,
-    "clicks": 297,
-    "conversions": 156.2
+    "spend": 437.67,
+    "impressions": 19726,
+    "clicks": 18,
+    "conversions": 55.6
    },
    "email": {
-    "spend": 240.92,
-    "impressions": 19689,
-    "clicks": 412,
-    "conversions": 77.7
+    "spend": 43.8,
+    "impressions": 2037,
+    "clicks": 43,
+    "conversions": 39.4
    }
   },
   {
    "date": "2026-07-25",
    "display": {
-    "spend": 4519.88,
-    "impressions": 922423,
-    "clicks": 830,
-    "conversions": 139.0
+    "spend": 299.29,
+    "impressions": 64133,
+    "clicks": 58,
+    "conversions": 44.1
    },
    "video": {
-    "spend": 6957.54,
-    "impressions": 310600,
-    "clicks": 289,
-    "conversions": 148.0
+    "spend": 425.85,
+    "impressions": 19193,
+    "clicks": 18,
+    "conversions": 52.7
    },
    "email": {
-    "spend": 2095.81,
-    "impressions": 171285,
-    "clicks": 3582,
-    "conversions": 658.5
+    "spend": 381.06,
+    "impressions": 17719,
+    "clicks": 372,
+    "conversions": 333.8
    }
   },
   {
    "date": "2026-07-26",
    "display": {
-    "spend": 4675.21,
-    "impressions": 954122,
-    "clicks": 859,
-    "conversions": 112.4
+    "spend": 309.57,
+    "impressions": 66337,
+    "clicks": 60,
+    "conversions": 35.6
    },
    "video": {
-    "spend": 7390.4,
-    "impressions": 329924,
-    "clicks": 307,
-    "conversions": 122.9
+    "spend": 452.34,
+    "impressions": 20387,
+    "clicks": 19,
+    "conversions": 43.8
    },
    "email": {
-    "spend": 251.58,
-    "impressions": 20561,
-    "clicks": 430,
-    "conversions": 61.8
+    "spend": 45.74,
+    "impressions": 2127,
+    "clicks": 45,
+    "conversions": 31.3
    }
   },
   {
    "date": "2026-07-27",
    "display": {
-    "spend": 5023.8,
-    "impressions": 1025262,
-    "clicks": 923,
-    "conversions": 126.1
+    "spend": 332.66,
+    "impressions": 71284,
+    "clicks": 64,
+    "conversions": 40.0
    },
    "video": {
-    "spend": 7348.38,
-    "impressions": 328048,
-    "clicks": 305,
-    "conversions": 127.5
+    "spend": 449.77,
+    "impressions": 20271,
+    "clicks": 19,
+    "conversions": 45.4
    },
    "email": {
-    "spend": 235.51,
-    "impressions": 19248,
-    "clicks": 403,
-    "conversions": 60.4
+    "spend": 42.82,
+    "impressions": 1991,
+    "clicks": 42,
+    "conversions": 30.6
    }
   },
   {
    "date": "2026-07-28",
    "display": {
-    "spend": 4833.64,
-    "impressions": 986454,
-    "clicks": 888,
-    "conversions": 106.5
+    "spend": 320.07,
+    "impressions": 68585,
+    "clicks": 62,
+    "conversions": 33.8
    },
    "video": {
-    "spend": 7070.41,
-    "impressions": 315639,
-    "clicks": 294,
-    "conversions": 107.7
+    "spend": 432.76,
+    "impressions": 19505,
+    "clicks": 18,
+    "conversions": 38.4
    },
    "email": {
-    "spend": 2025.51,
-    "impressions": 165539,
-    "clicks": 3462,
-    "conversions": 455.9
+    "spend": 368.27,
+    "impressions": 17125,
+    "clicks": 359,
+    "conversions": 231.0
    }
   },
   {
    "date": "2026-07-29",
    "display": {
-    "spend": 5062.33,
-    "impressions": 1033127,
-    "clicks": 930,
-    "conversions": 118.3
+    "spend": 335.21,
+    "impressions": 71830,
+    "clicks": 65,
+    "conversions": 37.5
    },
    "video": {
-    "spend": 8135.32,
-    "impressions": 363179,
-    "clicks": 338,
-    "conversions": 131.5
+    "spend": 497.94,
+    "impressions": 22442,
+    "clicks": 21,
+    "conversions": 46.8
    },
    "email": {
-    "spend": 289.42,
-    "impressions": 23654,
-    "clicks": 495,
-    "conversions": 69.1
+    "spend": 52.62,
+    "impressions": 2447,
+    "clicks": 51,
+    "conversions": 35.0
    }
   },
   {
    "date": "2026-07-30",
    "display": {
-    "spend": 5716.15,
-    "impressions": 1166559,
-    "clicks": 1050,
-    "conversions": 176.8
+    "spend": 378.5,
+    "impressions": 81108,
+    "clicks": 73,
+    "conversions": 56.1
    },
    "video": {
-    "spend": 9024.31,
-    "impressions": 402866,
-    "clicks": 375,
-    "conversions": 193.0
+    "spend": 552.35,
+    "impressions": 24895,
+    "clicks": 23,
+    "conversions": 68.7
    },
    "email": {
-    "spend": 295.77,
-    "impressions": 24172,
-    "clicks": 505,
-    "conversions": 93.4
+    "spend": 53.78,
+    "impressions": 2501,
+    "clicks": 52,
+    "conversions": 47.4
    }
   },
   {
    "date": "2026-07-31",
    "display": {
-    "spend": 5177.1,
-    "impressions": 1056548,
-    "clicks": 951,
-    "conversions": 150.2
+    "spend": 342.81,
+    "impressions": 73459,
+    "clicks": 66,
+    "conversions": 47.6
    },
    "video": {
-    "spend": 7593.41,
-    "impressions": 338987,
-    "clicks": 316,
-    "conversions": 152.4
+    "spend": 464.77,
+    "impressions": 20947,
+    "clicks": 19,
+    "conversions": 54.3
    },
    "email": {
-    "spend": 243.18,
-    "impressions": 19874,
-    "clicks": 416,
-    "conversions": 72.1
+    "spend": 44.21,
+    "impressions": 2056,
+    "clicks": 43,
+    "conversions": 36.5
    }
   },
   {
    "date": "2026-08-01",
    "display": {
-    "spend": 4541.39,
-    "impressions": 926812,
-    "clicks": 834,
-    "conversions": 134.1
+    "spend": 300.71,
+    "impressions": 64439,
+    "clicks": 58,
+    "conversions": 42.5
    },
    "video": {
-    "spend": 6962.7,
-    "impressions": 310830,
-    "clicks": 289,
-    "conversions": 142.2
+    "spend": 426.17,
+    "impressions": 19207,
+    "clicks": 18,
+    "conversions": 50.6
    },
    "email": {
-    "spend": 2026.32,
-    "impressions": 165605,
-    "clicks": 3463,
-    "conversions": 611.2
+    "spend": 368.42,
+    "impressions": 17132,
+    "clicks": 359,
+    "conversions": 309.8
    }
   },
   {
    "date": "2026-08-02",
    "display": {
-    "spend": 4448.84,
-    "impressions": 907924,
-    "clicks": 817,
-    "conversions": 125.1
+    "spend": 294.59,
+    "impressions": 63125,
+    "clicks": 57,
+    "conversions": 39.7
    },
    "video": {
-    "spend": 7361.24,
-    "impressions": 328622,
-    "clicks": 306,
-    "conversions": 143.2
+    "spend": 450.56,
+    "impressions": 20307,
+    "clicks": 19,
+    "conversions": 51.0
    },
    "email": {
-    "spend": 254.49,
-    "impressions": 20799,
-    "clicks": 435,
-    "conversions": 73.1
+    "spend": 46.27,
+    "impressions": 2152,
+    "clicks": 45,
+    "conversions": 37.1
    }
   },
   {
    "date": "2026-08-03",
    "display": {
-    "spend": 4942.92,
-    "impressions": 1008757,
-    "clicks": 908,
-    "conversions": 102.2
+    "spend": 327.3,
+    "impressions": 70136,
+    "clicks": 63,
+    "conversions": 32.4
    },
    "video": {
-    "spend": 7746.85,
-    "impressions": 345837,
-    "clicks": 322,
-    "conversions": 110.8
+    "spend": 474.16,
+    "impressions": 21371,
+    "clicks": 20,
+    "conversions": 39.5
    },
    "email": {
-    "spend": 246.01,
-    "impressions": 20106,
-    "clicks": 420,
-    "conversions": 52.0
+    "spend": 44.73,
+    "impressions": 2080,
+    "clicks": 44,
+    "conversions": 26.3
    }
   },
   {
    "date": "2026-08-04",
    "display": {
-    "spend": 4970.99,
-    "impressions": 1014486,
-    "clicks": 913,
-    "conversions": 117.8
+    "spend": 329.16,
+    "impressions": 70534,
+    "clicks": 63,
+    "conversions": 37.4
    },
    "video": {
-    "spend": 7406.4,
-    "impressions": 330638,
-    "clicks": 308,
-    "conversions": 121.4
+    "spend": 453.32,
+    "impressions": 20431,
+    "clicks": 19,
+    "conversions": 43.2
    },
    "email": {
-    "spend": 2002.23,
-    "impressions": 163637,
-    "clicks": 3422,
-    "conversions": 484.8
+    "spend": 364.04,
+    "impressions": 16928,
+    "clicks": 355,
+    "conversions": 245.7
    }
   },
   {
    "date": "2026-08-05",
    "display": {
-    "spend": 4980.4,
-    "impressions": 1016405,
-    "clicks": 915,
-    "conversions": 127.5
+    "spend": 329.78,
+    "impressions": 70668,
+    "clicks": 64,
+    "conversions": 40.4
    },
    "video": {
-    "spend": 8034.95,
-    "impressions": 358698,
-    "clicks": 334,
-    "conversions": 142.3
+    "spend": 491.79,
+    "impressions": 22165,
+    "clicks": 20,
+    "conversions": 50.7
    },
    "email": {
-    "spend": 281.7,
-    "impressions": 23023,
-    "clicks": 481,
-    "conversions": 73.7
+    "spend": 51.22,
+    "impressions": 2382,
+    "clicks": 50,
+    "conversions": 37.3
    }
   },
   {
    "date": "2026-08-06",
    "display": {
-    "spend": 5444.26,
-    "impressions": 1111070,
-    "clicks": 1000,
-    "conversions": 144.0
+    "spend": 360.5,
+    "impressions": 77250,
+    "clicks": 70,
+    "conversions": 45.7
    },
    "video": {
-    "spend": 9134.08,
-    "impressions": 407766,
-    "clicks": 380,
-    "conversions": 167.1
+    "spend": 559.07,
+    "impressions": 25197,
+    "clicks": 23,
+    "conversions": 59.5
    },
    "email": {
-    "spend": 304.49,
-    "impressions": 24885,
-    "clicks": 520,
-    "conversions": 82.3
+    "spend": 55.36,
+    "impressions": 2574,
+    "clicks": 54,
+    "conversions": 41.7
    }
   },
   {
    "date": "2026-08-07",
    "display": {
-    "spend": 5190.55,
-    "impressions": 1059293,
-    "clicks": 953,
-    "conversions": 170.8
+    "spend": 343.7,
+    "impressions": 73650,
+    "clicks": 66,
+    "conversions": 54.2
    },
    "video": {
-    "spend": 8077.71,
-    "impressions": 360607,
-    "clicks": 336,
-    "conversions": 183.8
+    "spend": 494.41,
+    "impressions": 22283,
+    "clicks": 21,
+    "conversions": 65.5
    },
    "email": {
-    "spend": 251.49,
-    "impressions": 20554,
-    "clicks": 430,
-    "conversions": 84.5
+    "spend": 45.73,
+    "impressions": 2126,
+    "clicks": 45,
+    "conversions": 42.8
    }
   },
   {
    "date": "2026-08-08",
    "display": {
-    "spend": 4651.42,
-    "impressions": 949268,
-    "clicks": 854,
-    "conversions": 134.2
+    "spend": 308.0,
+    "impressions": 66000,
+    "clicks": 59,
+    "conversions": 42.5
    },
    "video": {
-    "spend": 7147.03,
-    "impressions": 319059,
-    "clicks": 297,
-    "conversions": 142.6
+    "spend": 437.45,
+    "impressions": 19716,
+    "clicks": 18,
+    "conversions": 50.8
    },
    "email": {
-    "spend": 1971.59,
-    "impressions": 161133,
-    "clicks": 3370,
-    "conversions": 580.9
+    "spend": 358.47,
+    "impressions": 16669,
+    "clicks": 350,
+    "conversions": 294.4
    }
   },
   {
    "date": "2026-08-09",
    "display": {
-    "spend": 4292.21,
-    "impressions": 875958,
-    "clicks": 788,
-    "conversions": 107.4
+    "spend": 284.21,
+    "impressions": 60903,
+    "clicks": 55,
+    "conversions": 34.1
    },
    "video": {
-    "spend": 7248.19,
-    "impressions": 323575,
-    "clicks": 301,
-    "conversions": 125.4
+    "spend": 443.64,
+    "impressions": 19995,
+    "clicks": 18,
+    "conversions": 44.7
    },
    "email": {
-    "spend": 251.31,
-    "impressions": 20539,
-    "clicks": 430,
-    "conversions": 64.2
+    "spend": 45.69,
+    "impressions": 2125,
+    "clicks": 45,
+    "conversions": 32.6
    }
   },
   {
    "date": "2026-08-10",
    "display": {
-    "spend": 4756.38,
-    "impressions": 970687,
-    "clicks": 874,
-    "conversions": 120.4
+    "spend": 314.95,
+    "impressions": 67489,
+    "clicks": 61,
+    "conversions": 38.2
    },
    "video": {
-    "spend": 7988.82,
-    "impressions": 356639,
-    "clicks": 332,
-    "conversions": 139.9
+    "spend": 488.97,
+    "impressions": 22038,
+    "clicks": 20,
+    "conversions": 49.8
    },
    "email": {
-    "spend": 256.36,
-    "impressions": 20952,
-    "clicks": 438,
-    "conversions": 66.3
+    "spend": 46.61,
+    "impressions": 2167,
+    "clicks": 45,
+    "conversions": 33.6
    }
   },
   {
    "date": "2026-08-11",
    "display": {
-    "spend": 5062.81,
-    "impressions": 1033223,
-    "clicks": 930,
-    "conversions": 103.9
+    "spend": 335.24,
+    "impressions": 71837,
+    "clicks": 65,
+    "conversions": 33.0
    },
    "video": {
-    "spend": 7874.1,
-    "impressions": 351517,
-    "clicks": 327,
-    "conversions": 111.8
+    "spend": 481.95,
+    "impressions": 21722,
+    "clicks": 20,
+    "conversions": 39.8
    },
    "email": {
-    "spend": 2033.33,
-    "impressions": 166179,
-    "clicks": 3475,
-    "conversions": 426.3
+    "spend": 369.7,
+    "impressions": 17191,
+    "clicks": 360,
+    "conversions": 216.1
    }
   },
   {
    "date": "2026-08-12",
    "display": {
-    "spend": 5030.36,
-    "impressions": 1026601,
-    "clicks": 924,
-    "conversions": 127.0
+    "spend": 333.09,
+    "impressions": 71377,
+    "clicks": 64,
+    "conversions": 40.3
    },
    "video": {
-    "spend": 8075.86,
-    "impressions": 360524,
-    "clicks": 336,
-    "conversions": 141.0
+    "spend": 494.3,
+    "impressions": 22278,
+    "clicks": 21,
+    "conversions": 50.2
    },
    "email": {
-    "spend": 272.32,
-    "impressions": 22256,
-    "clicks": 465,
-    "conversions": 70.2
+    "spend": 49.51,
+    "impressions": 2302,
+    "clicks": 48,
+    "conversions": 35.6
    }
   },
   {
    "date": "2026-08-13",
    "display": {
-    "spend": 5188.35,
-    "impressions": 1058845,
-    "clicks": 953,
-    "conversions": 157.0
+    "spend": 343.55,
+    "impressions": 73619,
+    "clicks": 66,
+    "conversions": 49.8
    },
    "video": {
-    "spend": 9056.75,
-    "impressions": 404314,
-    "clicks": 376,
-    "conversions": 189.6
+    "spend": 554.34,
+    "impressions": 24984,
+    "clicks": 23,
+    "conversions": 67.5
    },
    "email": {
-    "spend": 306.3,
-    "impressions": 25033,
-    "clicks": 523,
-    "conversions": 94.7
+    "spend": 55.69,
+    "impressions": 2590,
+    "clicks": 54,
+    "conversions": 48.0
    }
   },
   {
    "date": "2026-08-14",
    "display": {
-    "spend": 5078.23,
-    "impressions": 1036370,
-    "clicks": 933,
-    "conversions": 143.8
+    "spend": 336.26,
+    "impressions": 72056,
+    "clicks": 65,
+    "conversions": 45.6
    },
    "video": {
-    "spend": 8473.25,
-    "impressions": 378265,
-    "clicks": 352,
-    "conversions": 166.0
+    "spend": 518.62,
+    "impressions": 23374,
+    "clicks": 22,
+    "conversions": 59.1
    },
    "email": {
-    "spend": 262.95,
-    "impressions": 21490,
-    "clicks": 449,
-    "conversions": 76.1
+    "spend": 47.81,
+    "impressions": 2223,
+    "clicks": 47,
+    "conversions": 38.6
    }
   },
   {
    "date": "2026-08-15",
    "display": {
-    "spend": 4778.81,
-    "impressions": 975265,
-    "clicks": 878,
-    "conversions": 148.9
+    "spend": 316.43,
+    "impressions": 67807,
+    "clicks": 61,
+    "conversions": 47.2
    },
    "video": {
-    "spend": 7515.76,
-    "impressions": 335520,
-    "clicks": 312,
-    "conversions": 161.9
+    "spend": 460.02,
+    "impressions": 20733,
+    "clicks": 19,
+    "conversions": 57.7
    },
    "email": {
-    "spend": 1960.14,
-    "impressions": 160197,
-    "clicks": 3350,
-    "conversions": 623.8
+    "spend": 356.39,
+    "impressions": 16572,
+    "clicks": 347,
+    "conversions": 316.1
    }
   },
   {
    "date": "2026-08-16",
    "display": {
-    "spend": 4248.17,
-    "impressions": 866971,
-    "clicks": 780,
-    "conversions": 112.1
+    "spend": 281.3,
+    "impressions": 60278,
+    "clicks": 54,
+    "conversions": 35.6
    },
    "video": {
-    "spend": 7172.31,
-    "impressions": 320188,
-    "clicks": 298,
-    "conversions": 130.9
+    "spend": 438.99,
+    "impressions": 19786,
+    "clicks": 18,
+    "conversions": 46.6
    },
    "email": {
-    "spend": 243.89,
-    "impressions": 19932,
-    "clicks": 417,
-    "conversions": 65.8
+    "spend": 44.34,
+    "impressions": 2062,
+    "clicks": 43,
+    "conversions": 33.3
    }
   },
   {
    "date": "2026-08-17",
    "display": {
-    "spend": 4523.16,
-    "impressions": 923092,
-    "clicks": 831,
-    "conversions": 95.0
+    "spend": 299.51,
+    "impressions": 64180,
+    "clicks": 58,
+    "conversions": 30.1
    },
    "video": {
-    "spend": 8037.25,
-    "impressions": 358801,
-    "clicks": 334,
-    "conversions": 116.8
+    "spend": 491.93,
+    "impressions": 22172,
+    "clicks": 20,
+    "conversions": 41.6
    },
    "email": {
-    "spend": 262.67,
-    "impressions": 21467,
-    "clicks": 449,
-    "conversions": 56.4
+    "spend": 47.76,
+    "impressions": 2221,
+    "clicks": 47,
+    "conversions": 28.6
    }
   }
  ],
  "totals": {
   "spend": {
-   "current": 401999.95,
-   "prior": 388626.48
+   "current": 27999.98,
+   "prior": 27499.29
   },
   "impressions": {
-   "current": 42358999,
-   "prior": 43046170
+   "current": 2925999,
+   "prior": 2988233
   },
   "clicks": {
-   "current": 74424,
-   "prior": 78814
+   "current": 6384,
+   "prior": 6827
   },
   "conversions": {
-   "current": 14029.8,
-   "prior": 14590.5
+   "current": 5730.1,
+   "prior": 6021.9
   }
- },
- "reach": {
-  "dedupedLow": 740000,
-  "dedupedHigh": 1120000,
-  "method": "Identity graph joining IP households, device IDs and hashed email. Display cookies collapsed to households at 2.0-2.5 devices each; the band spans plausible overlap between prospecting video and retargeted display.",
-  "source": "CIMM / Go Addressable (2025): IP-to-postal matching accurate 13-16% of the time."
  },
  "video": {
   "quartiles": [
@@ -1468,23 +1461,23 @@
   "types": [
    {
     "type": "Non-skippable + bumper",
-    "spend": 109200,
-    "impressions": 3900000,
-    "cpm": 28.0,
+    "spend": 6700,
+    "impressions": 240000,
+    "cpm": 27.92,
     "vcr": 94.6,
     "cpcv": 0.03,
     "viewability": 78.4,
-    "cpa": 51.3
+    "cpa": 8.42
    },
    {
     "type": "Skippable in-stream",
-    "spend": 122800,
-    "impressions": 6457000,
-    "cpm": 19.02,
+    "spend": 7500,
+    "impressions": 400000,
+    "cpm": 18.75,
     "vcr": 62.8,
     "cpcv": 0.03,
     "viewability": 66.9,
-    "cpa": 58.1
+    "cpa": 10.31
    }
   ],
   "dropoff": [
@@ -1514,37 +1507,37 @@
   "funnel": [
    {
     "stage": "Sent",
-    "value": 1840000,
+    "value": 195000,
     "note": null,
     "suspect": false
    },
    {
     "stage": "Delivered",
-    "value": 1798000,
-    "note": "97.7% of sent",
+    "value": 186000,
+    "note": "95.4% of sent",
     "suspect": false
    },
    {
     "stage": "Opens \u2014 reported",
-    "value": 782000,
-    "note": "43.5% \u00b7 inflated by Apple MPP",
+    "value": 84000,
+    "note": "45.2% \u00b7 inflated by Apple MPP",
     "suspect": true
    },
    {
     "stage": "Opens \u2014 modelled human",
-    "value": 502000,
-    "note": "27.9% \u00b7 what we use",
+    "value": 54300,
+    "note": "29.2% \u00b7 what we use",
     "suspect": false
    },
    {
     "stage": "Clicks",
-    "value": 37600,
-    "note": "2.09% of delivered",
+    "value": 3900,
+    "note": "2.10% of delivered",
     "suspect": false
    },
    {
-    "stage": "Conversions",
-    "value": 5880,
+    "stage": "Online orders",
+    "value": 2980,
     "note": null,
     "suspect": false
    }
@@ -1552,66 +1545,66 @@
   "listHealth": [
    {
     "metric": "Active subscribers",
-    "value": 460000,
+    "value": 62000,
     "benchmark": null
    },
    {
     "metric": "New subscribers",
-    "value": 18400,
+    "value": 2400,
     "benchmark": null
    },
    {
     "metric": "Unsubscribes",
-    "value": -8272,
+    "value": -856,
     "benchmark": "0.46%"
    },
    {
     "metric": "Bounced / cleaned",
-    "value": -2100,
+    "value": -220,
     "benchmark": "2.3%"
    },
    {
     "metric": "Net monthly change",
-    "value": 8028,
+    "value": 1324,
     "benchmark": null
    }
   ],
   "frequency": [
    {
     "sends": 2,
-    "conversions": 3560,
+    "conversions": 1980,
     "unsubRate": 0.31,
-    "netList": 12900
+    "netList": 2100
    },
    {
     "sends": 3,
-    "conversions": 4960,
+    "conversions": 2560,
     "unsubRate": 0.38,
-    "netList": 10800
+    "netList": 1760
    },
    {
     "sends": 4,
-    "conversions": 5880,
+    "conversions": 2980,
     "unsubRate": 0.46,
-    "netList": 8028
+    "netList": 1324
    },
    {
     "sends": 5,
-    "conversions": 6352,
+    "conversions": 3190,
     "unsubRate": 0.81,
-    "netList": 1600
+    "netList": 260
    },
    {
     "sends": 6,
-    "conversions": 6568,
+    "conversions": 3268,
     "unsubRate": 1.34,
-    "netList": -8900
+    "netList": -1450
    },
    {
     "sends": 8,
-    "conversions": 6620,
+    "conversions": 3290,
     "unsubRate": 2.21,
-    "netList": -28400
+    "netList": -4620
    }
   ]
  },
@@ -1620,16 +1613,16 @@
    {
     "marketplace": "Private marketplace",
     "rate": 84.6,
-    "spend": 52100,
+    "spend": 3400,
     "isBenchmark": false,
-    "wasted": 8023
+    "wasted": 524
    },
    {
     "marketplace": "Native placements",
     "rate": 81.0,
-    "spend": 16500,
+    "spend": 1100,
     "isBenchmark": false,
-    "wasted": 3135
+    "wasted": 209
    },
    {
     "marketplace": "Cross-network avg 2026",
@@ -1641,9 +1634,9 @@
    {
     "marketplace": "Open exchange",
     "rate": 61.2,
-    "spend": 79400,
+    "spend": 5300,
     "isBenchmark": false,
-    "wasted": 30807
+    "wasted": 2056
    }
   ],
   "metrics": [
@@ -1660,7 +1653,7 @@
    {
     "metric": "Retargeting share of spend",
     "value": "64%",
-    "reads": "Most of display is reaching people already shopping."
+    "reads": "Most of display is reaching people who already had us in mind."
    }
   ]
  },
@@ -1668,265 +1661,377 @@
   {
    "id": "em-1",
    "channel": "email",
-   "name": "Service reminder \u2014 45k mile",
-   "spend": 5200,
-   "units": 412000,
+   "name": "Two for Tuesday",
+   "spend": 2300,
+   "units": 104000,
    "completion": null,
-   "conversions": 1712,
+   "conversions": 1780,
    "verdict": "scale",
    "placements": [
     {
-     "name": "Segment: owners 30-50k mi",
-     "spend": 3100,
-     "units": 248000,
-     "conversions": 1104,
-     "cpa": 2.81
+     "name": "Ordered in last 30d",
+     "spend": 1380,
+     "units": 61000,
+     "conversions": 1140,
+     "cpa": 1.21
     },
     {
-     "name": "Segment: lapsed 12mo+",
-     "spend": 2100,
-     "units": 164000,
-     "conversions": 608,
-     "cpa": 3.45
+     "name": "Ordered 31-90d ago",
+     "spend": 920,
+     "units": 43000,
+     "conversions": 640,
+     "cpa": 1.44
     }
    ],
-   "cpa": 3.04
+   "cpa": 1.29,
+   "metrics": {
+    "delivered": 104000,
+    "openRateReported": 0.468,
+    "openRateModelled": 0.302,
+    "clicks": 2290,
+    "clickRate": 0.022,
+    "unsubRate": 0.0038
+   },
+   "assetKind": "image",
+   "asset": "../madhive-assets/creative-em-1.svg",
+   "poster": null,
+   "format": "600x300"
   },
   {
    "id": "em-2",
    "channel": "email",
-   "name": "Lease-end offer",
-   "spend": 6800,
-   "units": 388000,
+   "name": "We miss you \u2014 30 days",
+   "spend": 1700,
+   "units": 82000,
    "completion": null,
-   "conversions": 1288,
+   "conversions": 1200,
    "verdict": "scale",
    "placements": [
     {
-     "name": "Lease ending <=90d",
-     "spend": 4200,
-     "units": 201000,
-     "conversions": 872,
-     "cpa": 4.82
+     "name": "Lapsed 30-60d",
+     "spend": 1020,
+     "units": 47000,
+     "conversions": 780,
+     "cpa": 1.31
     },
     {
-     "name": "Lease ending 91-180d",
-     "spend": 2600,
-     "units": 187000,
-     "conversions": 416,
-     "cpa": 6.25
+     "name": "Lapsed 61-120d",
+     "spend": 680,
+     "units": 35000,
+     "conversions": 420,
+     "cpa": 1.62
     }
    ],
-   "cpa": 5.28
+   "cpa": 1.42,
+   "metrics": {
+    "delivered": 82000,
+    "openRateReported": 0.431,
+    "openRateModelled": 0.278,
+    "clicks": 1610,
+    "clickRate": 0.0196,
+    "unsubRate": 0.0054
+   },
+   "assetKind": "image",
+   "asset": "../madhive-assets/creative-em-2.svg",
+   "poster": null,
+   "format": "600x300"
   },
   {
    "id": "vd-1",
    "channel": "video",
-   "name": "Summer Event :15 \u2014 non-skip",
-   "spend": 64800,
-   "units": 2310000,
+   "name": "Fresh out the oven :15",
+   "spend": 4200,
+   "units": 196000,
    "completion": 95.1,
-   "conversions": 1462,
+   "conversions": 520,
    "verdict": "scale",
    "placements": [
     {
-     "name": "Local broadcaster app",
-     "spend": 31200,
-     "units": 1090000,
-     "conversions": 782,
-     "cpa": 39.9
+     "name": "Local streaming app",
+     "spend": 2100,
+     "units": 98000,
+     "conversions": 281,
+     "cpa": 7.47
+    },
+    {
+     "name": "FAST \u2014 food & travel",
+     "spend": 1300,
+     "units": 61000,
+     "conversions": 148,
+     "cpa": 8.78
     },
     {
      "name": "Premium AVOD",
-     "spend": 22400,
-     "units": 798000,
-     "conversions": 467,
-     "cpa": 47.97
-    },
-    {
-     "name": "FAST \u2014 news",
-     "spend": 11200,
-     "units": 422000,
-     "conversions": 213,
-     "cpa": 52.58
+     "spend": 800,
+     "units": 37000,
+     "conversions": 91,
+     "cpa": 8.79
     }
    ],
-   "cpa": 44.32
+   "cpa": 8.08,
+   "metrics": {
+    "q25": 0.982,
+    "q50": 0.972,
+    "q75": 0.964,
+    "q100": 0.951,
+    "cpcv": 0.0225,
+    "viewability": 0.784
+   },
+   "assetKind": "video",
+   "asset": "../madhive-assets/video-creative.mp4",
+   "poster": "../madhive-assets/video-poster.svg",
+   "format": ":15 non-skippable"
   },
   {
    "id": "vd-2",
    "channel": "video",
-   "name": "Test Drive :30 \u2014 non-skip",
-   "spend": 44400,
-   "units": 1590000,
+   "name": "Meet the dough :30",
+   "spend": 3600,
+   "units": 164000,
    "completion": 93.8,
-   "conversions": 954,
+   "conversions": 384,
    "verdict": "scale",
    "placements": [
     {
      "name": "Premium AVOD",
-     "spend": 26100,
-     "units": 934000,
-     "conversions": 578,
-     "cpa": 45.16
+     "spend": 2200,
+     "units": 100000,
+     "conversions": 241,
+     "cpa": 9.13
     },
     {
      "name": "FAST \u2014 entertainment",
-     "spend": 18300,
-     "units": 656000,
-     "conversions": 376,
-     "cpa": 48.67
+     "spend": 1400,
+     "units": 64000,
+     "conversions": 143,
+     "cpa": 9.79
     }
    ],
-   "cpa": 46.54
+   "cpa": 9.38,
+   "metrics": {
+    "q25": 0.974,
+    "q50": 0.961,
+    "q75": 0.947,
+    "q100": 0.938,
+    "cpcv": 0.0234,
+    "viewability": 0.771
+   },
+   "assetKind": "video",
+   "asset": "../madhive-assets/video-creative.mp4",
+   "poster": "../madhive-assets/video-poster.svg",
+   "format": ":30 non-skippable"
   },
   {
    "id": "vd-3",
    "channel": "video",
-   "name": "Brand Anthem :30 \u2014 skippable",
-   "spend": 71200,
-   "units": 3742000,
+   "name": "Family night :30 skippable",
+   "spend": 4100,
+   "units": 182000,
    "completion": 61.2,
-   "conversions": 1129,
+   "conversions": 372,
    "verdict": "fix",
    "placements": [
     {
      "name": "Web pre-roll",
-     "spend": 42800,
-     "units": 2250000,
-     "conversions": 666,
-     "cpa": 64.26
+     "spend": 2500,
+     "units": 111000,
+     "conversions": 231,
+     "cpa": 10.82
     },
     {
      "name": "Mobile in-app",
-     "spend": 28400,
-     "units": 1492000,
-     "conversions": 463,
-     "cpa": 61.34
+     "spend": 1600,
+     "units": 71000,
+     "conversions": 141,
+     "cpa": 11.35
     }
    ],
-   "cpa": 63.06
+   "cpa": 11.02,
+   "metrics": {
+    "q25": 0.706,
+    "q50": 0.658,
+    "q75": 0.629,
+    "q100": 0.612,
+    "cpcv": 0.0368,
+    "viewability": 0.672
+   },
+   "assetKind": "video",
+   "asset": "../madhive-assets/video-creative.mp4",
+   "poster": "../madhive-assets/video-poster.svg",
+   "format": ":30 skippable"
   },
   {
    "id": "vd-4",
    "channel": "video",
-   "name": "Inventory :15 \u2014 skippable",
-   "spend": 51600,
-   "units": 2715000,
+   "name": "Late night slice :15 skippable",
+   "spend": 2300,
+   "units": 98000,
    "completion": 64.9,
-   "conversions": 695,
+   "conversions": 234,
    "verdict": "pause",
    "placements": [
     {
      "name": "Web pre-roll",
-     "spend": 30900,
-     "units": 1626000,
-     "conversions": 425,
-     "cpa": 72.71
+     "spend": 1400,
+     "units": 60000,
+     "conversions": 145,
+     "cpa": 9.66
     },
     {
      "name": "Mobile in-app",
-     "spend": 20700,
-     "units": 1089000,
-     "conversions": 270,
-     "cpa": 76.67
+     "spend": 900,
+     "units": 38000,
+     "conversions": 89,
+     "cpa": 10.11
     }
    ],
-   "cpa": 74.24
+   "cpa": 9.83,
+   "metrics": {
+    "q25": 0.741,
+    "q50": 0.694,
+    "q75": 0.667,
+    "q100": 0.649,
+    "cpcv": 0.0362,
+    "viewability": 0.663
+   },
+   "assetKind": "video",
+   "asset": "../madhive-assets/video-creative.mp4",
+   "poster": "../madhive-assets/video-poster.svg",
+   "format": ":15 skippable"
   },
   {
    "id": "dp-1",
    "channel": "display",
-   "name": "Prospecting \u2014 in-market auto",
-   "spend": 48200,
-   "units": 10600000,
+   "name": "Family bundle \u2014 $26",
+   "spend": 2900,
+   "units": 620000,
    "completion": null,
-   "conversions": 1402,
+   "conversions": 420,
    "verdict": "hold",
    "placements": [
     {
      "name": "PMP",
-     "spend": 29600,
-     "units": 6100000,
-     "conversions": 944,
-     "cpa": 31.36
+     "spend": 1800,
+     "units": 385000,
+     "conversions": 276,
+     "cpa": 6.52
     },
     {
      "name": "Open exchange",
-     "spend": 18600,
-     "units": 4500000,
-     "conversions": 458,
-     "cpa": 40.61
+     "spend": 1100,
+     "units": 235000,
+     "conversions": 144,
+     "cpa": 7.64
     }
    ],
-   "cpa": 34.38
+   "cpa": 6.9,
+   "metrics": {
+    "clicks": 558,
+    "ctr": 0.0009,
+    "viewability": 0.812,
+    "timeInView": 6.9
+   },
+   "assetKind": "image",
+   "asset": "../madhive-assets/creative-dp-1.svg",
+   "poster": null,
+   "format": "300x250"
   },
   {
    "id": "dp-2",
    "channel": "display",
-   "name": "Native \u2014 model comparison",
-   "spend": 16500,
-   "units": 2704000,
+   "name": "Two for Tuesday banner",
+   "spend": 1800,
+   "units": 390000,
    "completion": null,
-   "conversions": 502,
+   "conversions": 244,
    "verdict": "hold",
    "placements": [
     {
-     "name": "Native exchange",
-     "spend": 16500,
-     "units": 2704000,
-     "conversions": 502,
-     "cpa": 32.87
+     "name": "Open exchange",
+     "spend": 1800,
+     "units": 390000,
+     "conversions": 244,
+     "cpa": 7.38
     }
    ],
-   "cpa": 32.87
+   "cpa": 7.38,
+   "metrics": {
+    "clicks": 351,
+    "ctr": 0.0009,
+    "viewability": 0.688,
+    "timeInView": 4.2
+   },
+   "assetKind": "image",
+   "asset": "../madhive-assets/creative-dp-2.svg",
+   "poster": null,
+   "format": "728x90"
   },
   {
    "id": "dp-3",
    "channel": "display",
-   "name": "Retarget \u2014 VDP abandoners",
-   "spend": 61400,
-   "units": 11800000,
+   "name": "Retarget \u2014 left in cart",
+   "spend": 3400,
+   "units": 730000,
    "completion": null,
-   "conversions": 1608,
+   "conversions": 386,
    "verdict": "hold",
    "placements": [
     {
      "name": "Open exchange",
-     "spend": 38900,
-     "units": 7900000,
-     "conversions": 924,
-     "cpa": 42.1
+     "spend": 2100,
+     "units": 452000,
+     "conversions": 232,
+     "cpa": 9.05
     },
     {
      "name": "PMP",
-     "spend": 22500,
-     "units": 3900000,
-     "conversions": 684,
-     "cpa": 32.89
+     "spend": 1300,
+     "units": 278000,
+     "conversions": 154,
+     "cpa": 8.44
     }
    ],
-   "cpa": 38.18
+   "cpa": 8.81,
+   "metrics": {
+    "clicks": 657,
+    "ctr": 0.0009,
+    "viewability": 0.604,
+    "timeInView": 7.4
+   },
+   "assetKind": "image",
+   "asset": "../madhive-assets/creative-dp-3.svg",
+   "poster": null,
+   "format": "300x600"
   },
   {
    "id": "dp-4",
    "channel": "display",
-   "name": "Conquest \u2014 competitor owners",
-   "spend": 21900,
-   "units": 5100000,
+   "name": "New: Detroit-style",
+   "spend": 1700,
+   "units": 360000,
    "completion": null,
-   "conversions": 398,
+   "conversions": 190,
    "verdict": "pause",
    "placements": [
     {
      "name": "Open exchange",
-     "spend": 21900,
-     "units": 5100000,
-     "conversions": 398,
-     "cpa": 55.03
+     "spend": 1700,
+     "units": 360000,
+     "conversions": 190,
+     "cpa": 8.95
     }
    ],
-   "cpa": 55.03
+   "cpa": 8.95,
+   "metrics": {
+    "clicks": 324,
+    "ctr": 0.0009,
+    "viewability": 0.641,
+    "timeInView": 5.1
+   },
+   "assetKind": "image",
+   "asset": "../madhive-assets/creative-dp-4.svg",
+   "poster": null,
+   "format": "300x250"
   }
  ]
 }

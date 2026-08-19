@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="600" viewBox="0 0 300 600" role="img" aria-label="Your cart's waiting — placeholder creative">
+  <defs>
+    <linearGradient id="gdp-3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2b3a2f"/><stop offset="100%" stop-color="#44583c"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="600" fill="#f7f4ef"/>
+  <rect width="300" height="600" fill="url(#gdp-3)"/>
+  <circle cx="258" cy="108" r="180" fill="#ffffff" opacity="0.05"/>
+  <circle cx="36" cy="552" r="132" fill="#ffffff" opacity="0.04"/>
+  <text x="20" y="46" text-anchor="start" font-family="Inter, system-ui, sans-serif"
+    font-size="10" font-weight="700" letter-spacing="1.6" fill="#e0561d">STILL HUNGRY?</text>
+  <text x="20" y="82" text-anchor="start" font-family="Inter, system-ui, sans-serif"
+    font-size="27" font-weight="800" fill="#ffffff">Your cart's waiting</text>
+  <text x="20" y="108" text-anchor="start" font-family="Inter, system-ui, sans-serif"
+    font-size="14" font-weight="500" fill="#ffffff" opacity="0.72">We kept it for 24 hours</text>
+  <rect x="20" y="540" width="260" height="40" rx="4" fill="#e0561d"/>
+  <text x="150" y="564" text-anchor="middle"
+    font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Finish your order</text>
+  <text x="294" y="594" text-anchor="end" font-family="ui-monospace, monospace"
+    font-size="8" fill="#ffffff" opacity="0.45">PLACEHOLDER · 300x600</text>
+</svg>

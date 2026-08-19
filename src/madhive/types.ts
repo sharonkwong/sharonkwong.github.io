@@ -86,13 +86,12 @@ export interface Creative {
   id: string; channel: ChannelKey; name: string; spend: number; units: number;
   completion: number | null; conversions: number; cpa: number;
   verdict: Verdict; placements: Placement[];
-}
-
-export interface ReachBlock {
-  dedupedLow: number;
-  dedupedHigh: number;
-  method: string;
-  source: string;
+  /** Metrics this format can actually emit — differs by channel. */
+  metrics: Record<string, number>;
+  assetKind: "image" | "video";
+  asset: string;
+  poster: string | null;
+  format: string;
 }
 
 export interface CampaignData {
@@ -111,7 +110,6 @@ export interface CampaignData {
     { current: number; prior: number }>;
   channels: Channel[];
   daily: DailyRow[];
-  reach: ReachBlock;
   video: { quartiles: QuartileRow[]; types: VideoType[]; dropoff: { stage: string; nonskip: number; skip: number }[] };
   email: { funnel: FunnelRow[]; listHealth: ListHealthRow[]; frequency: FreqRow[] };
   display: { viewability: ViewabilityRow[]; metrics: DisplayMetric[] };

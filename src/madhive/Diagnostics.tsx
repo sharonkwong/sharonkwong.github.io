@@ -6,6 +6,7 @@ import {
 import { money, nf } from "./data";
 import type { CampaignData } from "./types";
 import { BarRow, Callout, ChartTip, INK, Kpi, KpiRow, MUTED, Panel, RULE, SectionHead } from "./ui";
+import { ChannelCreatives } from "./Creatives";
 
 type Tab = "video" | "email" | "display";
 
@@ -37,9 +38,9 @@ export default function Diagnostics({ data }: { data: CampaignData }) {
         ))}
       </HStack>
 
-      {tab === "video" && <VideoTab data={data} />}
-      {tab === "email" && <EmailTab data={data} />}
-      {tab === "display" && <DisplayTab data={data} />}
+      {tab === "video" && <><VideoTab data={data} /><ChannelCreatives data={data} channel="video" /></>}
+      {tab === "email" && <><EmailTab data={data} /><ChannelCreatives data={data} channel="email" /></>}
+      {tab === "display" && <><DisplayTab data={data} /><ChannelCreatives data={data} channel="display" /></>}
     </Box>
   );
 }
@@ -160,8 +161,10 @@ function VideoTab({ data }: { data: CampaignData }) {
             prices completion in: skippable is cheaper per impression because fewer complete.
           </p>
           <p>
-            So CPCV can't rank them. <strong>Cost per conversion can</strong> — it says
-            non-skippable is 19% better. Completion is a diagnostic, not an outcome.
+            So CPCV can't rank them. <strong>Cost per order can</strong> — non-skippable brings an
+            order in for {money(types[0].cpa, 2)} against {money(types[1].cpa, 2)}, which is{" "}
+            {(((types[1].cpa - types[0].cpa) / types[1].cpa) * 100).toFixed(0)}% cheaper. Completion
+            is a diagnostic, not an outcome.
           </p>
         </Callout>
       </Box>
@@ -180,11 +183,19 @@ function EmailTab({ data }: { data: CampaignData }) {
   const convDelta = (cur.conversions - base.conversions) * leadValue;
   const netVal = convDelta + assetDelta;
   const maxF = funnel[0].value;
+  const delivered = funnel[1].value;
+  const reportedOpens = funnel[2].value;
+  const modelledOpens = funnel[3].value;
+  // The 5th send, priced against the 4th — both sides of the trade from one source.
+  const fifth = frequency[3];
+  const fifthOrders = fifth.conversions - base.conversions;
+  const fifthEarns = fifthOrders * leadValue;
+  const fifthCosts = (base.netList - fifth.netList) * subscriberValue;
 
   return (
     <>
       <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={4}>
-        <Panel title="Send → convert funnel" sub="Two open numbers are shown. Only one is real.">
+        <Panel title="Send → order funnel" sub="Two open numbers are shown. Only one is real.">
           <Box display="flex" flexDirection="column" gap={2.5}>
             {funnel.map((f) => (
               <BarRow key={f.stage} label={f.stage} value={f.value} max={maxF}
@@ -198,9 +209,10 @@ function EmailTab({ data }: { data: CampaignData }) {
           <Callout tag="The metric is broken, not the campaign" tone="warn">
             <p>
               Apple's Mail Privacy Protection fires the tracking pixel whether or not anyone opens the
-              message — inflating opens by an estimated <strong>15–20 points</strong>. Our reported
-              43.5% is really about <strong>27.9%</strong>. Roughly 280,000 of those "opens" never
-              happened.
+              message — inflating opens by an estimated <strong>15–20 points</strong>. Our reported{" "}
+              <strong>{((reportedOpens / delivered) * 100).toFixed(1)}%</strong> is really about{" "}
+              <strong>{((modelledOpens / delivered) * 100).toFixed(1)}%</strong>. About{" "}
+              {nf(reportedOpens - modelledOpens)} of those "opens" never happened.
             </p>
             <p>
               It breaks click-to-open too, since opens are the denominator. We use click rate on{" "}
@@ -256,23 +268,26 @@ function EmailTab({ data }: { data: CampaignData }) {
               aria-label="Email sends per subscriber per month" />
             <Box mt={4}>
               <KpiRow>
-                <Kpi label="Conversions" value={nf(cur.conversions)}
+                <Kpi label="Orders" value={nf(cur.conversions)}
                   sub={cur.sends === 4 ? "current" : `${cur.conversions > base.conversions ? "+" : ""}${nf(cur.conversions - base.conversions)} vs now`} />
                 <Kpi label="Unsubscribe rate" value={`${cur.unsubRate.toFixed(2)}%`}
                   sub="healthy is <0.50%" tone={cur.unsubRate > 0.5 ? "bad" : "good"} />
                 <Kpi label="Net list change" value={`${cur.netList > 0 ? "+" : ""}${nf(cur.netList)}`}
                   sub="subscribers / month" tone={cur.netList > 0 ? "good" : "bad"} />
                 <Kpi label="Net value vs now" value={`${netVal >= 0 ? "+" : "−"}${money(Math.abs(netVal))}`}
-                  sub="conv. value + list asset" tone={netVal >= 0 ? "good" : "bad"} />
+                  sub="order profit + list asset" tone={netVal >= 0 ? "good" : "bad"} />
               </KpiRow>
             </Box>
           </Box>
           <Box mt={4}>
             <Callout tag="The trap this exists to show" tone="warn">
               <p>
-                A 5th send gains <strong>472 conversions</strong> (~$160,480) for $4,200 in production —
-                a clear win on any media-cost dashboard. It also cuts net list growth from +8,028 to
-                +1,600, destroying <strong>$244,264</strong> of subscriber value a month — more than it earns.
+                A 5th email a month wins <strong>{nf(fifthOrders)} more orders</strong> —{" "}
+                {money(fifthEarns)} of profit, and a clear win on any media-cost dashboard. It also
+                cuts net list growth from +{nf(base.netList)} to +{nf(fifth.netList)} subscribers,
+                burning <strong>{money(fifthCosts)}</strong> of list value a month at{" "}
+                {money(subscriberValue)} a subscriber. It costs about{" "}
+                {money(fifthCosts - fifthEarns)} more than it earns.
               </p>
             </Callout>
           </Box>
@@ -287,6 +302,10 @@ function DisplayTab({ data }: { data: CampaignData }) {
   const { viewability, metrics } = data.display;
   const totalWasted = viewability.reduce((s, v) => s + (v.wasted ?? 0), 0);
   const totalSpend = viewability.reduce((s, v) => s + (v.spend ?? 0), 0);
+  const pmp = viewability.find((v) => v.marketplace === "Private marketplace")!;
+  const open = viewability.find((v) => v.marketplace === "Open exchange")!;
+  // Same CPM either way, so the gain is purely the viewability gap on that spend.
+  const pmpGain = (open.spend ?? 0) * ((pmp.rate - open.rate) / 100);
 
   return (
     <>
@@ -348,9 +367,11 @@ function DisplayTab({ data }: { data: CampaignData }) {
           <Box mt={4}>
             <Callout tag="Finding" tone="finding">
               <p>
-                <strong>{money(totalWasted)} — 28% of display spend — bought impressions nobody could
-                see.</strong> Open exchange is almost all of it. Moving that budget to PMP at the same
-                CPM recovers about $18,600 of working media for free.
+                <strong>{money(totalWasted)} — {((totalWasted / totalSpend) * 100).toFixed(0)}% of
+                display spend — bought impressions nobody could see.</strong> Open exchange is almost
+                all of it, at {open.rate}% viewable against {pmp.rate}% on the private marketplace.
+                Moving that spend across at the same CPM recovers about {money(pmpGain)} of working
+                media for free.
               </p>
             </Callout>
           </Box>
