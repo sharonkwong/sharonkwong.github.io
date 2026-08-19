@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-import { money } from "./data";
+import { money, nf } from "./data";
 import type { CampaignData } from "./types";
 import { Callout, INK, MUTED, Panel, RULE, SectionHead } from "./ui";
 
@@ -8,12 +8,11 @@ import { Callout, INK, MUTED, Panel, RULE, SectionHead } from "./ui";
  * can never quote a number the dashboard above has stopped showing.
  */
 function buildActions(data: CampaignData) {
-  const { subscriberValue, leadValue } = data.constants;
   const f = data.email.frequency;
   const now = f.find((r) => r.sends === 4)!;
   const fifth = f.find((r) => r.sends === 5)!;
-  const fifthEarns = (fifth.conversions - now.conversions) * leadValue;
-  const fifthCosts = (now.netList - fifth.netList) * subscriberValue;
+  const fifthGain = fifth.conversions - now.conversions;
+  const fifthLoss = now.netList - fifth.netList;
 
   const v = data.display.viewability;
   const pmp = v.find((r) => r.marketplace === "Private marketplace")!;
@@ -26,11 +25,11 @@ function buildActions(data: CampaignData) {
 
   return [
     { action: "Move display budget into online video",
-      why: "One more order from display costs far more than an order is worth; from video it still costs less. The exact amounts move with the profit-per-order and required-return inputs above.",
+      why: "One more conversion from display costs nearly twice what one from video costs. Moving the money levels the two out and buys more conversions for the same budget.",
       worth: "see panel", tone: "good", owner: "Media buying" },
     { action: "Hold email at 4 sends a month — do not add a 5th",
-      why: `A 5th email earns ${money(fifthEarns)} in extra order profit and burns ${money(fifthCosts)} of subscriber value through unsubscribes. Put the extra budget into segmenting the list, not sending to it more often.`,
-      worth: `${money(fifthCosts - fifthEarns)} saved`, tone: "good", owner: "CRM" },
+      why: `A 5th email wins ${fifthGain} more conversions and costs ${fifthLoss} subscribers — ${(fifthLoss / fifthGain).toFixed(1)} subscribers for every extra conversion, and the list does not grow back. Put the extra budget into segmenting the list, not sending to it more often.`,
+      worth: `${nf(fifthLoss)} subscribers kept`, tone: "good", owner: "CRM" },
     { action: "Move open-exchange display onto the private marketplace",
       why: `Open exchange is ${open.rate}% viewable against ${pmp.rate}% on PMP. Same CPM, more of the money actually reaching a screen.`,
       worth: `+${money(pmpGain)} working`, tone: "good", owner: "Media buying" },
@@ -91,7 +90,7 @@ export default function Tables({ data }: { data: CampaignData }) {
       <Box mt={12}>
         <SectionHead
           title="Assumptions"
-          sub="Every number here that isn't directly measured, and why it is what it is. Anything we couldn't justify was taken off the dashboard rather than guessed."
+          sub="Every number here that isn't directly measured, and why it is what it is. The only editable input on the page is the budget — everything the advertiser would have to tell us, we don't have, so nothing pretends otherwise."
         />
         <Panel p={0} overflow="hidden">
           <Box overflowX="auto">
@@ -121,7 +120,7 @@ export default function Tables({ data }: { data: CampaignData }) {
                         bg={a.adjustable ? "orange.100" : "transparent"}
                         color={a.adjustable ? "orange.800" : "gray.500"}
                         border={a.adjustable ? undefined : "1px solid"} borderColor="gray.300">
-                        {a.adjustable ? "Editable input" : "Measured"}
+                        {a.adjustable ? "Editable input" : "Assumption"}
                       </Box>
                     </Box>
                     <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
@@ -152,9 +151,13 @@ export default function Tables({ data }: { data: CampaignData }) {
             <Box as="ul" pl={5} sx={{ "& li": { mb: 1.5 } }}>
               <li><strong>"~+6 points of VCR" from rebuilding the skippable open.</strong> A guess.
               The action stays — the forecast doesn't.</li>
-              <li><strong>A fixed dollar ceiling on what an order may cost.</strong> Replaced. It
-              is now profit per order ÷ required return, both editable, cross-checked against what
-              the budget can actually afford.</li>
+              <li><strong>Return on ad spend, and every figure priced in dollars of profit.</strong>{" "}
+              Removed. We are not given the shop's ticket size or margin, so any number that
+              multiplied a conversion by a dollar value was our assumption wearing the advertiser's
+              clothes. What replaced it is the equimarginal bar: with a fixed budget, move money
+              until one more conversion costs the same everywhere. That needs no margin at all.</li>
+              <li><strong>The email frequency trade, priced in dollars.</strong> Restated in
+              subscribers per extra conversion — the only currency this side of the glass holds.</li>
               <li><strong>Deduped household reach.</strong> Removed. IP-to-postal matching is
               13–16% accurate, so any household count carried more error than signal.</li>
             </Box>

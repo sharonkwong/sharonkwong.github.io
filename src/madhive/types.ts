@@ -23,16 +23,20 @@ export interface Channel {
   spend: number;
   impressions: number;
   clicks: number;
+  onlineConversions: number;
+  offlineConversions: number;
+  /** Online + offline. The single definition every cost figure and the model use. */
   conversions: number;
   halfSaturationSpend: number;
   maxConversions: number;
   marginalCpa: number;
   floorCpa: number;
   cpa: number;
+  onlineCpa: number;
+  offlineShare: number;
   cpm: number;
   cpc: number;
   ctr: number;
-  convRate: number;
   reach: number;
   reachUnit: string;
   lift: LiftTest;
@@ -43,6 +47,8 @@ export interface DailyMetrics {
   spend: number;
   impressions: number;
   clicks: number;
+  onlineConversions: number;
+  offlineConversions: number;
   conversions: number;
 }
 export interface DailyRow {
@@ -100,18 +106,27 @@ export interface CampaignData {
     generatedAt: string; window: number; synthetic: boolean; sources: string[];
   };
   assumptions: Assumption[];
-  constants: {
-    leadValue: number;
-    targetReturn: number;
-    emailSpendCap: number;
-    subscriberValue: number;
-  };
-  totals: Record<"spend" | "impressions" | "clicks" | "conversions",
-    { current: number; prior: number }>;
+  constants: { emailSpendCap: number };
+  totals: Record<
+    "spend" | "impressions" | "clicks" | "onlineConversions" | "offlineConversions" | "conversions",
+    { current: number; prior: number }
+  >;
   channels: Channel[];
   daily: DailyRow[];
   video: { quartiles: QuartileRow[]; types: VideoType[]; dropoff: { stage: string; nonskip: number; skip: number }[] };
   email: { funnel: FunnelRow[]; listHealth: ListHealthRow[]; frequency: FreqRow[] };
   display: { viewability: ViewabilityRow[]; metrics: DisplayMetric[] };
   creatives: Creative[];
+  offline: OfflineBlock;
+}
+
+/** How an in-store visit gets tied back to an impression, and where it is weak. */
+export interface OfflineBlock {
+  method: string;
+  windowDays: number;
+  radiusM: number;
+  matchRate: number;
+  lagDays: number;
+  chain: { step: string; what: string; holds: string }[];
+  caveat: string;
 }

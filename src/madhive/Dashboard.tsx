@@ -5,7 +5,7 @@ import {
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { compact, money, nf, shortDate } from "./data";
-import { allocate, marginalAt, valueCeiling } from "./model";
+import { allocate, marginalAt } from "./model";
 import type { CampaignData, Channel, ChannelKey } from "./types";
 import { BarRow, ChartTip, INK, Kpi, KpiRow, MUTED, Panel, RULE, SectionHead } from "./ui";
 
@@ -18,15 +18,14 @@ export default function Dashboard({
   channel: ChannelKey | null;
   setChannel: (c: ChannelKey | null) => void;
 }) {
-  const { channels, constants, totals } = data;
+  const { channels, constants, totals, offline: off } = data;
   const byKey = useMemo(
     () => Object.fromEntries(channels.map((c) => [c.key, c])) as Record<ChannelKey, Channel>,
     [channels]
   );
   const dim = (k: ChannelKey) => Boolean(channel && channel !== k);
 
-  const [leadValue, setLeadValue] = useState(constants.leadValue);
-  const [targetReturn, setTargetReturn] = useState(constants.targetReturn);
+  const [budget, setBudget] = useState(Math.round(totals.spend.current));
 
   /* ------------------------------------------------------------- model */
   const curves = useMemo(
@@ -35,17 +34,18 @@ export default function Dashboard({
     )) as Record<ChannelKey, { K: number; Cmax: number }>,
     [channels]
   );
-  const budget = totals.spend.current;
-  const vCeil = valueCeiling(leadValue, targetReturn);
+  /* With no view of the advertiser's margins there is no "what a conversion is
+     worth" ceiling to price against. What is left is the budget itself: spread it
+     until one more conversion costs the same everywhere, and no dollar is sitting
+     somewhere it buys less than it would next door. */
   const plan = useMemo(() => allocate(
     channels.map((c) => ({
       key: c.key, spend: c.spend, curve: curves[c.key],
       cap: c.key === "email" ? { value: constants.emailSpendCap, reason: "list-burn cap" } : undefined,
-    })), vCeil, budget
-  ), [channels, curves, vCeil, budget, constants.emailSpendCap]);
+    })), Number.POSITIVE_INFINITY, budget
+  ), [channels, curves, budget, constants.emailSpendCap]);
   const planConv = plan.rows.reduce((s, r) => s + r.proposedConversions, 0);
   const nowConv = plan.rows.reduce((s, r) => s + r.currentConversions, 0);
-  const budgetBinds = plan.effectiveCeiling < vCeil - 0.01;
 
   /* --------------------------------------------------------- kpi deltas */
   const d = (cur: number, prv: number) => (prv > 0 ? (cur / prv - 1) * 100 : 0);
@@ -55,11 +55,10 @@ export default function Dashboard({
   const ctr = rate(T.clicks, T.impressions);
   const cpa = rate(T.spend, T.conversions);
   const cpc = rate(T.spend, T.clicks);
-  const causedOrders = channels.reduce((s, c) => s + c.lift.incremental, 0);
+  const onlineCpa = rate(T.spend, T.onlineConversions);
+  const causedConv = channels.reduce((s, c) => s + c.lift.incremental, 0);
   const cpm = { current: (T.spend.current / T.impressions.current) * 1000,
                 prior: (T.spend.prior / T.impressions.prior) * 1000 };
-  const roas = { current: (T.conversions.current * leadValue) / T.spend.current,
-                 prior: (T.conversions.prior * leadValue) / T.spend.prior };
 
   /* ------------------------------------------------------- daily series */
   const recent = data.daily.slice(-data.meta.window);
@@ -110,26 +109,45 @@ export default function Dashboard({
       {/* ============ KPI GRID ============ */}
       <KpiRow>
         <Kpi label="Spend" value={money(T.spend.current)} delta={d(T.spend.current, T.spend.prior)} lowerIsBetter
-          tip="What the shop paid for advertising over the last 30 days, across all three channels. Measured — this comes straight off the invoices." />
+          tip="What the shop paid for advertising over the last 30 days, across all three channels. Measured — this comes straight off the invoices."
+          extras={[{ label: "Per day", value: money(T.spend.current / data.meta.window),
+                     tip: "Spend ÷ 30. Derived. Useful because media is bought monthly but the shop trades daily." }]} />
         <Kpi label="Impressions" value={compact(T.impressions.current)} delta={d(T.impressions.current, T.impressions.prior)}
-          tip="How many times an ad was shown. For email this counts emails that landed in an inbox. Measured." />
+          tip="How many times an ad was shown. For email this counts emails that landed in an inbox. Measured."
+          extras={[{ label: "Cost per 1,000", value: money(cpm.current, 2),
+                     delta: d(cpm.current, cpm.prior), lowerIsBetter: true,
+                     tip: "Spend ÷ impressions × 1,000 — the industry calls this CPM. Derived. It is the price of the media itself, before any question of whether it worked." }]} />
         <Kpi label="Clicks" value={nf(T.clicks.current)} delta={d(T.clicks.current, T.clicks.prior)}
-          tip="How many times someone clicked an ad or a link in an email. Measured. Worth knowing: clicks are not comparable across channels — an email goes to people who already asked to hear from us, a display ad does not." />
-        <Kpi label="Online orders" value={nf(T.conversions.current)} delta={d(T.conversions.current, T.conversions.prior)}
-          tip="Orders placed on the website or app, credited to the last ad the customer saw beforehand. Measured by the ordering system, then matched back to ad exposure. This is the outcome the whole dashboard is about." />
-        <Kpi label="Cost per order" value={money(cpa.current, 2)} delta={d(cpa.current, cpa.prior)} lowerIsBetter
-          tip="Spend ÷ online orders. Derived. This is the average across every order — the next order always costs more than the average, which is what the panel further down works out." />
-        <Kpi label="Return on ad spend" value={`${roas.current.toFixed(2)}x`} delta={d(roas.current, roas.prior)}
-          tip={`Orders × ${money(leadValue)} profit per order ÷ spend. Derived. The ${money(leadValue)} is the owner's own number — you can change it in the panel below and every figure that depends on it moves.`} />
-        <Kpi label="Click-through rate" value={`${(ctr.current * 100).toFixed(2)}%`} delta={d(ctr.current, ctr.prior)}
-          tip="Clicks ÷ impressions. Derived. Tells you whether the creative is getting attention, not whether it sold any pizza." />
-        <Kpi label="Orders the ads caused" value={nf(causedOrders)}
-          sub={`${((causedOrders / T.conversions.current) * 100).toFixed(0)}% of the ${nf(T.conversions.current)} credited`}
-          tip="Adds up each channel's control-group test: orders by people who saw the ads, minus what the matched control ordered anyway. Derived, and the only number here that says the advertising was responsible. It has no period-on-period change because a lift test is a study with a fixed window, not a daily metric." />
-        <Kpi label="Cost per click" value={money(cpc.current, 2)} delta={d(cpc.current, cpc.prior)} lowerIsBetter
-          tip="Spend ÷ clicks. Derived." />
-        <Kpi label="Cost per 1,000 views" value={money(cpm.current, 2)} delta={d(cpm.current, cpm.prior)} lowerIsBetter
-          tip="Spend ÷ impressions × 1,000 — the industry calls this CPM. Derived. It is the price of the media itself, before any question of whether it worked." />
+          tip="How many times someone clicked an ad or a link in an email. Measured. Worth knowing: clicks are not comparable across channels — an email goes to people who already asked to hear from us, a display ad does not, and video mostly converts people who never click at all."
+          extras={[
+            { label: "Click rate", value: `${(ctr.current * 100).toFixed(2)}%`,
+              delta: d(ctr.current, ctr.prior),
+              tip: "Clicks ÷ impressions. Derived. Tells you whether the creative is getting attention, not whether it sold any pizza." },
+            { label: "Cost per click", value: money(cpc.current, 2),
+              delta: d(cpc.current, cpc.prior), lowerIsBetter: true,
+              tip: "Spend ÷ clicks. Derived." },
+          ]} />
+        <Kpi label="Cost per conversion" value={money(cpa.current, 2)} delta={d(cpa.current, cpa.prior)} lowerIsBetter
+          tip="Spend ÷ total conversions. Derived. It is the average across every conversion — the next one always costs more than the average, which is what the panel further down works out."
+          extras={[{ label: "Online only", value: money(onlineCpa.current, 2),
+                     delta: d(onlineCpa.current, onlineCpa.prior), lowerIsBetter: true,
+                     tip: "Spend ÷ online conversions. Derived. Shown because it is what a dashboard without store-visit data would report — and it ranks the channels differently." }]} />
+
+        <Kpi label="Online conversions" value={nf(T.onlineConversions.current)}
+          delta={d(T.onlineConversions.current, T.onlineConversions.prior)}
+          sub={`${((T.onlineConversions.current / T.conversions.current) * 100).toFixed(0)}% of all conversions`}
+          tip="Orders placed on the website or app, credited to the last ad the customer saw beforehand. Measured directly: the ordering system fires a pixel, and we match it back to the impression." />
+        <Kpi label="Offline conversions" value={nf(T.offlineConversions.current)}
+          delta={d(T.offlineConversions.current, T.offlineConversions.prior)}
+          sub={`${off.radiusM}m geofence · ${off.windowDays}-day window`}
+          tip={`A visit to one of the shops that we can tie back to an ad. The impression carries a household IP. A third-party location vendor sends us device IDs seen inside a ${off.radiusM}-metre geofence around each shop, along with the IPs those devices used — and where the two IPs match within ${off.windowDays} days, the visit is credited. Derived, and the softest number on this page: only about ${Math.round(off.matchRate * 100)}% of impressions resolve to a device we can follow, so it is a floor, not a count.`} />
+        <Kpi label="Total conversions" value={nf(T.conversions.current)}
+          delta={d(T.conversions.current, T.conversions.prior)}
+          sub={`${((T.offlineConversions.current / T.conversions.current) * 100).toFixed(0)}% of them in-store`}
+          tip="Online plus offline. Derived. This is the number the cost figures and the budget model both run on — a pizza shop that only counted online orders would be measuring the smaller half of its own business." />
+        <Kpi label="Conversions the ads caused" value={nf(causedConv)}
+          sub={`${((causedConv / T.conversions.current) * 100).toFixed(0)}% of the ${nf(T.conversions.current)} credited`}
+          tip="Adds up each channel's control-group test: conversions among people who saw the ads, minus what the matched control did anyway. Derived, and the only number here that says the advertising was responsible. It has no period-on-period change because a lift test is a study with a fixed window, not a daily metric." />
       </KpiRow>
       <Text fontSize="11.5px" color={MUTED} mt={2} fontFamily="mono">
         Change is against the previous {data.meta.window} days.
@@ -155,9 +173,9 @@ export default function Dashboard({
         <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
           <TrendCard title="Spend" data={series("spend")} channels={channels} dim={dim}
             fmt={(v) => money(v)} area />
-          <TrendCard title="Orders" data={series("conversions")} channels={channels} dim={dim}
+          <TrendCard title="Conversions" data={series("conversions")} channels={channels} dim={dim}
             fmt={(v) => nf(v)} area />
-          <TrendCard title="Cost per order" data={cpaSeries} channels={channels} dim={dim}
+          <TrendCard title="Cost per conversion" data={cpaSeries} channels={channels} dim={dim}
             fmt={(v) => money(v, 2)} />
           <TrendCard title="Impressions" data={series("impressions")} channels={channels} dim={dim}
             fmt={(v) => compact(v)} area />
@@ -169,38 +187,73 @@ export default function Dashboard({
         <SectionHead title="By channel"
           sub="Click a bar to filter the whole page. Cheapest today is not the same as room to grow — the panel on the right is the one that should decide the budget." />
         <Grid templateColumns={{ base: "1fr", lg: "1fr 1.3fr" }} gap={4} alignItems="start">
-          <Panel title="Cost per order" sub="Lower is better.">
+          <Panel title="Cost per conversion" sub="Lower is better. Online and in-store together.">
             <Box display="flex" flexDirection="column" gap={2.5}>
               {[...channels].sort((a, b) => a.cpa - b.cpa).map((c) => (
                 <BarRow key={c.key} label={c.label} value={c.cpa}
                   max={Math.max(...channels.map((x) => x.cpa))} color={c.color}
-                  display={money(c.cpa, 2)} sub={`${nf(c.conversions)} orders`}
+                  display={money(c.cpa, 2)} sub={`${nf(c.conversions)} conv`}
                   dim={dim(c.key)} onClick={() => setChannel(channel === c.key ? null : c.key)} />
               ))}
             </Box>
             <Box mt={5}>
-              <Text fontSize="12px" fontWeight={700} color={INK} mb={2}>Share of spend vs orders</Text>
+              <Text fontSize="12px" fontWeight={700} color={INK} mb={2}>Share of spend vs conversions</Text>
               <Stack label="Spend" parts={channels.map((c) => ({ k: c.key, v: c.spend, color: c.color, dim: dim(c.key) }))} />
               <Box h={2} />
-              <Stack label="Orders" parts={channels.map((c) => ({ k: c.key, v: c.conversions, color: c.color, dim: dim(c.key) }))} />
+              <Stack label="Conversions" parts={channels.map((c) => ({ k: c.key, v: c.conversions, color: c.color, dim: dim(c.key) }))} />
+            </Box>
+            <Box mt={5} pt={4} borderTop="1px solid" borderColor={RULE}>
+              <Text fontSize="12px" fontWeight={700} color={INK} mb={1}>Online vs in-store</Text>
+              <Text fontSize="11.5px" color={MUTED} mb={3} lineHeight={1.5}>
+                Counting online only, display looks cheaper than video ({money(byKey.display.onlineCpa, 2)}{" "}
+                against {money(byKey.video.onlineCpa, 2)}). Counting store visits too, it is the
+                other way round ({money(byKey.display.cpa, 2)} against {money(byKey.video.cpa, 2)}).
+              </Text>
+              <Box display="flex" flexDirection="column" gap={2.5}>
+                {channels.map((c) => (
+                  <Box key={c.key} opacity={dim(c.key) ? 0.35 : 1} transition="opacity .2s">
+                    <HStack justify="space-between" mb="4px">
+                      <Text fontSize="12px" color="gray.600">{c.label}</Text>
+                      <Text fontFamily="mono" fontSize="10.5px" color={MUTED}>
+                        {(c.offlineShare * 100).toFixed(0)}% in-store
+                      </Text>
+                    </HStack>
+                    <Box display="flex" h="18px" borderRadius="4px" overflow="hidden" gap="2px">
+                      <Box flex={`0 0 ${(1 - c.offlineShare) * 100}%`} bg={c.color} minW={0} />
+                      <Box flex="1" bg={c.color} opacity={0.3} minW={0} />
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+              <HStack spacing={4} mt={3} wrap="wrap">
+                <HStack spacing={1.5}>
+                  <Box w="10px" h="10px" borderRadius="2px" bg="gray.500" />
+                  <Text fontSize="11px" color={MUTED}>Online</Text>
+                </HStack>
+                <HStack spacing={1.5}>
+                  <Box w="10px" h="10px" borderRadius="2px" bg="gray.500" opacity={0.3} />
+                  <Text fontSize="11px" color={MUTED}>In-store, matched</Text>
+                </HStack>
+              </HStack>
             </Box>
           </Panel>
 
           <Panel
-            title="What would one more order cost?"
-            sub="Every channel gets more expensive the more you spend on it. Above the red line, one more order costs more than it earns."
+            title="What would one more conversion cost?"
+            sub="Every channel gets more expensive the more you spend on it. Move money until the next conversion costs the same everywhere — that is the point where a fixed budget is working as hard as it can."
             right={
-              <HStack spacing={3} wrap="wrap">
-                <NumIn label="Profit per order" prefix="$" value={leadValue} step={1} onChange={setLeadValue} />
-                <NumIn label="Return needed" suffix="x" value={targetReturn} step={0.25} onChange={setTargetReturn} />
-              </HStack>
+              <NumIn label="Monthly budget" prefix="$" value={budget} step={1000} onChange={setBudget} width="74px" />
             }
           >
             <Text fontSize="12px" color={MUTED} mb={3}>
-              {money(leadValue)} ÷ {targetReturn}x = <strong>{money(vCeil, 2)}</strong> is worth paying for an order.{" "}
-              {budgetBinds
-                ? <>Spending to that costs more than the {money(budget)} budget, so the real bar is <strong>{money(plan.effectiveCeiling, 2)}</strong>.</>
-                : <>The budget covers it.</>}
+              At {money(budget)} the next conversion prices out at{" "}
+              <strong>{money(plan.effectiveCeiling, 2)}</strong> across the board. Anything whose
+              line sits above that is being over-bought; anything below it is being starved.{" "}
+              {budget !== Math.round(totals.spend.current) && (
+                <Text as="span" color="orange.600" fontWeight={600}>
+                  (Editing the budget re-solves everything below.)
+                </Text>
+              )}
             </Text>
             <Box h="230px">
               <ResponsiveContainer width="100%" height="100%">
@@ -217,7 +270,7 @@ export default function Dashboard({
                     tick={{ fontSize: 10, fill: "#8a8f98", fontFamily: "monospace" }}
                     stroke="#c9ced6" width={42} />
                   <ReferenceLine y={plan.effectiveCeiling} stroke="#d03b3b" strokeDasharray="5 3"
-                    label={{ value: `${money(plan.effectiveCeiling, 2)} bar`, position: "insideTopLeft",
+                    label={{ value: `${money(plan.effectiveCeiling, 2)} everywhere`, position: "insideTopLeft",
                       style: { fontSize: 10, fill: "#d03b3b", fontWeight: 700, fontFamily: "monospace" } }} />
                   <ReferenceLine x={1} stroke="#c9ced6"
                     label={{ value: "today", position: "top",
@@ -229,7 +282,7 @@ export default function Dashboard({
                     return <ChartTip title={byKey[p.key].label}
                       rows={[{ label: `at ${money(p.spend)} spend`, value: money(p.y, 2) }]}
                       footer={<Text as="span" color={over ? "red.500" : "green.600"} fontWeight={600}>
-                        {over ? "over the bar — stop buying" : "under the bar — keep buying"}
+                        {over ? "dearer than elsewhere — buy less" : "cheaper than elsewhere — buy more"}
                       </Text>} />;
                   }} />
                   {KEYS.map((k) => {
@@ -249,7 +302,7 @@ export default function Dashboard({
 
             <Box mt={4} pt={4} borderTop="1px solid" borderColor={RULE}>
               <Text fontSize="12px" fontWeight={700} color={INK} mb={3}>
-                Suggested move — same {money(budget)} budget
+                Suggested move — {money(budget)} budget
               </Text>
               <Box display="grid" gridTemplateColumns={{ base: "1fr", sm: "repeat(3, 1fr)" }} gap={3}>
                 {plan.rows.map((r) => {
@@ -266,7 +319,7 @@ export default function Dashboard({
                         {money(r.current)} → {money(r.proposed)}
                       </Text>
                       <Text fontSize="11px" color={MUTED} mt="2px" lineHeight={1.4}>
-                        {r.cappedBy ? "Held by the list-burn cap." : `Next order costs ${money(r.marginalNow, 2)} today.`}
+                        {r.cappedBy ? "Held by the list-burn cap." : `Next conversion costs ${money(r.marginalNow, 2)} today.`}
                       </Text>
                     </Box>
                   );
@@ -274,13 +327,13 @@ export default function Dashboard({
               </Box>
               <HStack spacing={6} mt={4} wrap="wrap">
                 <Box>
-                  <Text fontFamily="mono" fontSize="9px" letterSpacing="0.11em" textTransform="uppercase" color={MUTED}>Orders</Text>
+                  <Text fontFamily="mono" fontSize="9px" letterSpacing="0.11em" textTransform="uppercase" color={MUTED}>Conversions</Text>
                   <Text fontFamily="mono" fontSize="16px" fontWeight={700} color="green.600">
                     {nf(nowConv)} → {nf(planConv)}
                   </Text>
                 </Box>
                 <Box>
-                  <Text fontFamily="mono" fontSize="9px" letterSpacing="0.11em" textTransform="uppercase" color={MUTED}>Cost per order</Text>
+                  <Text fontFamily="mono" fontSize="9px" letterSpacing="0.11em" textTransform="uppercase" color={MUTED}>Cost per conversion</Text>
                   <Text fontFamily="mono" fontSize="16px" fontWeight={700} color="green.600">
                     {money(budget / nowConv, 2)} → {money(budget / planConv, 2)}
                   </Text>
@@ -293,8 +346,8 @@ export default function Dashboard({
         {/* ---- lift ---- */}
         <Box mt={4}>
           <Panel
-            title="How many of these orders did the ads actually cause?"
-            sub="A control group was deliberately kept away from each channel's ads. The gap between how often people who saw the ads ordered and how often the control ordered is what the advertising caused. The rest was going to order anyway."
+            title="How many of these conversions did the ads actually cause?"
+            sub="A control group was deliberately kept away from each channel's ads. The gap between how often people who saw the ads converted and how often the control converted is what the advertising caused. The rest was going to happen anyway."
           >
             <Box display="flex" flexDirection="column" gap={4}>
               {channels.map((c) => {
@@ -309,7 +362,7 @@ export default function Dashboard({
                         <Box w="9px" h="9px" borderRadius="2px" bg={c.color} />
                         <Text fontSize="13.5px" fontWeight={700} color={INK}>{c.label}</Text>
                         <Text fontFamily="mono" fontSize="11.5px" color={MUTED}>
-                          {nf(c.conversions)} orders credited
+                          {nf(c.conversions)} conversions credited
                         </Text>
                       </HStack>
                       <Text fontFamily="mono" fontSize="11.5px" color={MUTED}>
@@ -331,7 +384,7 @@ export default function Dashboard({
                         {nf(L.incremental)} caused by the ads
                       </Text>
                       <Text fontFamily="mono" fontSize="11.5px" color={MUTED}>
-                        {nf(L.baseline)} would have ordered anyway
+                        {nf(L.baseline)} would have happened anyway
                       </Text>
                       <Text fontSize="11.5px" color={MUTED}>{L.why}</Text>
                     </HStack>
@@ -348,17 +401,17 @@ export default function Dashboard({
                 </HStack>
                 <HStack spacing={2}>
                   <Box w="11px" h="11px" borderRadius="2px" bg="gray.200" />
-                  <Text fontSize="12px" color="gray.600">Would have ordered anyway</Text>
+                  <Text fontSize="12px" color="gray.600">Would have happened anyway</Text>
                 </HStack>
               </HStack>
               <Text fontSize="13.5px" color="gray.700" lineHeight={1.6} maxW="82ch">
                 <strong>Email looks like the best channel, and it is mostly taking credit.</strong>{" "}
-                People on the list who were kept out of the sends still ordered{" "}
+                People on the list who were kept out of the sends still converted{" "}
                 {(byKey.email.lift.controlRate * 100).toFixed(2)}% of the time, against{" "}
                 {(byKey.email.lift.exposedRate * 100).toFixed(2)}% for people who got them — so{" "}
-                {nf(byKey.email.lift.baseline)} of its {nf(byKey.email.conversions)} orders were
-                regulars ordering pizza the way they always do. Online video is the reverse: its
-                control group barely ordered at all, so nearly everything it gets credit for, it
+                {nf(byKey.email.lift.baseline)} of its {nf(byKey.email.conversions)} conversions were
+                regulars buying pizza the way they always do. Online video is the reverse: its
+                control group barely converted at all, so nearly everything it gets credit for, it
                 earned.
               </Text>
             </Box>
@@ -442,9 +495,9 @@ function Stack({ label, parts }: {
 }
 
 /* ---------------------------------------------------------- number input */
-function NumIn({ label, value, onChange, step, prefix, suffix }: {
+function NumIn({ label, value, onChange, step, prefix, suffix, width }: {
   label: string; value: number; onChange: (v: number) => void;
-  step: number; prefix?: string; suffix?: string;
+  step: number; prefix?: string; suffix?: string; width?: string;
 }) {
   return (
     <Box>
@@ -458,7 +511,7 @@ function NumIn({ label, value, onChange, step, prefix, suffix }: {
             const v = Number(e.target.value);
             if (Number.isFinite(v) && v > 0) onChange(v);
           }}
-          w={suffix ? "42px" : "56px"} border="none" outline="none" bg="transparent"
+          w={width ?? (suffix ? "42px" : "56px")} border="none" outline="none" bg="transparent"
           fontFamily="mono" fontSize="13px" fontWeight={700} color={INK} />
         {suffix && <Text fontFamily="mono" fontSize="12px" color={MUTED}>{suffix}</Text>}
       </HStack>

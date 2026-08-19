@@ -57,9 +57,9 @@ function Page() {
 Which ads are actually selling pizza?
           </Text>
           <Text fontSize={{ base: "15px", md: "17px" }} color="gray.600" maxW="60ch">
-Display, online video and email for a six-shop pizza chain — what each one is
-            bringing in, how much of it the advertising actually caused, and where the next
-            dollar should go.
+Display, online video and email for a six-shop pizza chain — orders online, visits
+            in store, how much of it the advertising actually caused, and where the next dollar
+            should go.
           </Text>
         </Box>
 
@@ -76,10 +76,14 @@ Display, online video and email for a six-shop pizza chain — what each one is
         <Box mt={16} pt={5} borderTop="2px solid" borderColor={INK}>
           <Text fontFamily="mono" fontSize="11px" color={MUTED} lineHeight={1.8}>
             Synthetic demonstration data for a fictional pizza chain. No real advertiser, publisher or
-            campaign data appears on this page. Modelled on published 2026 benchmarks:
+            campaign data appears on this page. Modelled on published benchmarks:
           </Text>
           <Box as="ul" pl={5} mt={2} fontFamily="mono" fontSize="11px" color={MUTED} lineHeight={1.8}>
             {meta.sources.map((s) => <li key={s}>{s}</li>)}
+            <li>
+              CIMM / Go Addressable (2025): IP-to-postal accuracy 13–16% — why in-store
+              conversions are reported as a floor
+            </li>
           </Box>
           <Text fontFamily="mono" fontSize="11px" color={MUTED} mt={3}>
             <Text as="a" href="./modeling/" textDecoration="underline" _hover={{ color: INK }}>

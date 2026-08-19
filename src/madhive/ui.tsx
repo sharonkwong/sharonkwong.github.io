@@ -112,6 +112,7 @@ export function Kpi({
   delta,
   lowerIsBetter,
   tip,
+  extras,
 }: {
   label: string;
   value: string;
@@ -123,10 +124,12 @@ export function Kpi({
   lowerIsBetter?: boolean;
   /** What the metric is, and how it is worked out when it is derived. */
   tip?: ReactNode;
+  /** Metrics that belong with this one — a rate and its cost sit on their own card badly. */
+  extras?: { label: string; value: string; delta?: number; lowerIsBetter?: boolean; tip?: ReactNode }[];
 }) {
   const good = delta === undefined ? null : lowerIsBetter ? delta < 0 : delta > 0;
   return (
-    <Box bg="white" p={4}>
+    <Box bg="white" p={4} display="flex" flexDirection="column">
       <Flex align="center" gap="5px" mb={2} minH="14px">
         <Text
           fontSize="9.5px"
@@ -162,6 +165,28 @@ export function Kpi({
           {sub}
         </Text>
       )}
+      {extras && extras.length > 0 && (
+        <Box mt={3} pt={2.5} borderTop="1px solid" borderColor="gray.100"
+          display="flex" flexDirection="column" gap={1.5}>
+          {extras.map((e) => {
+            const eGood = e.delta === undefined ? null : e.lowerIsBetter ? e.delta < 0 : e.delta > 0;
+            return (
+              <Flex key={e.label} align="baseline" gap={1.5}>
+                <Text fontSize="11px" color={MUTED} whiteSpace="nowrap">{e.label}</Text>
+                {e.tip && <InfoTip label={e.label}>{e.tip}</InfoTip>}
+                <Text ml="auto" fontSize="12.5px" fontFamily="mono" fontWeight={700} color={INK}
+                  whiteSpace="nowrap">{e.value}</Text>
+                {e.delta !== undefined && (
+                  <Text fontSize="10px" fontFamily="mono" fontWeight={600} whiteSpace="nowrap"
+                    color={eGood ? "green.600" : "red.500"}>
+                    {e.delta >= 0 ? "▲" : "▼"}{Math.abs(e.delta).toFixed(1)}%
+                  </Text>
+                )}
+              </Flex>
+            );
+          })}
+        </Box>
+      )}
     </Box>
   );
 }
@@ -170,7 +195,7 @@ export function KpiRow({ children }: { children: ReactNode }) {
   return (
     <Box
       display="grid"
-      gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(5, 1fr)" }}
+      gridTemplateColumns={{ base: "repeat(1, 1fr)", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }}
       gap="1px"
       bg={RULE}
       border="1px solid"

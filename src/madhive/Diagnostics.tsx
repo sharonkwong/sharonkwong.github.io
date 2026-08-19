@@ -161,8 +161,8 @@ function VideoTab({ data }: { data: CampaignData }) {
             prices completion in: skippable is cheaper per impression because fewer complete.
           </p>
           <p>
-            So CPCV can't rank them. <strong>Cost per order can</strong> — non-skippable brings an
-            order in for {money(types[0].cpa, 2)} against {money(types[1].cpa, 2)}, which is{" "}
+            So CPCV can't rank them. <strong>Cost per conversion can</strong> — non-skippable brings one
+            in for {money(types[0].cpa, 2)} against {money(types[1].cpa, 2)}, which is{" "}
             {(((types[1].cpa - types[0].cpa) / types[1].cpa) * 100).toFixed(0)}% cheaper. Completion
             is a diagnostic, not an outcome.
           </p>
@@ -175,27 +175,27 @@ function VideoTab({ data }: { data: CampaignData }) {
 /* ==================================================================== email */
 function EmailTab({ data }: { data: CampaignData }) {
   const { funnel, listHealth, frequency } = data.email;
-  const { subscriberValue, leadValue } = data.constants;
   const [idx, setIdx] = useState(2); // index of the 4-sends row = current
   const cur = frequency[idx];
   const base = frequency[2];
-  const assetDelta = (cur.netList - base.netList) * subscriberValue;
-  const convDelta = (cur.conversions - base.conversions) * leadValue;
-  const netVal = convDelta + assetDelta;
+  /* We never see what a conversion or a subscriber is worth to the shop, so the
+     trade is priced in the only currency we do hold: subscribers per conversion. */
+  const dConv = cur.conversions - base.conversions;
+  const dList = cur.netList - base.netList;
+  const trade = dConv === 0 ? null : Math.abs(dList / dConv);
   const maxF = funnel[0].value;
   const delivered = funnel[1].value;
   const reportedOpens = funnel[2].value;
   const modelledOpens = funnel[3].value;
   // The 5th send, priced against the 4th — both sides of the trade from one source.
   const fifth = frequency[3];
-  const fifthOrders = fifth.conversions - base.conversions;
-  const fifthEarns = fifthOrders * leadValue;
-  const fifthCosts = (base.netList - fifth.netList) * subscriberValue;
+  const fifthGain = fifth.conversions - base.conversions;
+  const fifthLoss = base.netList - fifth.netList;
 
   return (
     <>
       <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={4}>
-        <Panel title="Send → order funnel" sub="Two open numbers are shown. Only one is real.">
+        <Panel title="Send → conversion funnel" sub="Two open numbers are shown. Only one is real.">
           <Box display="flex" flexDirection="column" gap={2.5}>
             {funnel.map((f) => (
               <BarRow key={f.stage} label={f.stage} value={f.value} max={maxF}
@@ -243,13 +243,6 @@ function EmailTab({ data }: { data: CampaignData }) {
                   </Box>
                 </Box>
               ))}
-              <Box as="tr">
-                <Box as="td" py={2.5} px={2} fontWeight={600} color={INK}>Modelled subscriber value</Box>
-                <Box as="td" py={2.5} px={2} textAlign="right" fontFamily="mono" color="gray.600">
-                  {money(subscriberValue)}
-                </Box>
-                <Box as="td" />
-              </Box>
             </Box>
           </Box>
         </Panel>
@@ -268,26 +261,28 @@ function EmailTab({ data }: { data: CampaignData }) {
               aria-label="Email sends per subscriber per month" />
             <Box mt={4}>
               <KpiRow>
-                <Kpi label="Orders" value={nf(cur.conversions)}
+                <Kpi label="Conversions" value={nf(cur.conversions)}
                   sub={cur.sends === 4 ? "current" : `${cur.conversions > base.conversions ? "+" : ""}${nf(cur.conversions - base.conversions)} vs now`} />
                 <Kpi label="Unsubscribe rate" value={`${cur.unsubRate.toFixed(2)}%`}
                   sub="healthy is <0.50%" tone={cur.unsubRate > 0.5 ? "bad" : "good"} />
                 <Kpi label="Net list change" value={`${cur.netList > 0 ? "+" : ""}${nf(cur.netList)}`}
                   sub="subscribers / month" tone={cur.netList > 0 ? "good" : "bad"} />
-                <Kpi label="Net value vs now" value={`${netVal >= 0 ? "+" : "−"}${money(Math.abs(netVal))}`}
-                  sub="order profit + list asset" tone={netVal >= 0 ? "good" : "bad"} />
+                <Kpi label="Subscribers per conversion"
+                  value={trade === null ? "—" : trade.toFixed(1)}
+                  sub={trade === null ? "current" : dConv > 0 ? "spent to gain one" : "kept per one given up"}
+                  tone={trade === null ? undefined : dConv > 0 && trade > 2 ? "bad" : "good"} />
               </KpiRow>
             </Box>
           </Box>
           <Box mt={4}>
             <Callout tag="The trap this exists to show" tone="warn">
               <p>
-                A 5th email a month wins <strong>{nf(fifthOrders)} more orders</strong> —{" "}
-                {money(fifthEarns)} of profit, and a clear win on any media-cost dashboard. It also
-                cuts net list growth from +{nf(base.netList)} to +{nf(fifth.netList)} subscribers,
-                burning <strong>{money(fifthCosts)}</strong> of list value a month at{" "}
-                {money(subscriberValue)} a subscriber. It costs about{" "}
-                {money(fifthCosts - fifthEarns)} more than it earns.
+                A 5th email a month wins <strong>{nf(fifthGain)} more conversions</strong> — a
+                clear win on any dashboard that stops at media cost. It also cuts net list growth
+                from +{nf(base.netList)} to +{nf(fifth.netList)}, so those conversions cost{" "}
+                <strong>{nf(fifthLoss)} subscribers</strong> — about{" "}
+                {(fifthLoss / fifthGain).toFixed(1)} subscribers each. The conversions arrive this
+                month and the subscribers do not come back, which is the part a monthly view hides.
               </p>
             </Callout>
           </Box>

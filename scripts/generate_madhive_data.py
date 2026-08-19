@@ -21,24 +21,28 @@ OUT = os.path.join(os.path.dirname(__file__), "..", "public", "data", "madhive-c
 # ---------------------------------------------------------------- assumptions
 # Every number here that isn't directly measured, with the basis for it.
 ASSUMPTIONS = [
-    dict(key="leadValue", label="Profit per online order", value=22, unit="$",
-         adjustable=True,
-         basis="Owner-supplied: $34 average ticket less food, packaging and delivery cost, "
-               "plus the second order a new customer places within 90 days. Their number, "
-               "not ours — we take it as an input."),
-    dict(key="targetReturn", label="Required return on ad spend", value=2.0, unit="x",
-         adjustable=True,
-         basis="The owner wants every $1 of advertising to return $2 of profit before it is "
-               "worth doing. A policy choice, not a measurement."),
     dict(key="emailSpendCap", label="Email spend ceiling", value=5600, unit="$",
          adjustable=False,
          basis="List-burn constraint. Past ~4 emails a month the unsubscribe rate passes 0.5% "
                "and the list starts shrinking, so extra budget cannot buy more sends and the "
                "response curve stops applying."),
+    dict(key="offlineMatchRate", label="Offline match rate", value=0.34, unit="",
+         adjustable=False,
+         basis="Modelled, not measured. Published work on IP-based resolution (CIMM / Go "
+               "Addressable, 2025) puts IP-to-postal accuracy at 13-16%, so an IP-to-device "
+               "match is only ever partial. Every offline conversion on this page is therefore "
+               "a floor, not a count — the real number is higher and unknowable from here."),
+    dict(key="offlineWindowDays", label="Store-visit window", value=7, unit=" days",
+         adjustable=False,
+         basis="A visit is credited if it happens within 7 days of the impression. Chosen to "
+               "match the lift tests' conversion window so the two metrics describe the same "
+               "span of behaviour."),
+    dict(key="geofenceRadius", label="Geofence radius", value=60, unit="m",
+         adjustable=False,
+         basis="60 metres around each shop. Tight enough to exclude the pavement traffic and "
+               "the units either side; wide enough to survive GPS drift indoors."),
 ]
 A = {a["key"]: a["value"] for a in ASSUMPTIONS}
-LEAD_VALUE = A["leadValue"]
-SUBSCRIBER_VALUE = 9
 START = date(2026, 6, 19)
 DAYS = 60
 WINDOW = 30
@@ -61,20 +65,20 @@ LIFT = {
         design="Control users entered the auction and were recorded as won, then served "
                "nothing — matched on targeting and auction dynamics.",
         units="user-level randomisation",
-        exposedRate=0.00326, controlRate=0.00238, ciLow=0.241, ciHigh=0.302,
+        exposedRate=0.00489, controlRate=0.00357, ciLow=0.241, ciHigh=0.302,
         why="Most display spend retargets people who already left an order in the cart."),
     "video": dict(
         method="Matched-market geo holdout",
         design="18 matched DMA pairs with the channel dark in one of each pair. Household-level "
                "withholding is not possible across CTV publishers.",
         units="22 matched ZIP pairs",
-        exposedRate=0.00719, controlRate=0.00108, ciLow=0.718, ciHigh=0.960,
+        exposedRate=0.01662, controlRate=0.00249, ciLow=0.718, ciHigh=0.960,
         why="Reaching people who were not already thinking about dinner."),
     "email": dict(
         method="Randomised list holdout",
         design="8% of subscribers withheld from every send in the window, re-randomised each send.",
         units="subscriber-level randomisation",
-        exposedRate=0.04806, controlRate=0.03605, ciLow=0.214, ciHigh=0.287,
+        exposedRate=0.05645, controlRate=0.04234, ciLow=0.214, ciHigh=0.287,
         why="The list is regulars, and regulars order pizza on their own schedule."),
 }
 
@@ -85,16 +89,22 @@ LIFT = {
 # step with the conversion totals.
 CHANNELS = [
     dict(key="display", label="Display", color="#2a78d6",
-         spend=9800, impressions=2100000, clicks=1890, conversions=1240,
+         spend=9800, impressions=2100000, clicks=1890,
+         onlineConversions=1240, offlineConversions=620,
          halfSaturationSpend=12000, reach=380000, reachUnit="devices"),
     dict(key="video", label="Online video", color="#eb6834",
-         spend=14200, impressions=640000, clicks=590, conversions=1510,
-         halfSaturationSpend=200000, reach=210000, reachUnit="households"),
+         spend=14200, impressions=640000, clicks=590,
+         onlineConversions=1510, offlineConversions=1980,
+         halfSaturationSpend=40000, reach=210000, reachUnit="households"),
     dict(key="email", label="Email", color="#1baf7a",
-         spend=4000, impressions=186000, clicks=3900, conversions=2980,
+         spend=4000, impressions=186000, clicks=3900,
+         onlineConversions=2980, offlineConversions=520,
          halfSaturationSpend=3000, reach=62000, reachUnit="subscribers"),
 ]
 for c in CHANNELS:
+    # One definition of "a conversion", used by the curve fit, the lift maths and
+    # every cost figure. Splitting it would let the two halves drift.
+    c["conversions"] = c["onlineConversions"] + c["offlineConversions"]
     lift = dict(LIFT[c["key"]])
     lift["incrementality"] = round(
         (lift["exposedRate"] - lift["controlRate"]) / lift["exposedRate"], 3)
@@ -109,7 +119,8 @@ for c in CHANNELS:
     c["cpm"] = round(s / c["impressions"] * 1000, 2)
     c["cpc"] = round(s / c["clicks"], 2)
     c["ctr"] = round(c["clicks"] / c["impressions"], 5)
-    c["convRate"] = round(n / c["clicks"], 4)
+    c["onlineCpa"] = round(s / c["onlineConversions"], 2)
+    c["offlineShare"] = round(c["offlineConversions"] / n, 3)
     c["frequency"] = round(c["impressions"] / c["reach"], 1)
 
 # ---------------------------------------------------------------- daily
@@ -142,6 +153,8 @@ for i in range(DAYS):
             spend=round(c["spend"] * share, 2),
             impressions=round(c["impressions"] * share),
             clicks=round(c["clicks"] * share),
+            onlineConversions=round(c["onlineConversions"] * conv_w[c["key"]][i] / recent_conv[c["key"]], 1),
+            offlineConversions=round(c["offlineConversions"] * conv_w[c["key"]][i] / recent_conv[c["key"]], 1),
             conversions=round(c["conversions"] * conv_w[c["key"]][i] / recent_conv[c["key"]], 1),
         )
     daily.append(row)
@@ -152,7 +165,8 @@ def wtot(field, lo, hi):
 CUR = (DAYS - WINDOW, DAYS)
 PRV = (DAYS - 2 * WINDOW, DAYS - WINDOW)
 totals = {f: dict(current=round(wtot(f, *CUR), 2), prior=round(wtot(f, *PRV), 2))
-          for f in ("spend", "impressions", "clicks", "conversions")}
+          for f in ("spend", "impressions", "clicks",
+                    "onlineConversions", "offlineConversions", "conversions")}
 
 # ---------------------------------------------------------------- video
 video = dict(
@@ -165,9 +179,9 @@ video = dict(
     ],
     types=[
         dict(type="Non-skippable + bumper", spend=6700, impressions=240000, cpm=27.92,
-             vcr=94.6, cpcv=0.030, viewability=78.4, cpa=8.42),
+             vcr=94.6, cpcv=0.030, viewability=78.4, cpa=3.60),
         dict(type="Skippable in-stream", spend=7500, impressions=400000, cpm=18.75,
-             vcr=62.8, cpcv=0.030, viewability=66.9, cpa=10.31),
+             vcr=62.8, cpcv=0.030, viewability=66.9, cpa=4.60),
     ],
 )
 video["dropoff"] = [
@@ -185,7 +199,7 @@ email = dict(
         dict(stage="Opens — reported", value=84000, note="45.2% · inflated by Apple MPP", suspect=True),
         dict(stage="Opens — modelled human", value=54300, note="29.2% · what we use", suspect=False),
         dict(stage="Clicks", value=3900, note="2.10% of delivered", suspect=False),
-        dict(stage="Online orders", value=2980, note=None, suspect=False),
+        dict(stage="Online conversions", value=2980, note=None, suspect=False),
     ],
     listHealth=[
         dict(metric="Active subscribers", value=62000, benchmark=None),
@@ -195,12 +209,12 @@ email = dict(
         dict(metric="Net monthly change", value=1324, benchmark=None),
     ],
     frequency=[
-        dict(sends=2, conversions=1980, unsubRate=0.31, netList=2100),
-        dict(sends=3, conversions=2560, unsubRate=0.38, netList=1760),
-        dict(sends=4, conversions=2980, unsubRate=0.46, netList=1324),
-        dict(sends=5, conversions=3190, unsubRate=0.81, netList=260),
-        dict(sends=6, conversions=3268, unsubRate=1.34, netList=-1450),
-        dict(sends=8, conversions=3290, unsubRate=2.21, netList=-4620),
+        dict(sends=2, conversions=2325, unsubRate=0.31, netList=2100),
+        dict(sends=3, conversions=3005, unsubRate=0.38, netList=1760),
+        dict(sends=4, conversions=3500, unsubRate=0.46, netList=1324),
+        dict(sends=5, conversions=3745, unsubRate=0.81, netList=260),
+        dict(sends=6, conversions=3840, unsubRate=1.34, netList=-1450),
+        dict(sends=8, conversions=3865, unsubRate=2.21, netList=-4620),
     ],
 )
 
@@ -227,42 +241,42 @@ for v in display["viewability"]:
 # ---------------------------------------------------------------- creatives
 creatives = [
     dict(id="em-1", channel="email", name="Two for Tuesday", spend=2300,
-         units=104000, completion=None, conversions=1780, verdict="scale",
-         placements=[("Ordered in last 30d", 1380, 61000, 1140),
-                     ("Ordered 31-90d ago", 920, 43000, 640)]),
+         units=104000, completion=None, conversions=2090, verdict="scale",
+         placements=[("Ordered in last 30d", 1380, 61000, 1339),
+                     ("Ordered 31-90d ago", 920, 43000, 751)]),
     dict(id="em-2", channel="email", name="We miss you — 30 days", spend=1700,
-         units=82000, completion=None, conversions=1200, verdict="scale",
-         placements=[("Lapsed 30-60d", 1020, 47000, 780),
-                     ("Lapsed 61-120d", 680, 35000, 420)]),
+         units=82000, completion=None, conversions=1410, verdict="scale",
+         placements=[("Lapsed 30-60d", 1020, 47000, 916),
+                     ("Lapsed 61-120d", 680, 35000, 494)]),
     dict(id="vd-1", channel="video", name="Fresh out the oven :15", spend=4200,
-         units=196000, completion=95.1, conversions=520, verdict="scale",
-         placements=[("Local streaming app", 2100, 98000, 281),
-                     ("FAST — food & travel", 1300, 61000, 148),
-                     ("Premium AVOD", 800, 37000, 91)]),
+         units=196000, completion=95.1, conversions=1202, verdict="scale",
+         placements=[("Local streaming app", 2100, 98000, 650),
+                     ("FAST — food & travel", 1300, 61000, 342),
+                     ("Premium AVOD", 800, 37000, 210)]),
     dict(id="vd-2", channel="video", name="Meet the dough :30", spend=3600,
-         units=164000, completion=93.8, conversions=384, verdict="scale",
-         placements=[("Premium AVOD", 2200, 100000, 241),
-                     ("FAST — entertainment", 1400, 64000, 143)]),
+         units=164000, completion=93.8, conversions=888, verdict="scale",
+         placements=[("Premium AVOD", 2200, 100000, 557),
+                     ("FAST — entertainment", 1400, 64000, 331)]),
     dict(id="vd-3", channel="video", name="Family night :30 skippable", spend=4100,
-         units=182000, completion=61.2, conversions=372, verdict="fix",
-         placements=[("Web pre-roll", 2500, 111000, 231),
-                     ("Mobile in-app", 1600, 71000, 141)]),
+         units=182000, completion=61.2, conversions=860, verdict="fix",
+         placements=[("Web pre-roll", 2500, 111000, 534),
+                     ("Mobile in-app", 1600, 71000, 326)]),
     dict(id="vd-4", channel="video", name="Late night slice :15 skippable", spend=2300,
-         units=98000, completion=64.9, conversions=234, verdict="pause",
-         placements=[("Web pre-roll", 1400, 60000, 145),
-                     ("Mobile in-app", 900, 38000, 89)]),
+         units=98000, completion=64.9, conversions=540, verdict="pause",
+         placements=[("Web pre-roll", 1400, 60000, 335),
+                     ("Mobile in-app", 900, 38000, 205)]),
     dict(id="dp-1", channel="display", name="Family bundle — $26", spend=2900,
-         units=620000, completion=None, conversions=420, verdict="hold",
-         placements=[("PMP", 1800, 385000, 276), ("Open exchange", 1100, 235000, 144)]),
+         units=620000, completion=None, conversions=630, verdict="hold",
+         placements=[("PMP", 1800, 385000, 414), ("Open exchange", 1100, 235000, 216)]),
     dict(id="dp-2", channel="display", name="Two for Tuesday banner", spend=1800,
-         units=390000, completion=None, conversions=244, verdict="hold",
-         placements=[("Open exchange", 1800, 390000, 244)]),
+         units=390000, completion=None, conversions=366, verdict="hold",
+         placements=[("Open exchange", 1800, 390000, 366)]),
     dict(id="dp-3", channel="display", name="Retarget — left in cart", spend=3400,
-         units=730000, completion=None, conversions=386, verdict="hold",
-         placements=[("Open exchange", 2100, 452000, 232), ("PMP", 1300, 278000, 154)]),
+         units=730000, completion=None, conversions=578, verdict="hold",
+         placements=[("Open exchange", 2100, 452000, 347), ("PMP", 1300, 278000, 231)]),
     dict(id="dp-4", channel="display", name="New: Detroit-style", spend=1700,
-         units=360000, completion=None, conversions=190, verdict="pause",
-         placements=[("Open exchange", 1700, 360000, 190)]),
+         units=360000, completion=None, conversions=286, verdict="pause",
+         placements=[("Open exchange", 1700, 360000, 286)]),
 ]
 # Metrics that can actually be captured at the creative level, per channel.
 # Deliberately different per channel — a video creative has a completion curve
@@ -305,6 +319,37 @@ for c in creatives:
                             cpa=round(p[1] / p[3], 2)) for p in c["placements"]]
 
 # ---------------------------------------------------------------- assemble
+# --------------------------------------------------------------- offline
+# A store visit is not observed by us. It is inferred, and the inference has
+# named weak points — which is why the widget shows the chain, not just a number.
+offline = dict(
+    method="IP-to-device geofence match",
+    windowDays=A["offlineWindowDays"],
+    radiusM=A["geofenceRadius"],
+    matchRate=A["offlineMatchRate"],
+    lagDays=3,
+    chain=[
+        dict(step="Impression",
+             what="The ad is served. The bid request carries the household IP.",
+             holds="Solid. This is our own log."),
+        dict(step="Vendor feed",
+             what="A third-party location vendor sends device IDs seen inside a "
+                  "%dm geofence around each shop, with the IPs those devices used."
+                  % A["geofenceRadius"],
+             holds="Solid for the sighting. We are trusting their panel's coverage."),
+        dict(step="IP match",
+             what="Impression IP is matched against the device's IP.",
+             holds="Weakest link. Mobile carrier IPs rotate and shared IPs collide."),
+        dict(step="Window",
+             what="A visit inside %d days of the impression is credited."
+                  % A["offlineWindowDays"],
+             holds="A choice, not a fact. Widen it and the number grows."),
+    ],
+    caveat="Matched visits only. Roughly %d%% of impressions resolve to a device we "
+           "can follow, so this is a floor — the true number is higher and we cannot "
+           "say by how much." % round(A["offlineMatchRate"] * 100),
+)
+
 data = dict(
     meta=dict(
         advertiser="Bella Vita Pizza",
@@ -322,8 +367,7 @@ data = dict(
         ],
     ),
     assumptions=ASSUMPTIONS,
-    constants=dict(leadValue=LEAD_VALUE, targetReturn=A["targetReturn"],
-                   emailSpendCap=A["emailSpendCap"], subscriberValue=SUBSCRIBER_VALUE),
+    constants=dict(emailSpendCap=A["emailSpendCap"]),
     channels=CHANNELS,
     daily=daily,
     totals=totals,
@@ -331,6 +375,7 @@ data = dict(
     email=email,
     display=display,
     creatives=creatives,
+    offline=offline,
 )
 
 os.makedirs(os.path.dirname(OUT), exist_ok=True)

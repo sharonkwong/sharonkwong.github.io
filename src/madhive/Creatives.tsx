@@ -107,7 +107,7 @@ export function ChannelCreatives({ data, channel }: { data: CampaignData; channe
   return (
     <Box mt={4}>
       <Panel title="Creative performance"
-        sub="Only this channel's ads, ranked by orders. The metrics are the ones this format can actually emit.">
+        sub="Only this channel's ads, ranked by conversions. The metrics are the ones this format can actually emit.">
         <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
           {rows.map((c) => (
             <Box key={c.id} border="1px solid" borderColor={RULE} borderRadius="8px" p={4} bg="white">
@@ -117,7 +117,7 @@ export function ChannelCreatives({ data, channel }: { data: CampaignData; channe
                 <Tag kind={c.verdict} />
               </HStack>
               <Text fontFamily={MONO} fontSize="10.5px" color={MUTED} mb={3}>
-                {c.format} · {money(c.spend)} spend · {nf(c.conversions)} orders · {money(c.cpa, 2)} per order
+                {c.format} · {money(c.spend)} spend · {nf(c.conversions)} conv · {money(c.cpa, 2)} each
               </Text>
               <CreativeMetrics c={c} />
             </Box>
@@ -136,7 +136,7 @@ export function CreativeRanking({ data }: { data: CampaignData }) {
   return (
     <Box mt={12}>
       <SectionHead title="Creative performance — all channels"
-        sub="Every ad ranked by orders, with the cost of each order alongside — because the top of this list is not always the top of that one." />
+        sub="Every ad ranked by conversions, online and in-store together, with the cost of each alongside — because the top of this list is not always the top of that one." />
       <Panel>
         <Box display="flex" flexDirection="column" gap={3}>
           {rows.map((c, i) => {
@@ -171,7 +171,7 @@ export function CreativeRanking({ data }: { data: CampaignData }) {
             </HStack>
           ))}
           <Text fontSize="12px" color={MUTED} ml="auto" fontFamily={MONO}>
-            bars = orders · right column = cost per order
+            bars = conversions · right column = cost per conversion
           </Text>
         </HStack>
       </Panel>

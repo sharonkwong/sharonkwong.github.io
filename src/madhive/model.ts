@@ -59,24 +59,22 @@ export function spendAtMarginal(p: CurveParams, target: number): number {
 /* ------------------------------------------------------------------ ceiling */
 
 /**
- * Two ceilings, and they answer different questions.
+ * There is exactly one ceiling here, and it is the budget.
  *
- *  value      — what a conversion is worth to the business, after the hurdle
- *               rate. Buy below this and you make money. Ignores budget.
- *  budget     — with a fixed budget you cannot reach the value optimum, so the
- *               binding constraint is "where does the money run out". This is
- *               the shadow price: raise it until total optimal spend equals the
- *               budget. At that point marginal cost is equal across channels,
- *               which is the textbook condition for an optimal allocation.
+ * The obvious other one — what a conversion is worth, divided by a required
+ * return — needs the advertiser's ticket size and margin. We are not given
+ * those, and inventing them would put our assumption on the screen wearing the
+ * advertiser's clothes. So the model prices against the only constraint we can
+ * see: with a fixed budget, raise the bar until total optimal spend equals it.
  *
- * The one that governs is whichever is LOWER. If the value ceiling says "buy
- * anything under $97" but doing that costs more than the budget, you cannot
- * afford every conversion worth buying — so the real bar is stricter than the
- * economics alone would set.
+ * That bar is the shadow price of the budget. At it, every uncapped channel sits
+ * at the same marginal cost — the textbook condition for an optimal allocation,
+ * and a statement that needs no margin at all: *wherever* the next conversion is
+ * cheaper here than there, money is in the wrong place.
+ *
+ * If margins ever arrive, the value ceiling goes back in as `Math.min(value,
+ * budget)` — the stricter bar binds — and nothing else has to change.
  */
-export function valueCeiling(leadValue: number, targetReturn: number) {
-  return leadValue / targetReturn;
-}
 
 /** Solve for the marginal cost at which total optimal spend equals `budget`. */
 export function budgetCeiling(
@@ -124,7 +122,8 @@ export function allocate(
 ): { rows: Allocation[]; effectiveCeiling: number; equimarginal: boolean } {
   const caps = channels.map((c) => c.cap?.value ?? null);
   const bCeil = budgetCeiling(channels.map((c) => c.curve), budget, caps);
-  // The stricter (lower) bar binds — see valueCeiling/budgetCeiling above.
+  // `ceiling` is Infinity while we have no margins, so the budget bar governs.
+  // Pass a real value ceiling and the stricter of the two binds.
   const effectiveCeiling = Math.min(ceiling, bCeil);
 
   const rows = channels.map((c, i): Allocation => {

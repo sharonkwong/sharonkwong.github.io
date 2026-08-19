@@ -293,7 +293,7 @@ function Page() {
 
         {/* 2 */}
         <Box mt={12}>
-          <SectionHead title="Three sources, three different problems"
+          <SectionHead title="Four sources, four different problems"
             sub="They arrive on different clocks, at different grains, with different identifiers." />
           <Table
             head={["Source", "Arrives", "Grain", "The problem it brings"]}
@@ -311,6 +311,10 @@ function Page() {
                 "Streaming, seconds",
                 "One row per event",
                 "Late and duplicated. Retries, offline queues and ad blockers mean events land hours late or twice."],
+              [<>Location vendor<br /><Text as="span" fontSize="11px" color={MUTED} fontWeight={400}>store-visit panel</Text></>,
+                "Daily batch, 3 days behind",
+                "One row per device sighting inside a geofence",
+                "Partial and probabilistic. It is a panel, not a census, and it is joined on IP — so what comes out is a floor with an unknown ceiling."],
             ]}
           />
           <Note tag="What silver is actually for">
@@ -321,8 +325,8 @@ function Page() {
               silver derives the change feed.
             </p>
             <p>
-              And all three arrive with <strong>different identifiers</strong> — a device ID, a
-              hashed email, a cookie. Resolving those to one person is silver's other job, and it is
+              And they arrive with <strong>different identifiers</strong> — a device ID, a
+              hashed email, a cookie, an IP. Resolving those to one person is silver's other job, and it is
               probabilistic, which is why anything downstream that counts people is a range rather
               than a count.
             </p>
@@ -359,16 +363,16 @@ function Page() {
             <Panel title="gold.lift_result — the whole metric in six columns" sub="Everything on the lift panel is derived from this.">
               <Box as="pre" overflowX="auto" bg="gray.50" border="1px solid" borderColor={RULE}
                 borderRadius="6px" p={4} fontFamily={MONO} fontSize="12.5px" lineHeight={1.7}>
-{`test_id   channel  arm       units    ordered   window_state
+{`test_id   channel  arm       units   converted  window_state
 ──────────────────────────────────────────────────────────────
-LT-0142   email    exposed   62,000     2,980     final
-LT-0142   email    control    8,600       310     final
+LT-0142   email    exposed   62,000     3,500     final
+LT-0142   email    control    8,600       364     final
 
-  exposed rate = 2,980 / 62,000 = 4.806%
-  control rate =   310 /  8,600 = 3.605%
-  lift         = (4.806 − 3.605) / 4.806 = 25.0%
-  caused       = 2,980 × 25.0% = 745
-  anyway       = 2,980 − 745  = 2,235`}
+  exposed rate = 3,500 / 62,000 = 5.645%
+  control rate =   364 /  8,600 = 4.234%
+  lift         = (5.645 − 4.234) / 5.645 = 25.0%
+  caused       = 3,500 × 25.0% = 875
+  anyway       = 3,500 − 875  = 2,625`}
               </Box>
               <Text fontSize="13px" color={MUTED} mt={3} lineHeight={1.6}>
                 Two rows produce every number on the lift widget. Storing the rate rather than the
@@ -377,6 +381,46 @@ LT-0142   email    control    8,600       310     final
               </Text>
             </Panel>
           </Box>
+        </Box>
+
+        {/* 3b */}
+        <Box mt={12}>
+          <SectionHead title="An in-store visit, traced the same way"
+            sub="Nobody observes a customer walking in. The number is inferred through four hops, and the model should make each hop's confidence visible rather than hide it behind one figure." />
+          <Table
+            head={["Hop", "What happens", "How much weight it holds", "Table"]}
+            widths={["150px", "", "230px", "200px"]}
+            rows={[
+              ["Impression",
+                <>The bid request lands with the household IP on it. Nothing is inferred yet.</>,
+                <Text as="span" color="green.600" fontWeight={600}>Solid — our own log.</Text>,
+                <C>bronze.dsp_delivery</C>],
+              ["Vendor sighting",
+                <>A location vendor sends device IDs seen inside a 60m geofence around each shop, with the IPs those devices used.</>,
+                <>Solid for the sighting itself. We are trusting the panel's coverage, which we cannot audit.</>,
+                <C>bronze.visit_panel</C>],
+              ["IP match",
+                <>The impression's IP is joined to the device's IP inside a 7-day window.</>,
+                <Text as="span" color="red.500" fontWeight={600}>Weakest hop. Carrier IPs rotate; shared IPs collide; roughly a third resolve.</Text>,
+                <C>silver.visit_match</C>],
+              ["Credit",
+                <>A matched visit is attributed to the last impression before it, the same rule online conversions use.</>,
+                <>A choice, not a fact. Widen the window and the number grows.</>,
+                <C>gold.conversion</C>],
+            ]}
+          />
+          <Note tag="Why the number is a floor" tone="warn">
+            <p>
+              Every hop can only lose matches, never invent them. A visit with no sighting, a
+              sighting with no IP match, a match outside the window — all three drop out. So the
+              offline count is the part we can prove, not the part that happened.
+            </p>
+            <p>
+              That is why the dashboard labels it a floor and never nets it against anything. It is
+              also why the same page refuses to publish a deduped household count: the identical IP
+              weakness that makes visits a floor makes a household total simply wrong.
+            </p>
+          </Note>
         </Box>
 
         {/* 4 */}
@@ -441,7 +485,10 @@ LT-0142   email    control    8,600       310     final
             rows={[
               ["Top-line metrics", "Daily, 06:00", "Rolling last 30 days", "Expected — the window moved."],
               ["Daily trend", "Daily, 06:00", "Last 30 days", "Expected, except for the trailing 7 days, which can restate as late events land."],
-              ["Cost of the next order", "Daily, 06:00", "Current spend level", "Expected — it is a function of today’s spend."],
+              ["Cost of the next conversion", "Daily, 06:00", "Current spend level", "Expected — it is a function of today’s spend."],
+              ["Offline conversions", <>Daily, 06:00<br /><Text as="span" fontSize="11px" color={MUTED}>3 days behind</Text></>,
+                "Rolling last 30 days, lagged",
+                "Expected for the trailing 3 days — the vendor batch has not landed. Older days moving is not."],
               ["Lift", <>On test maturity<br /><Text as="span" fontSize="11px" color={MUTED}>weeks, not days</Text></>,
                 "A fixed past test window",
                 <Text as="span" color="red.500" fontWeight={600}>Not expected. A final lift number moving means something upstream was rewritten.</Text>],
