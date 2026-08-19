@@ -127,7 +127,7 @@ function VideoTab({ data }: { data: CampaignData }) {
             <Box as="table" w="100%" minW="620px" fontSize="13px" style={{ borderCollapse: "collapse" }}>
               <Box as="thead">
                 <Box as="tr">
-                  {["Video type", "Spend", "Impressions", "CPM", "VCR", "CPCV", "Viewable", "CPiC"].map((h, i) => (
+                  {["Video type", "Spend", "Impressions", "CPM", "VCR", "CPCV", "Viewable", "CPA"].map((h, i) => (
                     <Box as="th" key={h} textAlign={i === 0 ? "left" : "right"} fontFamily="mono"
                       fontSize="9.5px" letterSpacing="0.11em" textTransform="uppercase" color={MUTED}
                       fontWeight={600} py={2.5} px={3} borderBottom="1px solid" borderColor="gray.300"
@@ -141,7 +141,7 @@ function VideoTab({ data }: { data: CampaignData }) {
                     <Box as="td" py={2.5} px={3} borderBottom="1px solid" borderColor={RULE}
                       fontWeight={600} color={INK}>{t.type}</Box>
                     {[money(t.spend), nf(t.impressions), money(t.cpm, 2), `${t.vcr}%`,
-                      `$${t.cpcv.toFixed(3)}`, `${t.viewability}%`, money(t.cpic, 2)].map((v, i) => (
+                      `$${t.cpcv.toFixed(3)}`, `${t.viewability}%`, money(t.cpa, 2)].map((v, i) => (
                       <Box as="td" key={i} py={2.5} px={3} borderBottom="1px solid" borderColor={RULE}
                         textAlign="right" fontFamily="mono" color="gray.600" whiteSpace="nowrap">{v}</Box>
                     ))}
@@ -154,13 +154,13 @@ function VideoTab({ data }: { data: CampaignData }) {
       </Box>
 
       <Box mt={4}>
-        <Callout tag="Why CPCV is identical and CPiC is not">
+        <Callout tag="Why CPCV is identical and CPA is not">
           <p>
             Both video types cost the same per <em>completed view</em> — $0.030. The market already
             prices completion in: skippable is cheaper per impression because fewer complete.
           </p>
           <p>
-            So CPCV can't rank them. <strong>Cost per incremental conversion can</strong> — it says
+            So CPCV can't rank them. <strong>Cost per conversion can</strong> — it says
             non-skippable is 19% better. Completion is a diagnostic, not an outcome.
           </p>
         </Callout>
@@ -172,12 +172,12 @@ function VideoTab({ data }: { data: CampaignData }) {
 /* ==================================================================== email */
 function EmailTab({ data }: { data: CampaignData }) {
   const { funnel, listHealth, frequency } = data.email;
-  const { subscriberValue, valuePerConversion } = data.constants;
+  const { subscriberValue, leadValue } = data.constants;
   const [idx, setIdx] = useState(2); // index of the 4-sends row = current
   const cur = frequency[idx];
   const base = frequency[2];
   const assetDelta = (cur.netList - base.netList) * subscriberValue;
-  const convDelta = (cur.incremental - base.incremental) * valuePerConversion;
+  const convDelta = (cur.conversions - base.conversions) * leadValue;
   const netVal = convDelta + assetDelta;
   const maxF = funnel[0].value;
 
@@ -256,8 +256,8 @@ function EmailTab({ data }: { data: CampaignData }) {
               aria-label="Email sends per subscriber per month" />
             <Box mt={4}>
               <KpiRow>
-                <Kpi label="Incremental conv." value={nf(cur.incremental)}
-                  sub={cur.sends === 4 ? "current" : `${cur.incremental > base.incremental ? "+" : ""}${nf(cur.incremental - base.incremental)} vs now`} />
+                <Kpi label="Conversions" value={nf(cur.conversions)}
+                  sub={cur.sends === 4 ? "current" : `${cur.conversions > base.conversions ? "+" : ""}${nf(cur.conversions - base.conversions)} vs now`} />
                 <Kpi label="Unsubscribe rate" value={`${cur.unsubRate.toFixed(2)}%`}
                   sub="healthy is <0.50%" tone={cur.unsubRate > 0.5 ? "bad" : "good"} />
                 <Kpi label="Net list change" value={`${cur.netList > 0 ? "+" : ""}${nf(cur.netList)}`}
@@ -270,10 +270,9 @@ function EmailTab({ data }: { data: CampaignData }) {
           <Box mt={4}>
             <Callout tag="The trap this exists to show" tone="warn">
               <p>
-                A 5th send gains <strong>118 conversions</strong> (~$40,120) for $4,200 in production —
+                A 5th send gains <strong>472 conversions</strong> (~$160,480) for $4,200 in production —
                 a clear win on any media-cost dashboard. It also cuts net list growth from +8,028 to
-                +1,600, destroying <strong>$244,264</strong> of subscriber value a month. The obvious
-                read is wrong by about 6×.
+                +1,600, destroying <strong>$244,264</strong> of subscriber value a month — more than it earns.
               </p>
             </Callout>
           </Box>

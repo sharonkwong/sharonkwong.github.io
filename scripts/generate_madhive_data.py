@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Generate the synthetic campaign dataset for the MadHive demo dashboard.
 
-Writes public/data/madhive-campaign.json, which the React dashboard fetches at
+Writes public/data/madhive-campaign.json, fetched by the React dashboard at
 runtime. Regenerate with:  python3 scripts/generate_madhive_data.py
 
-All figures are fabricated for a fictional advertiser. They are modelled on
-published 2026 benchmarks (cited in `meta.sources`) so the shape of the data is
-realistic: display CPM ~$3-8, MRC viewability standards, skippable vs
-non-skippable video completion, and email open rates inflated by Apple MPP.
+All figures are fabricated for a fictional advertiser, modelled on published
+2026 benchmarks (cited in meta.sources) so the shape is realistic.
+
+Conversions are last-touch throughout — what a platform reports by default.
+60 days are generated so the dashboard can show the most recent 30 against the
+prior 30.
 """
 import json
 import math
@@ -17,198 +19,134 @@ from datetime import date, timedelta
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "data", "madhive-campaign.json")
 
 # ---------------------------------------------------------------- assumptions
-# Every non-metric number on the dashboard is declared here with the basis for
-# it. Anything without a defensible basis was removed rather than guessed.
+# Every number here that isn't directly measured, with the basis for it.
 ASSUMPTIONS = [
     dict(key="leadValue", label="Gross profit per qualified lead", value=340, unit="$",
          adjustable=True,
          basis="Advertiser-supplied: 12% lead-to-sale close rate x $2,833 average front+back "
-               "gross per unit. Their finance team's number, not ours — we take it as an input."),
+               "gross per unit. Their finance team's number — we take it as an input."),
     dict(key="targetReturn", label="Required return on media", value=3.5, unit="x",
          adjustable=True,
-         basis="Dealer group's internal capital hurdle: media must return 3.5x contribution to "
-               "beat their next-best use of the same dollar. Policy, not measurement."),
-    dict(key="subscriberValue", label="Value of an email subscriber", value=38, unit="$",
-         adjustable=False,
-         basis="Computed, not assumed: trailing-12-month email-attributed gross profit divided "
-               "by mean active subscribers over the same period."),
+         basis="Dealer group's internal capital hurdle: media must return 3.5x contribution "
+               "to beat their next-best use of the same dollar. Policy, not measurement."),
     dict(key="emailSpendCap", label="Email spend ceiling", value=30000, unit="$",
          adjustable=False,
-         basis="List-burn constraint. Beyond ~4 sends/subscriber/month unsubscribe rate passes "
-               "0.5% and net list growth turns negative. Extra budget past this point cannot buy "
-               "more sends, so the response curve does not apply above it."),
+         basis="List-burn constraint. Past ~4 sends/subscriber/month the unsubscribe rate "
+               "passes 0.5% and net list growth turns negative, so extra budget cannot buy "
+               "more sends and the response curve stops applying."),
 ]
 A = {a["key"]: a["value"] for a in ASSUMPTIONS}
-VALUE_PER_CONVERSION = A["leadValue"]
-SUBSCRIBER_VALUE = A["subscriberValue"]
-START = date(2026, 7, 19)
-DAYS = 30
-
-# ------------------------------------------------------------- lift tests
-# Incrementality is the second load-bearing assumption after the ceiling, so it
-# carries its design and its confidence interval. A point estimate with no
-# interval is false precision — and the whole reallocation rests on these.
-#
-#   incremental = (rate_test - rate_control) x N_test
-#   rate        = incremental / attributed
-#
-# Design differs by channel because what is feasible differs. User-level
-# withholding is easy in email and possible via ghost bids in programmatic; CTV
-# generally cannot withhold per household across publishers, so it falls back to
-# matched geos — which have far fewer units of randomisation and therefore much
-# wider intervals, even on large impression counts.
-LIFT = {
-    "display": dict(
-        method="Ghost bids",
-        design="Control users entered the auction and were recorded as won, then served nothing. "
-               "Matched on targeting and auction dynamics.",
-        window="4 weeks, 22 Jun – 19 Jul 2026",
-        controlShare=0.10, units="30.2M impressions, user-level randomisation",
-        point=0.270, ciLow=0.241, ciHigh=0.302, pValue="<0.001"),
-    "video": dict(
-        method="Matched-market geo holdout",
-        design="18 matched DMA pairs, channel dark in one of each pair. Household-level "
-               "withholding is not possible across CTV publishers.",
-        window="4 weeks, 22 Jun – 19 Jul 2026",
-        controlShare=0.50, units="18 matched DMA pairs — only 18 units of randomisation",
-        point=0.854, ciLow=0.718, ciHigh=0.960, pValue="0.003"),
-    "email": dict(
-        method="Randomised list holdout",
-        design="8% of subscribers withheld from every send in the window, randomised at the "
-               "subscriber level and re-randomised each send.",
-        window="4 weeks, 22 Jun – 19 Jul 2026",
-        controlShare=0.08, units="460K subscribers, subscriber-level randomisation",
-        point=0.250, ciLow=0.214, ciHigh=0.287, pValue="<0.001"),
-}
+LEAD_VALUE = A["leadValue"]
+SUBSCRIBER_VALUE = 38
+START = date(2026, 6, 19)
+DAYS = 60
+WINDOW = 30
 
 # ---------------------------------------------------------------- channels
+# halfSaturationSpend (K) is the fitted response-curve parameter: the spend at
+# which a channel delivers half of everything it could ever deliver. Everything
+# marginal derives from it, so no second hand-written table can drift out of
+# step with the conversion totals.
 CHANNELS = [
     dict(key="display", label="Display", color="#2a78d6",
-         spend=148000, impressions=30204000, cpm=4.90, clicks=27184,
-         conversionsLast=3910, halfSaturationSpend=150000,
-         reach=1240000, note="64% of spend is retargeting — that's why lift is low."),
+         spend=148000, impressions=30204000, clicks=27184, conversions=3910,
+         halfSaturationSpend=150000, reach=1240000, reachUnit="cookies / device IDs"),
     dict(key="video", label="Online video", color="#eb6834",
-         spend=232000, impressions=10357000, cpm=22.40, clicks=9640,
-         conversionsLast=4240, halfSaturationSpend=1000000,
-         reach=742000, note="The only channel buying genuinely new reach."),
+         spend=232000, impressions=10357000, clicks=9640, conversions=4240,
+         halfSaturationSpend=1000000, reach=742000, reachUnit="IP households"),
     dict(key="email", label="Email", color="#1baf7a",
-         spend=22000, impressions=1798000, cpm=12.24, clicks=37600,
-         conversionsLast=5880, halfSaturationSpend=20000,
-         reach=460000, note="Cheapest per conversion, but the list is finite."),
+         spend=22000, impressions=1798000, clicks=37600, conversions=5880,
+         halfSaturationSpend=20000, reach=460000, reachUnit="subscribers"),
 ]
 for c in CHANNELS:
-    # Incremental conversions are DERIVED from the lift point estimate, not typed
-    # in separately — so the ratio on the page and the test result cannot diverge.
-    lift = LIFT[c["key"]]
-    c["lift"] = lift
-    c["conversionsIncr"] = round(c["conversionsLast"] * lift["point"])
-    c["conversionsIncrLow"] = round(c["conversionsLast"] * lift["ciLow"])
-    c["conversionsIncrHigh"] = round(c["conversionsLast"] * lift["ciHigh"])
-    # Hill response curve: conversions(s) = Cmax*s/(K+s). K is the fitted
-    # half-saturation spend; Cmax falls out of the observed (spend, conversions).
-    K = c["halfSaturationSpend"]
-    c["maxConversions"] = round(c["conversionsIncr"] * (K + c["spend"]) / c["spend"], 1)
-    c["marginalCpic"] = round((K + c["spend"]) ** 2 / (c["maxConversions"] * K), 2)
-    c["floorCpic"] = round(K / c["maxConversions"], 2)
+    K, s, n = c["halfSaturationSpend"], c["spend"], c["conversions"]
+    c["maxConversions"] = round(n * (K + s) / s, 1)
+    c["marginalCpa"] = round((K + s) ** 2 / (c["maxConversions"] * K), 2)
+    c["floorCpa"] = round(K / c["maxConversions"], 2)
+    c["cpa"] = round(s / n, 2)
+    c["cpm"] = round(s / c["impressions"] * 1000, 2)
+    c["cpc"] = round(s / c["clicks"], 2)
     c["ctr"] = round(c["clicks"] / c["impressions"], 5)
-    c["incrementalityRate"] = round(c["conversionsIncr"] / c["conversionsLast"], 3)
-    c["cpaLast"] = round(c["spend"] / c["conversionsLast"], 2)
-    c["cpic"] = round(c["spend"] / c["conversionsIncr"], 2)
+    c["convRate"] = round(n / c["clicks"], 4)
     c["frequency"] = round(c["impressions"] / c["reach"], 1)
 
 # ---------------------------------------------------------------- daily
-def day_weight(key: str, i: int) -> float:
-    """Deterministic daily shape. Weekend lift on video, twice-weekly email sends."""
+def day_weight(key, i):
     weekly = [1.04, 1.00, 0.97, 0.99, 1.03, 1.12, 1.16][i % 7]
-    trend = {"video": 1 + i * 0.006, "display": 1 - i * 0.002, "email": 1 + i * 0.001}[key]
-    wobble = 1 + 0.05 * math.sin(i * 1.7 + {"display": 0, "video": 1, "email": 2}[key])
+    trend = {"video": 1 + i * 0.004, "display": 1 - i * 0.0015, "email": 1 + i * 0.0008}[key]
+    wobble = 1 + 0.06 * math.sin(i * 1.7 + {"display": 0, "video": 1, "email": 2}[key])
     base = weekly * trend * wobble
-    if key == "email":                       # sends land Tue + Fri; trickle in between
+    if key == "email":
         base *= 1.0 if i % 7 in (1, 4) else 0.12
     return base
 
-daily = []
 weights = {c["key"]: [day_weight(c["key"], i) for i in range(DAYS)] for c in CHANNELS}
-totals = {k: sum(v) for k, v in weights.items()}
+# Conversions get their own daily shape. Sharing one shape with spend would make
+# cost-per-conversion a flat line by construction — an artefact, not a finding.
+conv_w = {c["key"]: [day_weight(c["key"], i) * (1 + 0.16 * math.sin(i * 0.9 + 1.3)
+                                                 + 0.09 * math.cos(i * 2.3))
+                     for i in range(DAYS)] for c in CHANNELS}
+# Normalise so the LAST 30 days sum to the reported totals; the prior 30 falls
+# out of the same shape and gives an honest period-over-period delta.
+recent_tot = {k: sum(v[DAYS - WINDOW:]) for k, v in weights.items()}
+recent_conv = {k: sum(v[DAYS - WINDOW:]) for k, v in conv_w.items()}
+
+daily = []
 for i in range(DAYS):
     row = {"date": (START + timedelta(days=i)).isoformat()}
     for c in CHANNELS:
-        share = weights[c["key"]][i] / totals[c["key"]]
-        row[c["key"]] = {
-            "spend": round(c["spend"] * share, 2),
-            "impressions": round(c["impressions"] * share),
-            "conversionsLast": round(c["conversionsLast"] * share, 1),
-            "conversionsIncr": round(c["conversionsIncr"] * share, 1),
-        }
+        share = weights[c["key"]][i] / recent_tot[c["key"]]
+        row[c["key"]] = dict(
+            spend=round(c["spend"] * share, 2),
+            impressions=round(c["impressions"] * share),
+            clicks=round(c["clicks"] * share),
+            conversions=round(c["conversions"] * conv_w[c["key"]][i] / recent_conv[c["key"]], 1),
+        )
     daily.append(row)
 
-# Marginal curves and the reallocation are NOT stored — the dashboard derives
-# them from the response-curve parameters above, so they cannot drift apart from
-# the conversion totals the way two hand-written tables would.
+def wtot(field, lo, hi):
+    return sum(sum(d[c["key"]][field] for c in CHANNELS) for d in daily[lo:hi])
+
+CUR = (DAYS - WINDOW, DAYS)
+PRV = (DAYS - 2 * WINDOW, DAYS - WINDOW)
+totals = {f: dict(current=round(wtot(f, *CUR), 2), prior=round(wtot(f, *PRV), 2))
+          for f in ("spend", "impressions", "clicks", "conversions")}
 
 # ------------------------------------------------------------------ reach
-# Deduped household reach, restored — but as a modelled RANGE, not a count.
-#
-# IP is the household identifier in CTV: streaming devices carry no cookie, and
-# everyone behind one home router shares a public IPv4 via NAT. That is real and
-# it is how the industry does it. The problem is precision, and it pushes in
-# BOTH directions:
-#
-#   IPv6      -> no NAT collapsing, addresses rotate. One household can present
-#                as dozens of distinct "users" in a week. OVER-counts households.
-#   CGNAT     -> carriers put thousands of subscribers behind one shared IPv4.
-#                Many households look like one. UNDER-counts households.
-#
-# And the three channels do not share an identifier at all, so a cross-channel
-# dedupe needs an identity graph, which is probabilistic. Published accuracy is
-# poor enough that a single number would be false precision (CIMM / Go
-# Addressable 2025: IP-to-postal matching accurate 13-16% of the time; different
-# identity vendors agree on a given IP-to-postal link only 7% of the time).
-#
-# Worth separating: IP is weak for ADDRESSABILITY (knowing *which* household)
-# and better for DEDUPLICATION (knowing a household is *distinct*). We only need
-# the second here, which is why a range is defensible where a target is not.
+# IP is the household identifier in CTV — streaming devices carry no cookie and a
+# home router NATs everyone onto one public IPv4. Real practice, imprecise BOTH
+# ways: IPv6 rotates addresses so one home looks like many (over-counts); CGNAT
+# puts thousands of subscribers behind one IPv4 so many homes look like one
+# (under-counts). The three channels also share no common identifier, so a
+# cross-channel dedupe runs through a probabilistic identity graph. Reported as a
+# range. IP is weak for ADDRESSABILITY (which household) and better for
+# DEDUPLICATION (that a household is distinct) — only the second is needed here.
 reach = dict(
-    channels=[
-        dict(key="display", label="Display", value=1240000, unit="cookies / device IDs",
-             note="Not households. Typically 2.0-2.5 devices per household, so this "
-                  "materially overstates household count before dedupe."),
-        dict(key="video", label="Online video", value=742000, unit="IP households",
-             note="IP-derived. Degraded by IPv6 rotation (over-counts) and CGNAT "
-                  "(under-counts)."),
-        dict(key="email", label="Email", value=460000, unit="subscribers",
-             note="Hashed email — effectively 1:1 with a person, the most reliable of "
-                  "the three."),
-    ],
-    dedupedLow=740000,
-    dedupedHigh=1120000,
+    dedupedLow=740000, dedupedHigh=1120000,
     method="Identity graph joining IP households, device IDs and hashed email. Display "
-           "cookies are collapsed to households at 2.0-2.5 devices each; the band spans "
+           "cookies collapsed to households at 2.0-2.5 devices each; the band spans "
            "plausible overlap between prospecting video and retargeted display.",
-    caveat="Reported as a range because the three channels share no common identifier and "
-           "published IP-to-household accuracy is low. A point estimate here would be "
-           "false precision.",
-    source="CIMM / Go Addressable, IP-to-Household Accuracy (2025)",
+    source="CIMM / Go Addressable (2025): IP-to-postal matching accurate 13-16% of the time.",
 )
 
 # ---------------------------------------------------------------- video
 video = dict(
     quartiles=[
         dict(stage="Start", nonskip=100.0, skip=100.0),
-        dict(stage="25%",   nonskip=97.8,  skip=71.4),
-        dict(stage="50%",   nonskip=96.1,  skip=66.2),
-        dict(stage="75%",   nonskip=95.2,  skip=63.9),
-        dict(stage="100%",  nonskip=94.6,  skip=62.8),
+        dict(stage="25%", nonskip=97.8, skip=71.4),
+        dict(stage="50%", nonskip=96.1, skip=66.2),
+        dict(stage="75%", nonskip=95.2, skip=63.9),
+        dict(stage="100%", nonskip=94.6, skip=62.8),
     ],
     types=[
         dict(type="Non-skippable + bumper", spend=109200, impressions=3900000, cpm=28.00,
-             vcr=94.6, cpcv=0.030, viewability=78.4, cpic=58.10),
+             vcr=94.6, cpcv=0.030, viewability=78.4, cpa=51.30),
         dict(type="Skippable in-stream", spend=122800, impressions=6457000, cpm=19.02,
-             vcr=62.8, cpcv=0.030, viewability=66.9, cpic=71.40),
+             vcr=62.8, cpcv=0.030, viewability=66.9, cpa=58.10),
     ],
 )
 video["dropoff"] = [
-    dict(stage=f'{video["quartiles"][i-1]["stage"]} → {video["quartiles"][i]["stage"]}',
+    dict(stage='%s → %s' % (video["quartiles"][i-1]["stage"], video["quartiles"][i]["stage"]),
          nonskip=round(video["quartiles"][i]["nonskip"] - video["quartiles"][i-1]["nonskip"], 1),
          skip=round(video["quartiles"][i]["skip"] - video["quartiles"][i-1]["skip"], 1))
     for i in range(1, len(video["quartiles"]))
@@ -220,10 +158,9 @@ email = dict(
         dict(stage="Sent", value=1840000, note=None, suspect=False),
         dict(stage="Delivered", value=1798000, note="97.7% of sent", suspect=False),
         dict(stage="Opens — reported", value=782000, note="43.5% · inflated by Apple MPP", suspect=True),
-        dict(stage="Opens — modelled human", value=502000, note="27.9% · what we actually use", suspect=False),
+        dict(stage="Opens — modelled human", value=502000, note="27.9% · what we use", suspect=False),
         dict(stage="Clicks", value=37600, note="2.09% of delivered", suspect=False),
-        dict(stage="Conversions", value=5880, note="last-touch", suspect=False),
-        dict(stage="Incremental", value=1470, note="25% of last-touch", suspect=False),
+        dict(stage="Conversions", value=5880, note=None, suspect=False),
     ],
     listHealth=[
         dict(metric="Active subscribers", value=460000, benchmark=None),
@@ -233,12 +170,12 @@ email = dict(
         dict(metric="Net monthly change", value=8028, benchmark=None),
     ],
     frequency=[
-        dict(sends=2, incremental=890,  unsubRate=0.31, netList=12900),
-        dict(sends=3, incremental=1240, unsubRate=0.38, netList=10800),
-        dict(sends=4, incremental=1470, unsubRate=0.46, netList=8028),
-        dict(sends=5, incremental=1588, unsubRate=0.81, netList=1600),
-        dict(sends=6, incremental=1642, unsubRate=1.34, netList=-8900),
-        dict(sends=8, incremental=1655, unsubRate=2.21, netList=-28400),
+        dict(sends=2, conversions=3560, unsubRate=0.31, netList=12900),
+        dict(sends=3, conversions=4960, unsubRate=0.38, netList=10800),
+        dict(sends=4, conversions=5880, unsubRate=0.46, netList=8028),
+        dict(sends=5, conversions=6352, unsubRate=0.81, netList=1600),
+        dict(sends=6, conversions=6568, unsubRate=1.34, netList=-8900),
+        dict(sends=8, conversions=6620, unsubRate=2.21, netList=-28400),
     ],
 )
 
@@ -251,14 +188,12 @@ display = dict(
         dict(marketplace="Open exchange", rate=61.2, spend=79400, isBenchmark=False),
     ],
     metrics=[
-        dict(metric="Click-through rate", value="0.09%",
-             reads="In line with display norms. Not comparable to email's 2.09% — different denominator, different audience."),
         dict(metric="Avg time in view", value="6.2s",
              reads="Healthy. Impressions that are viewable are getting real dwell."),
         dict(metric="Invalid traffic (IVT)", value="2.1%",
              reads="Under the 3% action threshold. Not the problem here."),
         dict(metric="Retargeting share of spend", value="64%",
-             reads="The reason incrementality is only 27%. We pay to reach people already in-market."),
+             reads="Most of display is reaching people already shopping."),
     ],
 )
 for v in display["viewability"]:
@@ -267,74 +202,72 @@ for v in display["viewability"]:
 # ---------------------------------------------------------------- creatives
 creatives = [
     dict(id="em-1", channel="email", name="Service reminder — 45k mile", spend=5200,
-         units=412000, completion=None, conversions=2140, cpic=12.40, verdict="scale",
-         placements=[("Segment: owners 30–50k mi", 3100, 248000, 1380),
-                     ("Segment: lapsed 12mo+", 2100, 164000, 760)]),
+         units=412000, completion=None, conversions=1712, verdict="scale",
+         placements=[("Segment: owners 30-50k mi", 3100, 248000, 1104),
+                     ("Segment: lapsed 12mo+", 2100, 164000, 608)]),
     dict(id="em-2", channel="email", name="Lease-end offer", spend=6800,
-         units=388000, completion=None, conversions=1610, cpic=16.80, verdict="scale",
-         placements=[("Lease ending ≤90d", 4200, 201000, 1090),
-                     ("Lease ending 91–180d", 2600, 187000, 520)]),
+         units=388000, completion=None, conversions=1288, verdict="scale",
+         placements=[("Lease ending <=90d", 4200, 201000, 872),
+                     ("Lease ending 91-180d", 2600, 187000, 416)]),
     dict(id="vd-1", channel="video", name="Summer Event :15 — non-skip", spend=64800,
-         units=2310000, completion=95.1, conversions=1290, cpic=50.20, verdict="scale",
-         placements=[("Local broadcaster app", 31200, 1090000, 690),
-                     ("Premium AVOD", 22400, 798000, 412),
-                     ("FAST — news", 11200, 422000, 188)]),
+         units=2310000, completion=95.1, conversions=1462, verdict="scale",
+         placements=[("Local broadcaster app", 31200, 1090000, 782),
+                     ("Premium AVOD", 22400, 798000, 467),
+                     ("FAST — news", 11200, 422000, 213)]),
     dict(id="vd-2", channel="video", name="Test Drive :30 — non-skip", spend=44400,
-         units=1590000, completion=93.8, conversions=842, cpic=52.70, verdict="scale",
-         placements=[("Premium AVOD", 26100, 934000, 510),
-                     ("FAST — entertainment", 18300, 656000, 332)]),
+         units=1590000, completion=93.8, conversions=954, verdict="scale",
+         placements=[("Premium AVOD", 26100, 934000, 578),
+                     ("FAST — entertainment", 18300, 656000, 376)]),
     dict(id="vd-3", channel="video", name="Brand Anthem :30 — skippable", spend=71200,
-         units=3742000, completion=61.2, conversions=996, cpic=71.50, verdict="fix",
-         placements=[("Web pre-roll", 42800, 2250000, 588),
-                     ("Mobile in-app", 28400, 1492000, 408)]),
+         units=3742000, completion=61.2, conversions=1129, verdict="fix",
+         placements=[("Web pre-roll", 42800, 2250000, 666),
+                     ("Mobile in-app", 28400, 1492000, 463)]),
     dict(id="vd-4", channel="video", name="Inventory :15 — skippable", spend=51600,
-         units=2715000, completion=64.9, conversions=492, cpic=104.90, verdict="pause",
-         placements=[("Web pre-roll", 30900, 1626000, 301),
-                     ("Mobile in-app", 20700, 1089000, 191)]),
+         units=2715000, completion=64.9, conversions=695, verdict="pause",
+         placements=[("Web pre-roll", 30900, 1626000, 425),
+                     ("Mobile in-app", 20700, 1089000, 270)]),
     dict(id="dp-1", channel="display", name="Prospecting — in-market auto", spend=48200,
-         units=10600000, completion=None, conversions=398, cpic=121.10, verdict="hold",
-         placements=[("PMP", 29600, 6100000, 268), ("Open exchange", 18600, 4500000, 130)]),
+         units=10600000, completion=None, conversions=1402, verdict="hold",
+         placements=[("PMP", 29600, 6100000, 944), ("Open exchange", 18600, 4500000, 458)]),
     dict(id="dp-2", channel="display", name="Native — model comparison", spend=16500,
-         units=2704000, completion=None, conversions=142, cpic=116.20, verdict="hold",
-         placements=[("Native exchange", 16500, 2704000, 142)]),
+         units=2704000, completion=None, conversions=502, verdict="hold",
+         placements=[("Native exchange", 16500, 2704000, 502)]),
     dict(id="dp-3", channel="display", name="Retarget — VDP abandoners", spend=61400,
-         units=11800000, completion=None, conversions=402, cpic=152.70, verdict="cut",
-         placements=[("Open exchange", 38900, 7900000, 231), ("PMP", 22500, 3900000, 171)]),
+         units=11800000, completion=None, conversions=1608, verdict="hold",
+         placements=[("Open exchange", 38900, 7900000, 924), ("PMP", 22500, 3900000, 684)]),
     dict(id="dp-4", channel="display", name="Conquest — competitor owners", spend=21900,
-         units=5100000, completion=None, conversions=113, cpic=193.80, verdict="pause",
-         placements=[("Open exchange", 21900, 5100000, 113)]),
+         units=5100000, completion=None, conversions=398, verdict="pause",
+         placements=[("Open exchange", 21900, 5100000, 398)]),
 ]
 for c in creatives:
-    c["placements"] = [
-        dict(name=p[0], spend=p[1], units=p[2], conversions=p[3],
-             cpic=round(p[1] / p[3], 2)) for p in c["placements"]
-    ]
+    c["cpa"] = round(c["spend"] / c["conversions"], 2)
+    c["placements"] = [dict(name=p[0], spend=p[1], units=p[2], conversions=p[3],
+                            cpa=round(p[1] / p[3], 2)) for p in c["placements"]]
 
 # ---------------------------------------------------------------- assemble
 data = dict(
     meta=dict(
         advertiser="Cascade Auto Group",
-        descriptor="4 rooftops · Portland–Vancouver DMA",
-        flightStart=START.isoformat(),
+        descriptor="4 rooftops · Portland-Vancouver DMA",
+        flightStart=(START + timedelta(days=DAYS - WINDOW)).isoformat(),
         flightEnd=(START + timedelta(days=DAYS - 1)).isoformat(),
         generatedAt="2026-08-19T06:00:00-07:00",
-        owner="Media Analytics",
-        goal="Figure out which channels are working best so we can run more of them.",
+        window=WINDOW,
         synthetic=True,
         sources=[
             "Display CPM $3.12 GDN / $8.20 PMP; 72% cross-network viewability (2026)",
             "MRC viewability: 50% of pixels for 1s (display), 2s (video)",
             "Skippable in-stream VCR 60%+; non-skippable 90%+ (2026)",
-            "Email: 43.46% avg open inflated 15–20pts by Apple MPP; 2.09% click on delivered; 6.81% median CTOR; 0.46% unsubscribe",
+            "Email: 43.46% avg open inflated 15-20pts by Apple MPP; 2.09% click on delivered; 0.46% unsubscribe",
+            "CIMM / Go Addressable (2025): IP-to-household accuracy 13-16%",
         ],
     ),
     assumptions=ASSUMPTIONS,
-    constants=dict(valuePerConversion=VALUE_PER_CONVERSION,
-                   subscriberValue=SUBSCRIBER_VALUE,
-                   emailSpendCap=A["emailSpendCap"],
-                   targetReturn=A["targetReturn"]),
+    constants=dict(leadValue=LEAD_VALUE, targetReturn=A["targetReturn"],
+                   emailSpendCap=A["emailSpendCap"], subscriberValue=SUBSCRIBER_VALUE),
     channels=CHANNELS,
     daily=daily,
+    totals=totals,
     reach=reach,
     video=video,
     email=email,
@@ -346,8 +279,13 @@ os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(OUT, "w") as f:
     json.dump(data, f, indent=1)
 
-tot_spend = sum(c["spend"] for c in CHANNELS)
-tot_incr = sum(c["conversionsIncr"] for c in CHANNELS)
-print(f"Wrote {os.path.relpath(OUT)}")
-print(f"  {len(CHANNELS)} channels · {len(daily)} days · {len(creatives)} creatives")
-print(f"  spend ${tot_spend:,} · incremental {tot_incr:,} · blended CPiC ${tot_spend/tot_incr:,.2f}")
+print("Wrote %s" % os.path.relpath(OUT))
+print("  %d channels · %d days (%d-day window) · %d creatives"
+      % (len(CHANNELS), DAYS, WINDOW, len(creatives)))
+for f_ in ("spend", "conversions"):
+    t = totals[f_]
+    pct = (t["current"] / t["prior"] - 1) * 100
+    print(f"  {f_:12} {t['current']:>12,.0f}  vs prior {t['prior']:>12,.0f}  ({pct:+.1f}%)")
+for c in CHANNELS:
+    print("  %-8s CPA $%7.2f  next conv $%7.2f  floor $%6.2f"
+          % (c["key"], c["cpa"], c["marginalCpa"], c["floorCpa"]))

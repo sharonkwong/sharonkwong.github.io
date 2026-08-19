@@ -56,12 +56,19 @@ export function Kpi({
   value,
   sub,
   tone,
+  delta,
+  lowerIsBetter,
 }: {
   label: string;
   value: string;
   sub?: string;
   tone?: "good" | "bad";
+  /** Percentage change vs the comparison period. */
+  delta?: number;
+  /** For cost metrics, a fall is an improvement. */
+  lowerIsBetter?: boolean;
 }) {
+  const good = delta === undefined ? null : lowerIsBetter ? delta < 0 : delta > 0;
   return (
     <Box bg="white" p={4}>
       <Text
@@ -75,14 +82,22 @@ export function Kpi({
         {label}
       </Text>
       <Text
-        fontSize={{ base: "22px", md: "26px" }}
+        fontSize={{ base: "19px", md: "22px" }}
         fontWeight={700}
         letterSpacing="-0.025em"
+        whiteSpace="nowrap"
         lineHeight={1.08}
         color={tone === "good" ? "green.600" : tone === "bad" ? "red.500" : INK}
       >
         {value}
       </Text>
+      {delta !== undefined && (
+        <Text fontSize="11px" mt={1.5} fontFamily="mono"
+          color={good ? "green.600" : "red.500"} fontWeight={600}>
+          {delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}%
+          <Text as="span" color={MUTED} fontWeight={400}> vs prior</Text>
+        </Text>
+      )}
       {sub && (
         <Text fontSize="11px" color={MUTED} mt={1} fontFamily="mono">
           {sub}
@@ -96,7 +111,7 @@ export function KpiRow({ children }: { children: ReactNode }) {
   return (
     <Box
       display="grid"
-      gridTemplateColumns="repeat(auto-fit, minmax(150px, 1fr))"
+      gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)", xl: "repeat(6, 1fr)" }}
       gap="1px"
       bg={RULE}
       border="1px solid"

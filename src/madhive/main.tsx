@@ -56,15 +56,15 @@ function Page() {
             Which channel should get the next dollar?
           </Text>
           <Text fontSize={{ base: "15px", md: "17px" }} color="gray.600" maxW="60ch">
-            Display, online video and email — ranked on one metric that works across all three.
+            Display, online video and email — what each is delivering, and where the next
+            dollar should go.
           </Text>
         </Box>
 
         <Dashboard
           data={data}
-          attr={view.attr}
           channel={view.channel}
-          setView={setView}
+          setChannel={(c) => setView({ channel: c })}
         />
         <Diagnostics data={data} />
         <Tables

@@ -1,17 +1,4 @@
 export type ChannelKey = "display" | "video" | "email";
-export type AttrModel = "last" | "incr";
-
-export interface LiftTest {
-  method: string;
-  design: string;
-  window: string;
-  controlShare: number;
-  units: string;
-  point: number;
-  ciLow: number;
-  ciHigh: number;
-  pValue: string;
-}
 
 export interface Channel {
   key: ChannelKey;
@@ -19,35 +6,27 @@ export interface Channel {
   color: string;
   spend: number;
   impressions: number;
-  cpm: number;
   clicks: number;
-  ctr: number;
-  conversionsLast: number;
-  conversionsIncr: number;
-  conversionsIncrLow: number;
-  conversionsIncrHigh: number;
-  lift: LiftTest;
-  incrementalityRate: number;
-  cpaLast: number;
-  cpic: number;
-  /** Fitted half-saturation spend for the Hill response curve. */
+  conversions: number;
   halfSaturationSpend: number;
-  /** Ceiling of the response curve — most incremental conversions achievable. */
   maxConversions: number;
-  /** Marginal cost of the next conversion at CURRENT spend. Derived. */
-  marginalCpic: number;
-  /** Cheapest the next conversion can ever be on this channel. Derived. */
-  floorCpic: number;
+  marginalCpa: number;
+  floorCpa: number;
+  cpa: number;
+  cpm: number;
+  cpc: number;
+  ctr: number;
+  convRate: number;
   reach: number;
+  reachUnit: string;
   frequency: number;
-  note: string;
 }
 
 export interface DailyMetrics {
   spend: number;
   impressions: number;
-  conversionsLast: number;
-  conversionsIncr: number;
+  clicks: number;
+  conversions: number;
 }
 export interface DailyRow {
   date: string;
@@ -69,12 +48,12 @@ export interface Assumption {
 export interface QuartileRow { stage: string; nonskip: number; skip: number }
 export interface VideoType {
   type: string; spend: number; impressions: number; cpm: number;
-  vcr: number; cpcv: number; viewability: number; cpic: number;
+  vcr: number; cpcv: number; viewability: number; cpa: number;
 }
 
 export interface FunnelRow { stage: string; value: number; note: string | null; suspect: boolean }
 export interface ListHealthRow { metric: string; value: number; benchmark: string | null }
-export interface FreqRow { sends: number; incremental: number; unsubRate: number; netList: number }
+export interface FreqRow { sends: number; conversions: number; unsubRate: number; netList: number }
 
 export interface ViewabilityRow {
   marketplace: string; rate: number; spend: number | null;
@@ -84,35 +63,35 @@ export interface DisplayMetric { metric: string; value: string; reads: string }
 
 export type Verdict = "scale" | "hold" | "fix" | "pause" | "cut";
 export interface Placement {
-  name: string; spend: number; units: number; conversions: number; cpic: number;
+  name: string; spend: number; units: number; conversions: number; cpa: number;
 }
 export interface Creative {
   id: string; channel: ChannelKey; name: string; spend: number; units: number;
-  completion: number | null; conversions: number; cpic: number;
+  completion: number | null; conversions: number; cpa: number;
   verdict: Verdict; placements: Placement[];
 }
 
 export interface ReachBlock {
-  channels: { key: string; label: string; value: number; unit: string; note: string }[];
   dedupedLow: number;
   dedupedHigh: number;
   method: string;
-  caveat: string;
   source: string;
 }
 
 export interface CampaignData {
   meta: {
     advertiser: string; descriptor: string; flightStart: string; flightEnd: string;
-    generatedAt: string; owner: string; goal: string; synthetic: boolean; sources: string[];
+    generatedAt: string; window: number; synthetic: boolean; sources: string[];
   };
   assumptions: Assumption[];
   constants: {
-    valuePerConversion: number;
-    subscriberValue: number;
-    emailSpendCap: number;
+    leadValue: number;
     targetReturn: number;
+    emailSpendCap: number;
+    subscriberValue: number;
   };
+  totals: Record<"spend" | "impressions" | "clicks" | "conversions",
+    { current: number; prior: number }>;
   channels: Channel[];
   daily: DailyRow[];
   reach: ReachBlock;

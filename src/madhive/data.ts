@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { AttrModel, CampaignData, Channel, ChannelKey } from "./types";
+import type { CampaignData, ChannelKey } from "./types";
 
 /* ------------------------------------------------------------------ fetch */
 
@@ -32,16 +32,13 @@ export function useCampaignData() {
 /* ------------------------------------------------- URL-synced view state */
 
 export interface ViewState {
-  attr: AttrModel;
   channel: ChannelKey | null;
 }
 
 function readUrl(): ViewState {
   const p = new URLSearchParams(window.location.search);
-  const attr = p.get("attr") === "last" ? "last" : "incr";
   const c = p.get("channel");
-  const channel = c === "display" || c === "video" || c === "email" ? c : null;
-  return { attr, channel };
+  return { channel: c === "display" || c === "video" || c === "email" ? c : null };
 }
 
 /** View state that lives in the query string, so any drill-down is a shareable link. */
@@ -58,7 +55,6 @@ export function useViewState() {
     setState((prev) => {
       const next = { ...prev, ...patch };
       const p = new URLSearchParams();
-      if (next.attr !== "incr") p.set("attr", next.attr);
       if (next.channel) p.set("channel", next.channel);
       const qs = p.toString();
       window.history.replaceState(
@@ -72,19 +68,6 @@ export function useViewState() {
 
   return [state, update] as const;
 }
-
-/* --------------------------------------------------------------- derived */
-
-export const convOf = (c: Channel, attr: AttrModel) =>
-  attr === "incr" ? c.conversionsIncr : c.conversionsLast;
-
-export const cpaOf = (c: Channel, attr: AttrModel) => c.spend / convOf(c, attr);
-
-export const totals = (channels: Channel[], attr: AttrModel) => {
-  const spend = channels.reduce((s, c) => s + c.spend, 0);
-  const conv = channels.reduce((s, c) => s + convOf(c, attr), 0);
-  return { spend, conv, blended: spend / conv };
-};
 
 /* ---------------------------------------------------------------- format */
 

@@ -39,14 +39,14 @@ export default function Tables({
   const byKey = Object.fromEntries(data.channels.map((c) => [c.key, c])) as Record<ChannelKey, Channel>;
   const rows = data.creatives
     .filter((c) => !channel || c.channel === channel)
-    .sort((a, b) => a.cpic - b.cpic);
+    .sort((a, b) => a.cpa - b.cpa);
 
   return (
     <>
       <Box mt={12}>
         <SectionHead
           title="Creative performance"
-          sub="Ranked by cost per incremental conversion. Click a row for placement detail."
+          sub="Ranked by cost per conversion. Click a row for placement detail."
         />
         {channel && (
           <HStack mb={3} spacing={2}>
@@ -65,7 +65,7 @@ export default function Tables({
             <Box as="table" w="100%" minW="760px" fontSize="13px" style={{ borderCollapse: "collapse" }}>
               <Box as="thead">
                 <Box as="tr">
-                  {["Creative", "Spend", "Imps / sends", "Completion", "Conv.", "CPiC", "Verdict"].map((h, i) => (
+                  {["Creative", "Spend", "Imps / sends", "Completion", "Conv.", "CPA", "Verdict"].map((h, i) => (
                     <Box as="th" key={h} textAlign={i === 0 || i === 6 ? "left" : "right"}
                       fontFamily="mono" fontSize="9.5px" letterSpacing="0.11em" textTransform="uppercase"
                       color={MUTED} fontWeight={600} py={3} px={3} borderBottom="1px solid"
@@ -98,7 +98,7 @@ export default function Tables({
                           </HStack>
                         </Box>
                         {[money(c.spend), nf(c.units), c.completion ? `${c.completion}%` : "—",
-                          nf(c.conversions), money(c.cpic, 2)].map((v, i) => (
+                          nf(c.conversions), money(c.cpa, 2)].map((v, i) => (
                           <Box as="td" key={i} py={2.5} px={3} borderBottom="1px solid" borderColor={RULE}
                             textAlign="right" fontFamily="mono" whiteSpace="nowrap"
                             color={i === 4 ? INK : "gray.600"} fontWeight={i === 4 ? 700 : 400}>{v}</Box>
@@ -112,7 +112,7 @@ export default function Tables({
                           <Box as="tr" key={p.name} bg="gray.50">
                             <Box as="td" py={2} px={3} pl={12} borderBottom="1px solid" borderColor={RULE}
                               color="gray.600" fontSize="12.5px">{p.name}</Box>
-                            {[money(p.spend), nf(p.units), "—", nf(p.conversions), money(p.cpic, 2)].map((v, i) => (
+                            {[money(p.spend), nf(p.units), "—", nf(p.conversions), money(p.cpa, 2)].map((v, i) => (
                               <Box as="td" key={i} py={2} px={3} borderBottom="1px solid" borderColor={RULE}
                                 textAlign="right" fontFamily="mono" color="gray.600" fontSize="12.5px"
                                 whiteSpace="nowrap">{v}</Box>
@@ -127,9 +127,6 @@ export default function Tables({
             </Box>
           </Box>
         </Panel>
-        <Text fontSize="11.5px" color={MUTED} mt={2} fontFamily="mono">
-          Creative-level CPiC is directional — the lift test powers to channel level, not creative.
-        </Text>
       </Box>
 
       <Box mt={12}>
@@ -220,14 +217,7 @@ export default function Tables({
                   </Box>
                   <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
                     color="gray.600" lineHeight={1.55}>
-                    {data.reach.method} {data.reach.caveat}
-                    <Box mt={2} display="flex" gap={4} flexWrap="wrap">
-                      {data.reach.channels.map((c) => (
-                        <Text key={c.key} fontFamily="mono" fontSize="11px" color={MUTED}>
-                          {c.label}: {nf(c.value)} {c.unit}
-                        </Text>
-                      ))}
-                    </Box>
+                    {data.reach.method}
                     <Text fontFamily="mono" fontSize="11px" color={MUTED} mt={1}>
                       Source: {data.reach.source}
                     </Text>
@@ -264,67 +254,9 @@ export default function Tables({
         </Box>
       </Box>
 
-      <Box mt={12}>
-        <SectionHead title="Why these metrics"
-          sub="The four decisions behind it." />
-        <Box display="flex" flexDirection="column" gap={4}>
-          <Method n="1" title="Clicks can't be the comparison currency">
-            <p>
-              Email clicks at <strong>2.09%</strong> of delivered, display at <strong>0.09%</strong>.
-              That 23× gap says nothing about which drove more business — different denominators over
-              different audiences. Email reaches people who opted in; display reaches cold prospects.
-              Headline the dashboard with click rate and the ranking is decided before you look.
-            </p>
-            <p>
-              So everything ranks on <strong>cost per incremental conversion</strong>, and native
-              metrics stay in the diagnostics tabs.
-            </p>
-          </Method>
-          <Method n="2" title="Attribution model is a control, not an assumption">
-            <p>
-              Flip the toggle and the ranking inverts. On last-touch email costs <strong>$3.74</strong>{" "}
-              and looks 15× better than video. Lift-tested, only <strong>25%</strong> of its
-              conversions were incremental. Display is worse at <strong>27%</strong> — 64% of its
-              spend is retargeting.
-            </p>
-            <p>Both models, one click apart. Hiding the unflattering one is what starts arguments.</p>
-          </Method>
-          <Method n="3" title="Efficiency ranking doesn't answer the question that was asked">
-            <p>
-              Email still wins on cost — $14.97. But the goal is <em>run more of what works</em>, and
-              email can't absorb more: the list is finite and mailing it harder burns it. The decision
-              metric is <strong>marginal</strong> cost at the next dollar, not average cost at the
-              current one.
-            </p>
-            <p>Average efficiency says who's winning. Marginal says where the money goes.</p>
-          </Method>
-          <Method n="4" title="What this dashboard deliberately doesn't do">
-            <Box as="ul" pl={5} sx={{ "& li": { mb: 1.5 } }}>
-              <li><strong>No cross-channel rate comparisons.</strong> No chart puts email CTR beside display CTR — the layout makes the invalid comparison impossible.</li>
-              <li><strong>No forecasting past the tested range.</strong> The marginal curves stop where the lift test has support. Extrapolating to 3× spend would be fabrication.</li>
-              <li><strong>No creative-level incrementality.</strong> The lift test only powers to channel level, so creative rows are directional.</li>
-              <li><strong>No real-time refresh.</strong> Daily at 06:00 — a number that moves mid-meeting loses the room.</li>
-            </Box>
-          </Method>
-        </Box>
-      </Box>
     </>
   );
 }
 
-function Method({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
-  return (
-    <Box>
-      <HStack spacing={3} align="baseline" mb={2}>
-        <Text fontFamily="mono" fontSize="12px" fontWeight={700} color="gray.400">{n}</Text>
-        <Text fontSize="17px" fontWeight={700} letterSpacing="-0.012em" color={INK}>{title}</Text>
-      </HStack>
-      <Box pl={{ base: 0, md: 7 }} fontSize="14.5px" color="gray.600" lineHeight={1.65}
-        maxW="76ch" sx={{ "& p + p": { mt: 3 } }}>
-        {children}
-      </Box>
-    </Box>
-  );
-}
 
 export { Callout };
