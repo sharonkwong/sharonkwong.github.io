@@ -208,6 +208,32 @@ export default function Tables({
                   </Box>
                 ))}
                 <Box as="tr">
+                  <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                    fontWeight={600} color={INK}>Deduped household reach</Box>
+                  <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                    textAlign="right" fontFamily="mono" color={INK} fontWeight={700} whiteSpace="nowrap">
+                    {nf(data.reach.dedupedLow / 1000)}K–{nf(data.reach.dedupedHigh / 1000)}K
+                  </Box>
+                  <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE} whiteSpace="nowrap">
+                    <Box as="span" fontFamily="mono" fontSize="10px" fontWeight={700} px={2} py="2px"
+                      borderRadius="full" bg="orange.100" color="orange.800">Modelled range</Box>
+                  </Box>
+                  <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                    color="gray.600" lineHeight={1.55}>
+                    {data.reach.method} {data.reach.caveat}
+                    <Box mt={2} display="flex" gap={4} flexWrap="wrap">
+                      {data.reach.channels.map((c) => (
+                        <Text key={c.key} fontFamily="mono" fontSize="11px" color={MUTED}>
+                          {c.label}: {nf(c.value)} {c.unit}
+                        </Text>
+                      ))}
+                    </Box>
+                    <Text fontFamily="mono" fontSize="11px" color={MUTED} mt={1}>
+                      Source: {data.reach.source}
+                    </Text>
+                  </Box>
+                </Box>
+                <Box as="tr">
                   <Box as="td" py={3} px={3} fontWeight={600} color={INK}>Response curve per channel</Box>
                   <Box as="td" py={3} px={3} textAlign="right" fontFamily="mono" color={MUTED}>K, Cmax</Box>
                   <Box as="td" py={3} px={3}>
@@ -229,9 +255,6 @@ export default function Tables({
         <Box mt={4}>
           <Callout tag="Taken off the dashboard" tone="warn">
             <Box as="ul" pl={5} sx={{ "& li": { mb: 1.5 } }}>
-              <li><strong>Deduped household reach.</strong> Was showing 986,000. Cross-channel dedupe
-              needs an identity graph we don't have here, and the number wasn't derivable from the
-              per-channel reach figures. Removed rather than asserted.</li>
               <li><strong>"~+6 points of VCR" from rebuilding the skippable open.</strong> A guess.
               The action stays — the forecast doesn't.</li>
               <li><strong>Fixed $95 ceiling.</strong> Replaced. It is now lead value ÷ required

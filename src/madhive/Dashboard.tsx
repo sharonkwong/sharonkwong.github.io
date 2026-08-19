@@ -201,6 +201,9 @@ export default function Dashboard({
         />
         <Kpi label="Ceiling on next conv." value={money(plan.effectiveCeiling)}
           sub={budgetBinds ? "set by budget, not value" : "set by lead value ÷ return"} />
+        <Kpi label="Households reached"
+          value={`${compact(data.reach.dedupedLow)}–${compact(data.reach.dedupedHigh)}`}
+          sub="modelled range — see assumptions" />
         <Kpi label="Qualified leads / day" value={nf(t.conv / data.daily.length)} sub={`${data.daily.length}-day flight`} />
       </KpiRow>
 

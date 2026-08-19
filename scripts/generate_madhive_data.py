@@ -146,6 +146,51 @@ for i in range(DAYS):
 # them from the response-curve parameters above, so they cannot drift apart from
 # the conversion totals the way two hand-written tables would.
 
+# ------------------------------------------------------------------ reach
+# Deduped household reach, restored — but as a modelled RANGE, not a count.
+#
+# IP is the household identifier in CTV: streaming devices carry no cookie, and
+# everyone behind one home router shares a public IPv4 via NAT. That is real and
+# it is how the industry does it. The problem is precision, and it pushes in
+# BOTH directions:
+#
+#   IPv6      -> no NAT collapsing, addresses rotate. One household can present
+#                as dozens of distinct "users" in a week. OVER-counts households.
+#   CGNAT     -> carriers put thousands of subscribers behind one shared IPv4.
+#                Many households look like one. UNDER-counts households.
+#
+# And the three channels do not share an identifier at all, so a cross-channel
+# dedupe needs an identity graph, which is probabilistic. Published accuracy is
+# poor enough that a single number would be false precision (CIMM / Go
+# Addressable 2025: IP-to-postal matching accurate 13-16% of the time; different
+# identity vendors agree on a given IP-to-postal link only 7% of the time).
+#
+# Worth separating: IP is weak for ADDRESSABILITY (knowing *which* household)
+# and better for DEDUPLICATION (knowing a household is *distinct*). We only need
+# the second here, which is why a range is defensible where a target is not.
+reach = dict(
+    channels=[
+        dict(key="display", label="Display", value=1240000, unit="cookies / device IDs",
+             note="Not households. Typically 2.0-2.5 devices per household, so this "
+                  "materially overstates household count before dedupe."),
+        dict(key="video", label="Online video", value=742000, unit="IP households",
+             note="IP-derived. Degraded by IPv6 rotation (over-counts) and CGNAT "
+                  "(under-counts)."),
+        dict(key="email", label="Email", value=460000, unit="subscribers",
+             note="Hashed email — effectively 1:1 with a person, the most reliable of "
+                  "the three."),
+    ],
+    dedupedLow=740000,
+    dedupedHigh=1120000,
+    method="Identity graph joining IP households, device IDs and hashed email. Display "
+           "cookies are collapsed to households at 2.0-2.5 devices each; the band spans "
+           "plausible overlap between prospecting video and retargeted display.",
+    caveat="Reported as a range because the three channels share no common identifier and "
+           "published IP-to-household accuracy is low. A point estimate here would be "
+           "false precision.",
+    source="CIMM / Go Addressable, IP-to-Household Accuracy (2025)",
+)
+
 # ---------------------------------------------------------------- video
 video = dict(
     quartiles=[
@@ -290,6 +335,7 @@ data = dict(
                    targetReturn=A["targetReturn"]),
     channels=CHANNELS,
     daily=daily,
+    reach=reach,
     video=video,
     email=email,
     display=display,

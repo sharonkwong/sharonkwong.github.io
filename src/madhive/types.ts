@@ -92,6 +92,15 @@ export interface Creative {
   verdict: Verdict; placements: Placement[];
 }
 
+export interface ReachBlock {
+  channels: { key: string; label: string; value: number; unit: string; note: string }[];
+  dedupedLow: number;
+  dedupedHigh: number;
+  method: string;
+  caveat: string;
+  source: string;
+}
+
 export interface CampaignData {
   meta: {
     advertiser: string; descriptor: string; flightStart: string; flightEnd: string;
@@ -106,6 +115,7 @@ export interface CampaignData {
   };
   channels: Channel[];
   daily: DailyRow[];
+  reach: ReachBlock;
   video: { quartiles: QuartileRow[]; types: VideoType[]; dropoff: { stage: string; nonskip: number; skip: number }[] };
   email: { funnel: FunnelRow[]; listHealth: ListHealthRow[]; frequency: FreqRow[] };
   display: { viewability: ViewabilityRow[]; metrics: DisplayMetric[] };
