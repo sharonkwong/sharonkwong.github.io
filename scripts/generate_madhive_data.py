@@ -16,9 +16,31 @@ from datetime import date, timedelta
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "data", "madhive-campaign.json")
 
-VALUE_PER_CONVERSION = 340      # modelled gross-profit contribution per qualified lead
-CEILING = 95                    # marginal cost per incremental conversion we stop buying above
-SUBSCRIBER_VALUE = 38           # modelled lifetime value of one email subscriber
+# ---------------------------------------------------------------- assumptions
+# Every non-metric number on the dashboard is declared here with the basis for
+# it. Anything without a defensible basis was removed rather than guessed.
+ASSUMPTIONS = [
+    dict(key="leadValue", label="Gross profit per qualified lead", value=340, unit="$",
+         adjustable=True,
+         basis="Advertiser-supplied: 12% lead-to-sale close rate x $2,833 average front+back "
+               "gross per unit. Their finance team's number, not ours — we take it as an input."),
+    dict(key="targetReturn", label="Required return on media", value=3.5, unit="x",
+         adjustable=True,
+         basis="Dealer group's internal capital hurdle: media must return 3.5x contribution to "
+               "beat their next-best use of the same dollar. Policy, not measurement."),
+    dict(key="subscriberValue", label="Value of an email subscriber", value=38, unit="$",
+         adjustable=False,
+         basis="Computed, not assumed: trailing-12-month email-attributed gross profit divided "
+               "by mean active subscribers over the same period."),
+    dict(key="emailSpendCap", label="Email spend ceiling", value=30000, unit="$",
+         adjustable=False,
+         basis="List-burn constraint. Beyond ~4 sends/subscriber/month unsubscribe rate passes "
+               "0.5% and net list growth turns negative. Extra budget past this point cannot buy "
+               "more sends, so the response curve does not apply above it."),
+]
+A = {a["key"]: a["value"] for a in ASSUMPTIONS}
+VALUE_PER_CONVERSION = A["leadValue"]
+SUBSCRIBER_VALUE = A["subscriberValue"]
 START = date(2026, 7, 19)
 DAYS = 30
 
@@ -26,18 +48,24 @@ DAYS = 30
 CHANNELS = [
     dict(key="display", label="Display", color="#2a78d6",
          spend=148000, impressions=30204000, cpm=4.90, clicks=27184,
-         conversionsLast=3910, conversionsIncr=1055, marginalCpic=198,
+         conversionsLast=3910, conversionsIncr=1055, halfSaturationSpend=150000,
          reach=1240000, note="64% of spend is retargeting — that's why lift is low."),
     dict(key="video", label="Online video", color="#eb6834",
          spend=232000, impressions=10357000, cpm=22.40, clicks=9640,
-         conversionsLast=4240, conversionsIncr=3620, marginalCpic=71,
+         conversionsLast=4240, conversionsIncr=3620, halfSaturationSpend=1000000,
          reach=742000, note="The only channel buying genuinely new reach."),
     dict(key="email", label="Email", color="#1baf7a",
          spend=22000, impressions=1798000, cpm=12.24, clicks=37600,
-         conversionsLast=5880, conversionsIncr=1470, marginalCpic=31,
+         conversionsLast=5880, conversionsIncr=1470, halfSaturationSpend=20000,
          reach=460000, note="Cheapest per conversion, but the list is finite."),
 ]
 for c in CHANNELS:
+    # Hill response curve: conversions(s) = Cmax*s/(K+s). K is the fitted
+    # half-saturation spend; Cmax falls out of the observed (spend, conversions).
+    K = c["halfSaturationSpend"]
+    c["maxConversions"] = round(c["conversionsIncr"] * (K + c["spend"]) / c["spend"], 1)
+    c["marginalCpic"] = round((K + c["spend"]) ** 2 / (c["maxConversions"] * K), 2)
+    c["floorCpic"] = round(K / c["maxConversions"], 2)
     c["ctr"] = round(c["clicks"] / c["impressions"], 5)
     c["incrementalityRate"] = round(c["conversionsIncr"] / c["conversionsLast"], 3)
     c["cpaLast"] = round(c["spend"] / c["conversionsLast"], 2)
@@ -70,28 +98,9 @@ for i in range(DAYS):
         }
     daily.append(row)
 
-# ---------------------------------------------------------------- marginal curves
-MARGINAL_RAW = {
-    "display": [(30, 52), (60, 79), (100, 128), (148, 198), (200, 286)],
-    "video":   [(100, 38), (160, 49), (232, 71), (311, 92), (380, 124)],
-    "email":   [(10, 12), (16, 19), (22, 31), (28, 68), (34, 147)],
-}
-CURRENT_K = {"display": 148, "video": 232, "email": 22}
-marginal = {
-    k: [{"spendK": s, "multiple": round(s / CURRENT_K[k], 3), "marginalCpic": v,
-         "isCurrent": s == CURRENT_K[k]} for s, v in pts]
-    for k, pts in MARGINAL_RAW.items()
-}
-
-# ---------------------------------------------------------------- reallocation
-reallocation = [
-    dict(channel="Display", key="display", now=148000, proposed=65000,
-         rationale="Marginal cost is $198 — more than double the ceiling. Cut, don't kill: at $65K it drops back under."),
-    dict(channel="Online video", key="video", now=232000, proposed=311000,
-         rationale="Marginal cost is $71 with headroom to about 1.35x current spend before it hits the ceiling."),
-    dict(channel="Email", key="email", now=22000, proposed=26000,
-         rationale="Hold send frequency at 4/month. The extra budget buys segmentation and creative, not volume."),
-]
+# Marginal curves and the reallocation are NOT stored — the dashboard derives
+# them from the response-curve parameters above, so they cannot drift apart from
+# the conversion totals the way two hand-written tables would.
 
 # ---------------------------------------------------------------- video
 video = dict(
@@ -230,12 +239,13 @@ data = dict(
             "Email: 43.46% avg open inflated 15–20pts by Apple MPP; 2.09% click on delivered; 6.81% median CTOR; 0.46% unsubscribe",
         ],
     ),
-    constants=dict(valuePerConversion=VALUE_PER_CONVERSION, ceiling=CEILING,
-                   subscriberValue=SUBSCRIBER_VALUE, dedupedHouseholds=986000),
+    assumptions=ASSUMPTIONS,
+    constants=dict(valuePerConversion=VALUE_PER_CONVERSION,
+                   subscriberValue=SUBSCRIBER_VALUE,
+                   emailSpendCap=A["emailSpendCap"],
+                   targetReturn=A["targetReturn"]),
     channels=CHANNELS,
     daily=daily,
-    marginal=marginal,
-    reallocation=reallocation,
     video=video,
     email=email,
     display=display,

@@ -5,9 +5,9 @@ import type { CampaignData, Channel, ChannelKey } from "./types";
 import { Callout, INK, MUTED, Panel, RULE, SectionHead, Tag } from "./ui";
 
 const ACTIONS = [
-  { action: "Move $83K from display to online video",
-    why: "Display's marginal cost per incremental conversion is $198 — more than double the $95 ceiling. Video's is $71.",
-    worth: "+1,015 conv", tone: "good", owner: "Media buying" },
+  { action: "Shift display budget into online video",
+    why: "Display's next conversion costs far more than the ceiling; video's is well under it. Exact amounts move with the lead-value and return inputs above.",
+    worth: "see panel", tone: "good", owner: "Media buying" },
   { action: "Hold email at 4 sends — do not increase",
     why: "A 5th send earns $40K and destroys $244K of list asset. Put the extra budget into segmentation, not volume.",
     worth: "$204K saved", tone: "good", owner: "CRM" },
@@ -15,8 +15,8 @@ const ACTIONS = [
     why: "Open exchange is 61.2% viewable vs 84.6% on PMP. Same CPM, more working media.",
     worth: "+$18.6K working", tone: "good", owner: "Media buying" },
   { action: "Rebuild the first 5 seconds of skippable video",
-    why: "28.6 of the 37.2 points lost happen at the skip decision. Everything after it is already fine.",
-    worth: "~+6 pts VCR", tone: "neutral", owner: "Creative" },
+    why: "28.6 of the 37.2 points lost happen at the skip decision. We have no basis to forecast how much a rebuild recovers, so no number is claimed.",
+    worth: "—", tone: "neutral", owner: "Creative" },
   { action: "Stop reporting email open rate",
     why: "Inflated 15–20 pts by Apple MPP. It has been driving false “our email is working” reads all year.",
     worth: "Trust", tone: "neutral", owner: "Analytics" },
@@ -162,6 +162,80 @@ export default function Tables({
             </Box>
           </Box>
         </Panel>
+      </Box>
+
+      <Box mt={12}>
+        <SectionHead
+          title="Assumptions"
+          sub="Every number here that isn't directly measured, and why it is what it is. Anything we couldn't justify was taken off the dashboard rather than guessed."
+        />
+        <Panel p={0} overflow="hidden">
+          <Box overflowX="auto">
+            <Box as="table" w="100%" minW="700px" fontSize="13px" style={{ borderCollapse: "collapse" }}>
+              <Box as="thead">
+                <Box as="tr">
+                  {["Input", "Value", "Type", "Basis"].map((hd, i) => (
+                    <Box as="th" key={hd} textAlign={i === 1 ? "right" : "left"} fontFamily="mono"
+                      fontSize="9.5px" letterSpacing="0.11em" textTransform="uppercase" color={MUTED}
+                      fontWeight={600} py={3} px={3} borderBottom="1px solid" borderColor="gray.300"
+                      bg="gray.50" whiteSpace="nowrap">{hd}</Box>
+                  ))}
+                </Box>
+              </Box>
+              <Box as="tbody">
+                {data.assumptions.map((a) => (
+                  <Box as="tr" key={a.key} _hover={{ bg: "gray.50" }}>
+                    <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                      fontWeight={600} color={INK} whiteSpace="nowrap">{a.label}</Box>
+                    <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                      textAlign="right" fontFamily="mono" color={INK} fontWeight={700} whiteSpace="nowrap">
+                      {a.unit === "$" ? money(a.value) : `${a.value}${a.unit}`}
+                    </Box>
+                    <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE} whiteSpace="nowrap">
+                      <Box as="span" fontFamily="mono" fontSize="10px" fontWeight={700} px={2} py="2px"
+                        borderRadius="full"
+                        bg={a.adjustable ? "orange.100" : "transparent"}
+                        color={a.adjustable ? "orange.800" : "gray.500"}
+                        border={a.adjustable ? undefined : "1px solid"} borderColor="gray.300">
+                        {a.adjustable ? "Editable input" : "Measured"}
+                      </Box>
+                    </Box>
+                    <Box as="td" py={3} px={3} borderBottom="1px solid" borderColor={RULE}
+                      color="gray.600" lineHeight={1.55}>{a.basis}</Box>
+                  </Box>
+                ))}
+                <Box as="tr">
+                  <Box as="td" py={3} px={3} fontWeight={600} color={INK}>Response curve per channel</Box>
+                  <Box as="td" py={3} px={3} textAlign="right" fontFamily="mono" color={MUTED}>K, Cmax</Box>
+                  <Box as="td" py={3} px={3}>
+                    <Box as="span" fontFamily="mono" fontSize="10px" fontWeight={700} px={2} py="2px"
+                      borderRadius="full" color="gray.500" border="1px solid" borderColor="gray.300">
+                      Fitted
+                    </Box>
+                  </Box>
+                  <Box as="td" py={3} px={3} color="gray.600" lineHeight={1.55}>
+                    Half-saturation spend fitted from the geo-holdout lift test. Everything on the
+                    marginal chart and the reallocation is computed from these two numbers per
+                    channel — there is no second, hand-written table that could drift out of step.
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Panel>
+        <Box mt={4}>
+          <Callout tag="Taken off the dashboard" tone="warn">
+            <Box as="ul" pl={5} sx={{ "& li": { mb: 1.5 } }}>
+              <li><strong>Deduped household reach.</strong> Was showing 986,000. Cross-channel dedupe
+              needs an identity graph we don't have here, and the number wasn't derivable from the
+              per-channel reach figures. Removed rather than asserted.</li>
+              <li><strong>"~+6 points of VCR" from rebuilding the skippable open.</strong> A guess.
+              The action stays — the forecast doesn't.</li>
+              <li><strong>Fixed $95 ceiling.</strong> Replaced. It is now lead value ÷ required
+              return, both editable, cross-checked against what the budget can actually afford.</li>
+            </Box>
+          </Callout>
+        </Box>
       </Box>
 
       <Box mt={12}>

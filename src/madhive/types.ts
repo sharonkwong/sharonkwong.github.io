@@ -15,7 +15,14 @@ export interface Channel {
   incrementalityRate: number;
   cpaLast: number;
   cpic: number;
+  /** Fitted half-saturation spend for the Hill response curve. */
+  halfSaturationSpend: number;
+  /** Ceiling of the response curve — most incremental conversions achievable. */
+  maxConversions: number;
+  /** Marginal cost of the next conversion at CURRENT spend. Derived. */
   marginalCpic: number;
+  /** Cheapest the next conversion can ever be on this channel. Derived. */
+  floorCpic: number;
   reach: number;
   frequency: number;
   note: string;
@@ -34,19 +41,14 @@ export interface DailyRow {
   email: DailyMetrics;
 }
 
-export interface MarginalPoint {
-  spendK: number;
-  multiple: number;
-  marginalCpic: number;
-  isCurrent: boolean;
-}
-
-export interface ReallocRow {
-  channel: string;
-  key: ChannelKey;
-  now: number;
-  proposed: number;
-  rationale: string;
+export interface Assumption {
+  key: string;
+  label: string;
+  value: number;
+  unit: string;
+  adjustable: boolean;
+  /** Why this number is what it is. Every non-metric number must carry one. */
+  basis: string;
 }
 
 export interface QuartileRow { stage: string; nonskip: number; skip: number }
@@ -80,14 +82,15 @@ export interface CampaignData {
     advertiser: string; descriptor: string; flightStart: string; flightEnd: string;
     generatedAt: string; owner: string; goal: string; synthetic: boolean; sources: string[];
   };
+  assumptions: Assumption[];
   constants: {
-    valuePerConversion: number; ceiling: number;
-    subscriberValue: number; dedupedHouseholds: number;
+    valuePerConversion: number;
+    subscriberValue: number;
+    emailSpendCap: number;
+    targetReturn: number;
   };
   channels: Channel[];
   daily: DailyRow[];
-  marginal: Record<ChannelKey, MarginalPoint[]>;
-  reallocation: ReallocRow[];
   video: { quartiles: QuartileRow[]; types: VideoType[]; dropoff: { stage: string; nonskip: number; skip: number }[] };
   email: { funnel: FunnelRow[]; listHealth: ListHealthRow[]; frequency: FreqRow[] };
   display: { viewability: ViewabilityRow[]; metrics: DisplayMetric[] };

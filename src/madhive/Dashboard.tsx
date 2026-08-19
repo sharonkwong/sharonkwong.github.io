@@ -5,22 +5,13 @@ import {
   Tooltip, XAxis, YAxis,
 } from "recharts";
 import { compact, convOf, cpaOf, money, nf, shortDate, totals } from "./data";
+import { allocate, marginalAt, valueCeiling } from "./model";
 import type { AttrModel, CampaignData, Channel, ChannelKey } from "./types";
 import {
   BarRow, Callout, ChartTip, INK, Kpi, KpiRow, MUTED, Panel, RULE, Segmented,
 } from "./ui";
 
 type TrendMetric = "conv" | "spend" | "cpa" | "imps";
-
-/** Plain-language answer for the marginal panel, kept in sync with the reallocation table. */
-const READOUT: { key: ChannelKey; headline: string; why: string; good: boolean }[] = [
-  { key: "display", headline: "Spend $83K less", good: false,
-    why: "Next conversion already costs $198. Crossed the ceiling at half today's spend." },
-  { key: "video", headline: "Room for $79K more", good: true,
-    why: "Next conversion costs $71. Stays under the ceiling to about 1.35x today." },
-  { key: "email", headline: "Only $4K more", good: true,
-    why: "Cheapest today at $31, but the curve goes vertical just past current spend." },
-];
 
 export default function Dashboard({
   data, attr, channel, setView,
@@ -32,6 +23,10 @@ export default function Dashboard({
 }) {
   const [trendMetric, setTrendMetric] = useState<TrendMetric>("conv");
   const { channels, constants } = data;
+  // The two assumptions the ceiling is built from — editable, because they are
+  // inputs the advertiser owns, not things we measured.
+  const [leadValue, setLeadValue] = useState(constants.valuePerConversion);
+  const [targetReturn, setTargetReturn] = useState(constants.targetReturn);
   const byKey = useMemo(
     () => Object.fromEntries(channels.map((c) => [c.key, c])) as Record<ChannelKey, Channel>,
     [channels]
@@ -39,6 +34,33 @@ export default function Dashboard({
   const t = totals(channels, attr);
   const isIncr = attr === "incr";
   const dimmed = (k: ChannelKey) => Boolean(channel && channel !== k);
+
+  /* ------------------------------------------------- response model */
+  const curves = useMemo(
+    () => Object.fromEntries(
+      channels.map((c) => [c.key, { K: c.halfSaturationSpend, Cmax: c.maxConversions }])
+    ) as Record<ChannelKey, { K: number; Cmax: number }>,
+    [channels]
+  );
+  const budget = channels.reduce((s, c) => s + c.spend, 0);
+  const vCeil = valueCeiling(leadValue, targetReturn);
+  const plan = useMemo(
+    () => allocate(
+      channels.map((c) => ({
+        key: c.key,
+        spend: c.spend,
+        curve: curves[c.key],
+        cap: c.key === "email"
+          ? { value: constants.emailSpendCap, reason: "list-burn cap" }
+          : undefined,
+      })),
+      vCeil, budget
+    ),
+    [channels, curves, vCeil, budget, constants.emailSpendCap]
+  );
+  const planConv = plan.rows.reduce((s, r) => s + r.proposedConversions, 0);
+  const nowConv = plan.rows.reduce((s, r) => s + r.currentConversions, 0);
+  const budgetBinds = plan.effectiveCeiling < vCeil - 0.01;
 
   /* ------------------------------------------------------- trend series */
   const trendData = useMemo(
@@ -64,13 +86,18 @@ export default function Dashboard({
     : compact(v);
 
   /* -------------------------------------------------- marginal series */
-  const marginalSeries = (["display", "video", "email"] as ChannelKey[]).map((k) => ({
-    key: k,
-    color: byKey[k].color,
-    points: data.marginal[k].map((p) => ({
-      x: p.multiple, y: p.marginalCpic, spendK: p.spendK, isCurrent: p.isCurrent, key: k,
-    })),
-  }));
+  // Sampled straight off the response curve, so the line and the recommendation
+  // are the same maths — they cannot disagree.
+  const marginalSeries = (["display", "video", "email"] as ChannelKey[]).map((k) => {
+    const c = byKey[k];
+    const pts = [];
+    for (let mult = 0.15; mult <= 1.85; mult += 0.05) {
+      const s = c.spend * mult;
+      const m = marginalAt(curves[k], s);
+      if (m <= 340) pts.push({ x: +mult.toFixed(2), y: m, spendK: s / 1000, key: k });
+    }
+    return { key: k, color: c.color, points: pts, currentX: 1 };
+  });
 
   const verdictRows = [...channels].sort((a, b) => cpaOf(a, attr) - cpaOf(b, attr));
   const maxCpa = Math.max(...channels.map((c) => cpaOf(c, attr)));
@@ -152,7 +179,8 @@ export default function Dashboard({
           value={`${((t.conv * constants.valuePerConversion) / t.spend).toFixed(2)}x`}
           sub={`at ${money(constants.valuePerConversion)} per lead`}
         />
-        <Kpi label="Households reached" value={nf(constants.dedupedHouseholds)} sub="deduped across channels" />
+        <Kpi label="Ceiling on next conv." value={money(plan.effectiveCeiling)}
+          sub={budgetBinds ? "set by budget, not value" : "set by lead value ÷ return"} />
         <Kpi label="Qualified leads / day" value={nf(t.conv / data.daily.length)} sub={`${data.daily.length}-day flight`} />
       </KpiRow>
 
@@ -229,8 +257,27 @@ export default function Dashboard({
       <Grid templateColumns={{ base: "1fr", lg: "1.35fr 1fr" }} gap={4} mt={4}>
         <Panel
           title="How much more can each channel absorb?"
-          sub="What the NEXT conversion costs as you spend more. Above the red line it stops being worth buying. Left of centre is less spend than today, right is more."
+          sub="What the NEXT conversion costs as you spend more. Above the red line it stops being worth buying. Everything below is computed from these two inputs — change them and the whole recommendation moves."
+          right={
+            <HStack spacing={3} wrap="wrap">
+              <NumIn label="Lead worth" prefix="$" value={leadValue} step={10}
+                onChange={setLeadValue} />
+              <NumIn label="Return needed" suffix="x" value={targetReturn} step={0.25}
+                onChange={setTargetReturn} />
+            </HStack>
+          }
         >
+          <Text fontSize="12px" color={MUTED} mb={3}>
+            {money(leadValue)} ÷ {targetReturn}x = <strong>{money(vCeil)}</strong> a conversion is
+            worth paying.{" "}
+            {budgetBinds ? (
+              <>But spending to that bar costs more than the {money(budget)} budget, so the binding
+              bar is <strong>{money(plan.effectiveCeiling)}</strong> — you can't afford every
+              conversion that would pay back.</>
+            ) : (
+              <>The budget covers that, so {money(vCeil)} is the bar.</>
+            )}
+          </Text>
           <Box h="260px">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart margin={{ top: 16, right: 18, bottom: 24, left: 4 }}>
@@ -245,12 +292,13 @@ export default function Dashboard({
                     offset: -14, style: { fontSize: 10, fill: "#8a8f98", fontFamily: "monospace" } }}
                 />
                 <YAxis
-                  domain={[0, 300]} tickFormatter={(v: number) => `$${v}`}
+                  domain={[0, 320]} ticks={[0, 80, 160, 240, 320]} allowDataOverflow
+                  tickFormatter={(v: number) => `$${v}`}
                   tick={{ fontSize: 10, fill: "#8a8f98", fontFamily: "monospace" }}
                   stroke="#c9ced6" width={44}
                 />
-                <ReferenceLine y={constants.ceiling} stroke="#d03b3b" strokeDasharray="5 3"
-                  label={{ value: `$${constants.ceiling} ceiling`, position: "insideTopLeft",
+                <ReferenceLine y={plan.effectiveCeiling} stroke="#d03b3b" strokeDasharray="5 3"
+                  label={{ value: `$${plan.effectiveCeiling.toFixed(0)} ceiling`, position: "insideTopLeft",
                     style: { fontSize: 10, fill: "#d03b3b", fontWeight: 700, fontFamily: "monospace" } }} />
                 <ReferenceLine x={1} stroke="#c9ced6"
                   label={{ value: "today", position: "top",
@@ -260,7 +308,7 @@ export default function Dashboard({
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
                     const p = payload[0].payload as { key: ChannelKey; x: number; y: number; spendK: number; isCurrent: boolean };
-                    const over = p.y > constants.ceiling;
+                    const over = p.y > plan.effectiveCeiling;
                     return (
                       <ChartTip
                         title={byKey[p.key].label}
@@ -283,16 +331,13 @@ export default function Dashboard({
                     key={s.key} data={s.points} dataKey="y" type="monotone"
                     stroke={s.color} strokeWidth={dimmed(s.key) ? 1.5 : 2.5}
                     strokeOpacity={dimmed(s.key) ? 0.3 : 1}
-                    dot={(props: { cx?: number; cy?: number; payload?: { isCurrent: boolean } }) => (
-                      <circle
-                        key={`${s.key}-${props.cx}`}
-                        cx={props.cx} cy={props.cy}
-                        r={props.payload?.isCurrent ? 5.5 : 3.5}
-                        fill={props.payload?.isCurrent ? s.color : "#fff"}
-                        stroke={s.color} strokeWidth={2}
-                        opacity={dimmed(s.key) ? 0.3 : 1}
-                      />
-                    )}
+                    dot={(props: { cx?: number; cy?: number; payload?: { x: number } }) =>
+                      props.payload?.x === 1 ? (
+                        <circle key={`${s.key}-now`} cx={props.cx} cy={props.cy} r={5.5}
+                          fill={s.color} stroke="#fff" strokeWidth={2}
+                          opacity={dimmed(s.key) ? 0.3 : 1} />
+                      ) : <g key={`${s.key}-${props.cx}`} />
+                    }
                     activeDot={{ r: 6 }} isAnimationActive={false}
                   />
                 ))}
@@ -301,14 +346,25 @@ export default function Dashboard({
           </Box>
           <Box display="grid" gridTemplateColumns={{ base: "1fr", sm: "repeat(3, 1fr)" }}
             gap={2} mt={3}>
-            {READOUT.map((r) => (
-              <Box key={r.key} borderTop="2px solid" borderColor={byKey[r.key].color} pt={2}>
-                <Text fontSize="12.5px" fontWeight={700} color={INK}>{byKey[r.key].label}</Text>
-                <Text fontFamily="mono" fontSize="15px" fontWeight={700} mt="2px"
-                  color={r.good ? "green.600" : "red.500"}>{r.headline}</Text>
-                <Text fontSize="11.5px" color={MUTED} mt="2px" lineHeight={1.45}>{r.why}</Text>
-              </Box>
-            ))}
+            {plan.rows.map((r) => {
+              const c = byKey[r.key as ChannelKey];
+              const up = r.delta > 0;
+              return (
+                <Box key={r.key} borderTop="2px solid" borderColor={c.color} pt={2}>
+                  <Text fontSize="12.5px" fontWeight={700} color={INK}>{c.label}</Text>
+                  <Text fontFamily="mono" fontSize="15px" fontWeight={700} mt="2px"
+                    color={up ? "green.600" : "red.500"}>
+                    {up ? "+" : "−"}{money(Math.abs(r.delta))}
+                  </Text>
+                  <Text fontSize="11.5px" color={MUTED} mt="2px" lineHeight={1.45}>
+                    Next conversion costs {money(r.marginalNow)} today.{" "}
+                    {r.cappedBy
+                      ? `Held at ${money(r.proposed)} by the ${r.cappedBy}.`
+                      : `Reaches the ${money(plan.effectiveCeiling)} bar at ${money(r.proposed)}.`}
+                  </Text>
+                </Box>
+              );
+            })}
           </Box>
         </Panel>
 
@@ -328,25 +384,31 @@ export default function Dashboard({
                 </Box>
               </Box>
               <Box as="tbody">
-                {data.reallocation.map((r) => {
-                  const d = r.proposed - r.now;
+                {plan.rows.map((r) => {
+                  const c = byKey[r.key as ChannelKey];
                   return (
                     <Box as="tr" key={r.key} _hover={{ bg: "gray.50" }}>
                       <Box as="td" py={2.5} px={2} borderBottom="1px solid" borderColor={RULE}
                         fontWeight={600} color={INK}>
                         <HStack spacing={2}>
-                          <Box w="8px" h="8px" borderRadius="2px" bg={byKey[r.key].color} />
-                          <Text>{r.channel}</Text>
+                          <Box w="8px" h="8px" borderRadius="2px" bg={c.color} />
+                          <Text>{c.label}</Text>
+                          {r.cappedBy && (
+                            <Text as="span" fontFamily="mono" fontSize="9px" color={MUTED}
+                              border="1px solid" borderColor="gray.300" borderRadius="full" px={1.5}>
+                              capped
+                            </Text>
+                          )}
                         </HStack>
                       </Box>
                       <Box as="td" py={2.5} px={2} borderBottom="1px solid" borderColor={RULE}
-                        textAlign="right" fontFamily="mono" color="gray.600">{money(r.now)}</Box>
+                        textAlign="right" fontFamily="mono" color="gray.600">{money(r.current)}</Box>
                       <Box as="td" py={2.5} px={2} borderBottom="1px solid" borderColor={RULE}
                         textAlign="right" fontFamily="mono" color="gray.600">{money(r.proposed)}</Box>
                       <Box as="td" py={2.5} px={2} borderBottom="1px solid" borderColor={RULE}
                         textAlign="right" fontFamily="mono" fontWeight={700}
-                        color={d > 0 ? "green.600" : "red.500"}>
-                        {d > 0 ? "+" : "−"}{money(Math.abs(d))}
+                        color={r.delta > 0 ? "green.600" : "red.500"}>
+                        {r.delta > 0 ? "+" : "−"}{money(Math.abs(r.delta))}
                       </Box>
                     </Box>
                   );
@@ -354,10 +416,10 @@ export default function Dashboard({
                 <Box as="tr">
                   <Box as="td" py={2.5} px={2} fontWeight={700} color={INK}>Total</Box>
                   <Box as="td" py={2.5} px={2} textAlign="right" fontFamily="mono" fontWeight={700} color={INK}>
-                    {money(data.reallocation.reduce((s, r) => s + r.now, 0))}
+                    {money(budget)}
                   </Box>
                   <Box as="td" py={2.5} px={2} textAlign="right" fontFamily="mono" fontWeight={700} color={INK}>
-                    {money(data.reallocation.reduce((s, r) => s + r.proposed, 0))}
+                    {money(plan.rows.reduce((s, r) => s + r.proposed, 0))}
                   </Box>
                   <Box as="td" py={2.5} px={2} textAlign="right" fontFamily="mono" color={MUTED}>—</Box>
                 </Box>
@@ -366,9 +428,15 @@ export default function Dashboard({
           </Box>
           <Box mt={4}>
             <KpiRow>
-              <Kpi label="Incr. conversions" value="7,160" sub="▲ 16.5% vs 6,145" tone="good" />
-              <Kpi label="Blended CPiC" value="$56.15" sub="▼ 14.2% vs $65.42" tone="good" />
-              <Kpi label="Budget change" value="$0" sub="same $402K" />
+              <Kpi label="Incr. conversions" value={nf(planConv)}
+                sub={`▲ ${(((planConv / nowConv) - 1) * 100).toFixed(1)}% vs ${nf(nowConv)}`} tone="good" />
+              <Kpi label="Blended CPiC" value={money(budget / planConv, 2)}
+                sub={`▼ ${((1 - (budget / planConv) / (budget / nowConv)) * 100).toFixed(1)}% vs ${money(budget / nowConv, 2)}`}
+                tone="good" />
+              <Kpi label="Equal at the margin"
+                value={plan.equimarginal ? "Yes" : "No"}
+                sub={plan.equimarginal ? "optimal allocation" : "not yet optimal"}
+                tone={plan.equimarginal ? "good" : "bad"} />
             </KpiRow>
           </Box>
         </Panel>
@@ -441,6 +509,34 @@ export default function Dashboard({
         </Panel>
       </Box>
     </>
+  );
+}
+
+/* ---------------------------------------------------------- number input */
+function NumIn({
+  label, value, onChange, step, prefix, suffix,
+}: {
+  label: string; value: number; onChange: (v: number) => void;
+  step: number; prefix?: string; suffix?: string;
+}) {
+  return (
+    <Box>
+      <Text fontFamily="mono" fontSize="9px" letterSpacing="0.11em" textTransform="uppercase"
+        color={MUTED} fontWeight={600} mb="3px">{label}</Text>
+      <HStack spacing={0} border="1px solid" borderColor={RULE} borderRadius="6px"
+        bg="white" px={2} py="3px">
+        {prefix && <Text fontFamily="mono" fontSize="12px" color={MUTED}>{prefix}</Text>}
+        <Box as="input" type="number" value={value} step={step} min={0}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const v = Number(e.target.value);
+            if (Number.isFinite(v) && v > 0) onChange(v);
+          }}
+          w={suffix ? "42px" : "56px"} border="none" outline="none" bg="transparent"
+          fontFamily="mono" fontSize="13px" fontWeight={700} color={INK}
+          sx={{ "&::-webkit-outer-spin-button,&::-webkit-inner-spin-button": { opacity: 1 } }} />
+        {suffix && <Text fontFamily="mono" fontSize="12px" color={MUTED}>{suffix}</Text>}
+      </HStack>
+    </Box>
   );
 }
 
