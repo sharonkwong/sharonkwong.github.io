@@ -15,11 +15,45 @@
    "Email: 43.46% avg open inflated 15\u201320pts by Apple MPP; 2.09% click on delivered; 6.81% median CTOR; 0.46% unsubscribe"
   ]
  },
+ "assumptions": [
+  {
+   "key": "leadValue",
+   "label": "Gross profit per qualified lead",
+   "value": 340,
+   "unit": "$",
+   "adjustable": true,
+   "basis": "Advertiser-supplied: 12% lead-to-sale close rate x $2,833 average front+back gross per unit. Their finance team's number, not ours \u2014 we take it as an input."
+  },
+  {
+   "key": "targetReturn",
+   "label": "Required return on media",
+   "value": 3.5,
+   "unit": "x",
+   "adjustable": true,
+   "basis": "Dealer group's internal capital hurdle: media must return 3.5x contribution to beat their next-best use of the same dollar. Policy, not measurement."
+  },
+  {
+   "key": "subscriberValue",
+   "label": "Value of an email subscriber",
+   "value": 38,
+   "unit": "$",
+   "adjustable": false,
+   "basis": "Computed, not assumed: trailing-12-month email-attributed gross profit divided by mean active subscribers over the same period."
+  },
+  {
+   "key": "emailSpendCap",
+   "label": "Email spend ceiling",
+   "value": 30000,
+   "unit": "$",
+   "adjustable": false,
+   "basis": "List-burn constraint. Beyond ~4 sends/subscriber/month unsubscribe rate passes 0.5% and net list growth turns negative. Extra budget past this point cannot buy more sends, so the response curve does not apply above it."
+  }
+ ],
  "constants": {
   "valuePerConversion": 340,
-  "ceiling": 95,
   "subscriberValue": 38,
-  "dedupedHouseholds": 986000
+  "emailSpendCap": 30000,
+  "targetReturn": 3.5
  },
  "channels": [
   {
@@ -32,9 +66,12 @@
    "clicks": 27184,
    "conversionsLast": 3910,
    "conversionsIncr": 1055,
-   "marginalCpic": 198,
+   "halfSaturationSpend": 150000,
    "reach": 1240000,
    "note": "64% of spend is retargeting \u2014 that's why lift is low.",
+   "maxConversions": 2124.3,
+   "marginalCpic": 278.69,
+   "floorCpic": 70.61,
    "ctr": 0.0009,
    "incrementalityRate": 0.27,
    "cpaLast": 37.85,
@@ -51,9 +88,12 @@
    "clicks": 9640,
    "conversionsLast": 4240,
    "conversionsIncr": 3620,
-   "marginalCpic": 71,
+   "halfSaturationSpend": 1000000,
    "reach": 742000,
    "note": "The only channel buying genuinely new reach.",
+   "maxConversions": 19223.4,
+   "marginalCpic": 78.96,
+   "floorCpic": 52.02,
    "ctr": 0.00093,
    "incrementalityRate": 0.854,
    "cpaLast": 54.72,
@@ -70,9 +110,12 @@
    "clicks": 37600,
    "conversionsLast": 5880,
    "conversionsIncr": 1470,
-   "marginalCpic": 31,
+   "halfSaturationSpend": 20000,
    "reach": 460000,
    "note": "Cheapest per conversion, but the list is finite.",
+   "maxConversions": 2806.4,
+   "marginalCpic": 31.43,
+   "floorCpic": 7.13,
    "ctr": 0.02091,
    "incrementalityRate": 0.25,
    "cpaLast": 3.74,
@@ -710,127 +753,6 @@
     "conversionsLast": 517.8,
     "conversionsIncr": 129.5
    }
-  }
- ],
- "marginal": {
-  "display": [
-   {
-    "spendK": 30,
-    "multiple": 0.203,
-    "marginalCpic": 52,
-    "isCurrent": false
-   },
-   {
-    "spendK": 60,
-    "multiple": 0.405,
-    "marginalCpic": 79,
-    "isCurrent": false
-   },
-   {
-    "spendK": 100,
-    "multiple": 0.676,
-    "marginalCpic": 128,
-    "isCurrent": false
-   },
-   {
-    "spendK": 148,
-    "multiple": 1.0,
-    "marginalCpic": 198,
-    "isCurrent": true
-   },
-   {
-    "spendK": 200,
-    "multiple": 1.351,
-    "marginalCpic": 286,
-    "isCurrent": false
-   }
-  ],
-  "video": [
-   {
-    "spendK": 100,
-    "multiple": 0.431,
-    "marginalCpic": 38,
-    "isCurrent": false
-   },
-   {
-    "spendK": 160,
-    "multiple": 0.69,
-    "marginalCpic": 49,
-    "isCurrent": false
-   },
-   {
-    "spendK": 232,
-    "multiple": 1.0,
-    "marginalCpic": 71,
-    "isCurrent": true
-   },
-   {
-    "spendK": 311,
-    "multiple": 1.341,
-    "marginalCpic": 92,
-    "isCurrent": false
-   },
-   {
-    "spendK": 380,
-    "multiple": 1.638,
-    "marginalCpic": 124,
-    "isCurrent": false
-   }
-  ],
-  "email": [
-   {
-    "spendK": 10,
-    "multiple": 0.455,
-    "marginalCpic": 12,
-    "isCurrent": false
-   },
-   {
-    "spendK": 16,
-    "multiple": 0.727,
-    "marginalCpic": 19,
-    "isCurrent": false
-   },
-   {
-    "spendK": 22,
-    "multiple": 1.0,
-    "marginalCpic": 31,
-    "isCurrent": true
-   },
-   {
-    "spendK": 28,
-    "multiple": 1.273,
-    "marginalCpic": 68,
-    "isCurrent": false
-   },
-   {
-    "spendK": 34,
-    "multiple": 1.545,
-    "marginalCpic": 147,
-    "isCurrent": false
-   }
-  ]
- },
- "reallocation": [
-  {
-   "channel": "Display",
-   "key": "display",
-   "now": 148000,
-   "proposed": 65000,
-   "rationale": "Marginal cost is $198 \u2014 more than double the ceiling. Cut, don't kill: at $65K it drops back under."
-  },
-  {
-   "channel": "Online video",
-   "key": "video",
-   "now": 232000,
-   "proposed": 311000,
-   "rationale": "Marginal cost is $71 with headroom to about 1.35x current spend before it hits the ceiling."
-  },
-  {
-   "channel": "Email",
-   "key": "email",
-   "now": 22000,
-   "proposed": 26000,
-   "rationale": "Hold send frequency at 4/month. The extra budget buys segmentation and creative, not volume."
   }
  ],
  "video": {
