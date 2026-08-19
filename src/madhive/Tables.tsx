@@ -43,7 +43,7 @@ export default function Tables({
       <Box mt={12}>
         <SectionHead
           title="Creative performance"
-          sub="Ranked by cost per incremental conversion. Click any row to drill into placement-level detail."
+          sub="Ranked by cost per incremental conversion. Click a row for placement detail."
         />
         {channel && (
           <HStack mb={3} spacing={2}>
@@ -166,53 +166,44 @@ export default function Tables({
 
       <Box mt={12}>
         <SectionHead title="Why these metrics"
-          sub="The design decisions behind the dashboard — the part worth defending in a review." />
+          sub="The four decisions behind it." />
         <Box display="flex" flexDirection="column" gap={4}>
           <Method n="1" title="Clicks can't be the comparison currency">
             <p>
-              The obvious dashboard headlines Total Clicks and Click Rate. That ranking is decided
-              before you look at it: email's click rate on delivered runs around <strong>2.09%</strong>{" "}
-              and display's around <strong>0.09%</strong> — a 23× gap that says nothing about which
-              drove more business. Different denominators over different audiences. Email reaches
-              people who already opted in; display reaches cold prospects. And on non-skippable video
-              the click is close to meaningless.
+              Email clicks at <strong>2.09%</strong> of delivered, display at <strong>0.09%</strong>.
+              That 23× gap says nothing about which drove more business — different denominators over
+              different audiences. Email reaches people who opted in; display reaches cold prospects.
+              Headline the dashboard with click rate and the ranking is decided before you look.
             </p>
             <p>
-              So every channel is compared on <strong>cost per incremental conversion</strong>, and
-              channel-native metrics stay in the diagnostics tabs where they belong.
+              So everything ranks on <strong>cost per incremental conversion</strong>, and native
+              metrics stay in the diagnostics tabs.
             </p>
           </Method>
           <Method n="2" title="Attribution model is a control, not an assumption">
             <p>
-              Flip the toggle at the top and the ranking inverts. On last-touch, email costs{" "}
-              <strong>$3.74</strong> per conversion and looks 15× better than video. Lift-tested, only{" "}
-              <strong>25%</strong> of email conversions were incremental — the rest were people who'd
-              have bought anyway. Display is worse still at <strong>27%</strong>, because 64% of its
+              Flip the toggle and the ranking inverts. On last-touch email costs <strong>$3.74</strong>{" "}
+              and looks 15× better than video. Lift-tested, only <strong>25%</strong> of its
+              conversions were incremental. Display is worse at <strong>27%</strong> — 64% of its
               spend is retargeting.
             </p>
-            <p>
-              Putting both models one click apart is what ends the argument. Hiding the one you don't
-              like is what starts it.
-            </p>
+            <p>Both models, one click apart. Hiding the unflattering one is what starts arguments.</p>
           </Method>
           <Method n="3" title="Efficiency ranking doesn't answer the question that was asked">
             <p>
-              Even lift-tested, email wins on cost — $14.97 per incremental conversion. But the goal
-              is <em>"run more of what works."</em> Email can't absorb more budget: the list is finite
-              and mailing it harder burns it. The decision metric is <strong>marginal</strong> cost at
-              the next increment of spend, not average cost at the current one.
+              Email still wins on cost — $14.97. But the goal is <em>run more of what works</em>, and
+              email can't absorb more: the list is finite and mailing it harder burns it. The decision
+              metric is <strong>marginal</strong> cost at the next dollar, not average cost at the
+              current one.
             </p>
-            <p>
-              That's why the reallocation panel sits directly under the ranking. Average efficiency
-              tells you who's winning; marginal efficiency tells you where to put the money.
-            </p>
+            <p>Average efficiency says who's winning. Marginal says where the money goes.</p>
           </Method>
           <Method n="4" title="What this dashboard deliberately doesn't do">
             <Box as="ul" pl={5} sx={{ "& li": { mb: 1.5 } }}>
-              <li><strong>No cross-channel rate comparisons.</strong> No chart puts email CTR next to display CTR. The layout makes the invalid comparison impossible rather than trusting people not to make it.</li>
+              <li><strong>No cross-channel rate comparisons.</strong> No chart puts email CTR beside display CTR — the layout makes the invalid comparison impossible.</li>
               <li><strong>No forecasting past the tested range.</strong> The marginal curves stop where the lift test has support. Extrapolating to 3× spend would be fabrication.</li>
-              <li><strong>No creative-level incrementality.</strong> The lift test powers to channel level. Creative rows inherit channel ratios and are labelled directional.</li>
-              <li><strong>No real-time refresh.</strong> Daily at 06:00. A number that moves mid-meeting loses the room.</li>
+              <li><strong>No creative-level incrementality.</strong> The lift test only powers to channel level, so creative rows are directional.</li>
+              <li><strong>No real-time refresh.</strong> Daily at 06:00 — a number that moves mid-meeting loses the room.</li>
             </Box>
           </Method>
         </Box>

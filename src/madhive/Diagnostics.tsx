@@ -21,7 +21,7 @@ export default function Diagnostics({ data }: { data: CampaignData }) {
     <Box mt={12}>
       <SectionHead
         title="Channel diagnostics"
-        sub="Each channel gets the metrics that are actually native to it. These explain why a channel performs — they are deliberately not comparable across tabs, and the layout keeps them apart so nobody tries."
+        sub="Each channel's own native metrics — deliberately not comparable across tabs."
       />
       <HStack spacing={0} borderBottom="1px solid" borderColor={RULE} mb={4} wrap="wrap" role="tablist">
         {tabs.map((t) => (
@@ -54,7 +54,7 @@ function VideoTab({ data }: { data: CampaignData }) {
       <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={4}>
         <Panel
           title="Quartile completion — the retention curve"
-          sub="Share of impressions still playing at each quartile. Non-skippable vs skippable, same creative."
+          sub="Share of impressions still playing at each quartile. Same creative, two formats."
         >
           <Box h="250px">
             <ResponsiveContainer width="100%" height="100%">
@@ -110,13 +110,11 @@ function VideoTab({ data }: { data: CampaignData }) {
             <Callout tag="Finding" tone="finding">
               <p>
                 <strong>Skippable loses 28.6 points in the first quartile</strong> — that's the skip
-                button at 5 seconds, not gradual disinterest. After the skip decision it barely
-                leaks: 25%→100% loses only 8.6 more points.
+                button at 5 seconds, not gradual disinterest. After it, only 8.6 more points leak away.
               </p>
               <p>
-                So "improve our video completion rate" is really two different jobs. On skippable,
-                everything depends on the first 5 seconds. On non-skippable, completion is already
-                94.6% and there is nothing left to win.
+                So the fix is the first 5 seconds of the skippable cut. Non-skippable is already at
+                94.6% — nothing left to win there.
               </p>
             </Callout>
           </Box>
@@ -158,14 +156,12 @@ function VideoTab({ data }: { data: CampaignData }) {
       <Box mt={4}>
         <Callout tag="Why CPCV is identical and CPiC is not">
           <p>
-            Both video types cost the same per <em>completed view</em> — $0.030. The market has
-            already priced completion in: skippable is cheaper per impression precisely because
-            fewer impressions complete.
+            Both video types cost the same per <em>completed view</em> — $0.030. The market already
+            prices completion in: skippable is cheaper per impression because fewer complete.
           </p>
           <p>
-            So CPCV can't separate them. <strong>Cost per incremental conversion can</strong>, and it
-            says non-skippable is 19% more efficient. Completion is a diagnostic, not an outcome — a
-            completed view that drives nothing is still worth nothing.
+            So CPCV can't rank them. <strong>Cost per incremental conversion can</strong> — it says
+            non-skippable is 19% better. Completion is a diagnostic, not an outcome.
           </p>
         </Callout>
       </Box>
@@ -188,7 +184,7 @@ function EmailTab({ data }: { data: CampaignData }) {
   return (
     <>
       <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={4}>
-        <Panel title="Send → convert funnel" sub="Both reported and privacy-adjusted opens are shown. Only one of them is real.">
+        <Panel title="Send → convert funnel" sub="Two open numbers are shown. Only one is real.">
           <Box display="flex" flexDirection="column" gap={2.5}>
             {funnel.map((f) => (
               <BarRow key={f.stage} label={f.stage} value={f.value} max={maxF}
@@ -201,18 +197,14 @@ function EmailTab({ data }: { data: CampaignData }) {
         <Panel title="Open rate is not a usable metric" sub="Apple Mail Privacy Protection pre-loads tracking pixels on delivery.">
           <Callout tag="The metric is broken, not the campaign" tone="warn">
             <p>
-              Apple's Mail Privacy Protection loads the tracking pixel whether or not a human ever
-              opens the message. Published estimates put the inflation at{" "}
-              <strong>15–20 percentage points</strong>.
+              Apple's Mail Privacy Protection fires the tracking pixel whether or not anyone opens the
+              message — inflating opens by an estimated <strong>15–20 points</strong>. Our reported
+              43.5% is really about <strong>27.9%</strong>. Roughly 280,000 of those "opens" never
+              happened.
             </p>
             <p>
-              Our reported open rate is <strong>43.5%</strong>. Modelled human opens are{" "}
-              <strong>27.9%</strong>. The 782,000 "opens" include roughly 280,000 that never happened.
-            </p>
-            <p>
-              It poisons <strong>click-to-open rate</strong> too, because opens are its denominator.
-              Reported CTOR reads 4.81%; against modelled human opens it's 7.49%. We report click
-              rate on <em>delivered</em> instead — it needs no pixel.
+              It breaks click-to-open too, since opens are the denominator. We use click rate on{" "}
+              <em>delivered</em> instead — no pixel required.
             </p>
           </Callout>
         </Panel>
@@ -220,7 +212,7 @@ function EmailTab({ data }: { data: CampaignData }) {
 
       <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={4} mt={4}>
         <Panel title="List health — the asset behind the channel"
-          sub="Email's real constraint isn't budget, it's subscribers. Once they leave they don't come back.">
+          sub="Email's constraint isn't budget — it's subscribers, and they don't come back.">
           <Box as="table" w="100%" fontSize="13px" style={{ borderCollapse: "collapse" }}>
             <Box as="tbody">
               {listHealth.map((r) => (
@@ -278,11 +270,10 @@ function EmailTab({ data }: { data: CampaignData }) {
           <Box mt={4}>
             <Callout tag="The trap this exists to show" tone="warn">
               <p>
-                Going from 4 sends to 5 gains <strong>118 incremental conversions</strong> — about{" "}
-                <strong>$40,120</strong> of value — and costs only $4,200 in production. On a
-                media-cost dashboard that is a clear win. It also drops net list growth from +8,028
-                to +1,600, destroying <strong>$244,264</strong> of subscriber asset a month. The
-                obvious read is wrong by roughly 6×.
+                A 5th send gains <strong>118 conversions</strong> (~$40,120) for $4,200 in production —
+                a clear win on any media-cost dashboard. It also cuts net list growth from +8,028 to
+                +1,600, destroying <strong>$244,264</strong> of subscriber value a month. The obvious
+                read is wrong by about 6×.
               </p>
             </Callout>
           </Box>
@@ -302,7 +293,7 @@ function DisplayTab({ data }: { data: CampaignData }) {
     <>
       <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={4}>
         <Panel title="Viewability by marketplace"
-          sub="MRC standard for display: 50% of the ad's pixels in view for 1 continuous second.">
+          sub="MRC standard: 50% of pixels in view for 1 continuous second.">
           <Box display="flex" flexDirection="column" gap={2.5}>
             {viewability.map((v) => (
               <BarRow key={v.marketplace} label={v.marketplace} value={v.rate} max={100}
@@ -316,7 +307,7 @@ function DisplayTab({ data }: { data: CampaignData }) {
         </Panel>
 
         <Panel title="What we paid for that nobody could see"
-          sub="Non-viewable impressions costed at each marketplace's own CPM.">
+          sub="Non-viewable impressions, costed at each marketplace's CPM.">
           <Box as="table" w="100%" fontSize="13px" style={{ borderCollapse: "collapse" }}>
             <Box as="thead">
               <Box as="tr">
@@ -358,10 +349,9 @@ function DisplayTab({ data }: { data: CampaignData }) {
           <Box mt={4}>
             <Callout tag="Finding" tone="finding">
               <p>
-                <strong>{money(totalWasted)} — 28% of display spend — bought impressions that never
-                met the viewability standard.</strong> Open exchange is almost the whole problem.
-                Shifting that budget to private marketplace at the same CPM would recover roughly
-                $18,600 of working media without spending a dollar more.
+                <strong>{money(totalWasted)} — 28% of display spend — bought impressions nobody could
+                see.</strong> Open exchange is almost all of it. Moving that budget to PMP at the same
+                CPM recovers about $18,600 of working media for free.
               </p>
             </Callout>
           </Box>

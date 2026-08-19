@@ -12,6 +12,16 @@ import {
 
 type TrendMetric = "conv" | "spend" | "cpa" | "imps";
 
+/** Plain-language answer for the marginal panel, kept in sync with the reallocation table. */
+const READOUT: { key: ChannelKey; headline: string; why: string; good: boolean }[] = [
+  { key: "display", headline: "Spend $83K less", good: false,
+    why: "Next conversion already costs $198. Crossed the ceiling at half today's spend." },
+  { key: "video", headline: "Room for $79K more", good: true,
+    why: "Next conversion costs $71. Stays under the ceiling to about 1.35x today." },
+  { key: "email", headline: "Only $4K more", good: true,
+    why: "Cheapest today at $31, but the curve goes vertical just past current spend." },
+];
+
 export default function Dashboard({
   data, attr, channel, setView,
 }: {
@@ -114,13 +124,11 @@ export default function Dashboard({
         <Box mb={4}>
           <Callout tag="You just changed the ranking" tone="warn">
             <p>
-              You're looking at <strong>last-touch</strong>. Email reads{" "}
-              <strong>{money(byKey.email.cpaLast, 2)}</strong> per conversion and appears to beat
-              online video by {(byKey.video.cpaLast / byKey.email.cpaLast).toFixed(0)}×. Lift testing
-              says only <strong>{(byKey.email.incrementalityRate * 100).toFixed(0)}%</strong> of
-              those conversions were incremental — the rest were customers who would have bought
-              anyway. Budget decisions made on this view systematically over-fund retargeting and
-              email, and starve the channels that actually create demand.
+              Email now reads <strong>{money(byKey.email.cpaLast, 2)}</strong> and looks{" "}
+              {(byKey.video.cpaLast / byKey.email.cpaLast).toFixed(0)}× better than online video. But
+              only <strong>{(byKey.email.incrementalityRate * 100).toFixed(0)}%</strong> of those
+              conversions were incremental — the rest would have happened anyway. Budget set on this
+              view over-funds retargeting and email.
             </p>
           </Callout>
         </Box>
@@ -154,8 +162,8 @@ export default function Dashboard({
           title="Cost per conversion, by channel"
           sub={
             isIncr
-              ? "Cost per INCREMENTAL conversion — conversions that would not have happened otherwise. Lower is better. Click a bar to filter the page."
-              : "Cost per LAST-TOUCH conversion — credits whatever the customer touched last. Lower is better."
+              ? "Conversions that would not have happened otherwise. Lower is better — click a bar to filter the page."
+              : "Credits whatever the customer touched last. Lower is better."
           }
         >
           <Box display="flex" flexDirection="column" gap={2.5}>
@@ -176,9 +184,8 @@ export default function Dashboard({
           <Text fontSize="12px" color={MUTED} mt={4} lineHeight={1.6}>
             {isIncr ? (
               <>
-                <strong>{best.label}</strong> is most efficient per incremental conversion — but read
-                the panel below before moving budget. Efficiency at today's spend is not headroom for
-                tomorrow's.
+                <strong>{best.label}</strong> is cheapest — but see the panel below. Cheap today is
+                not the same as room to grow.
               </>
             ) : (
               <>
@@ -192,7 +199,7 @@ export default function Dashboard({
 
         <Panel
           title="Where the money goes vs. what it buys"
-          sub="Share of spend against share of conversions. A channel wider on top than bottom is over-funded."
+          sub="Wider on top than bottom means over-funded."
         >
           <ShareStack label="Share of spend" total={money(t.spend)}
             parts={channels.map((c) => ({ key: c.key, v: c.spend, color: c.color, dim: dimmed(c.key) }))} />
@@ -221,8 +228,8 @@ export default function Dashboard({
       {/* ---------------- marginal + realloc ---------------- */}
       <Grid templateColumns={{ base: "1fr", lg: "1.35fr 1fr" }} gap={4} mt={4}>
         <Panel
-          title="Where the next dollar still works"
-          sub={`Marginal cost per incremental conversion, plotted against each channel's own current spend. Three channels spending $22K, $148K and $232K can't share a dollar axis — email would occupy 8% of it — and the question here is marginal behaviour, so this normalises to "the next dollar relative to today".`}
+          title="How much more can each channel absorb?"
+          sub="What the NEXT conversion costs as you spend more. Above the red line it stops being worth buying. Left of centre is less spend than today, right is more."
         >
           <Box h="260px">
             <ResponsiveContainer width="100%" height="100%">
@@ -234,7 +241,7 @@ export default function Dashboard({
                   tickFormatter={(v: number) => `${v}x`}
                   tick={{ fontSize: 10, fill: "#8a8f98", fontFamily: "monospace" }}
                   stroke="#c9ced6"
-                  label={{ value: "multiple of that channel's current spend", position: "insideBottom",
+                  label={{ value: "spend vs today  ·  1x = current spend", position: "insideBottom",
                     offset: -14, style: { fontSize: 10, fill: "#8a8f98", fontFamily: "monospace" } }}
                 />
                 <YAxis
@@ -292,22 +299,21 @@ export default function Dashboard({
               </LineChart>
             </ResponsiveContainer>
           </Box>
-          <HStack spacing={4} mt={2} wrap="wrap">
-            {channels.map((c) => (
-              <HStack key={c.key} spacing={1.5}>
-                <Box w="10px" h="10px" borderRadius="2px" bg={c.color} />
-                <Text fontSize="12px" color="gray.600">{c.label}</Text>
-              </HStack>
+          <Box display="grid" gridTemplateColumns={{ base: "1fr", sm: "repeat(3, 1fr)" }}
+            gap={2} mt={3}>
+            {READOUT.map((r) => (
+              <Box key={r.key} borderTop="2px solid" borderColor={byKey[r.key].color} pt={2}>
+                <Text fontSize="12.5px" fontWeight={700} color={INK}>{byKey[r.key].label}</Text>
+                <Text fontFamily="mono" fontSize="15px" fontWeight={700} mt="2px"
+                  color={r.good ? "green.600" : "red.500"}>{r.headline}</Text>
+                <Text fontSize="11.5px" color={MUTED} mt="2px" lineHeight={1.45}>{r.why}</Text>
+              </Box>
             ))}
-            <HStack spacing={1.5}>
-              <Box w="10px" h="10px" borderRadius="2px" bg="#d03b3b" />
-              <Text fontSize="12px" color="gray.600">${constants.ceiling} ceiling</Text>
-            </HStack>
-          </HStack>
+          </Box>
         </Panel>
 
         <Panel title="Recommended reallocation"
-          sub="Same total budget. Moves each channel to where its marginal cost sits under the ceiling.">
+          sub="Same total budget, moved to where each channel still pays back.">
           <Box overflowX="auto">
             <Box as="table" w="100%" fontSize="13px" style={{ borderCollapse: "collapse" }}>
               <Box as="thead">

@@ -37,23 +37,26 @@ function Page() {
       <Box maxW="1280px" mx="auto" px={{ base: 5, md: 8 }} pb={24}>
         {/* masthead */}
         <Box pt={{ base: 10, md: 14 }} pb={5} borderBottom="2px solid" borderColor={INK} mb={5}>
-          <HStack spacing={3} mb={4} wrap="wrap"
-            fontFamily="mono" fontSize="10.5px" letterSpacing="0.15em"
-            textTransform="uppercase" color={MUTED}>
-            <Text>Channel performance</Text>
-            <Text color="gray.300">/</Text>
-            <Text>Synthetic demo data</Text>
-            <Text color="gray.300">/</Text>
-            <Text>{flight}</Text>
-          </HStack>
+          <Flex justify="space-between" align="baseline" gap={4} wrap="wrap" mb={3}>
+            <Text fontSize={{ base: "22px", md: "27px" }} fontWeight={700}
+              letterSpacing="-0.02em" color={INK}>
+              {meta.advertiser}
+            </Text>
+            <HStack spacing={3} wrap="wrap" fontFamily="mono" fontSize="10.5px"
+              letterSpacing="0.13em" textTransform="uppercase" color={MUTED}>
+              <Text>{meta.descriptor}</Text>
+              <Text color="gray.300">/</Text>
+              <Text>{flight}</Text>
+              <Text color="gray.300">/</Text>
+              <Text>Demo data</Text>
+            </HStack>
+          </Flex>
           <Text as="h1" fontSize={{ base: "30px", md: "44px" }} fontWeight={800}
             letterSpacing="-0.032em" lineHeight={1.05} color={INK} maxW="20ch" mb={3}>
             Which channel should get the next dollar?
           </Text>
-          <Text fontSize={{ base: "15px", md: "17px" }} color="gray.600" maxW="72ch">
-            {meta.advertiser} — {meta.descriptor}. Display, online video and email, compared on a
-            currency that works across all three. Every number here is fabricated for demonstration;
-            the published benchmarks they're modelled on are listed at the bottom.
+          <Text fontSize={{ base: "15px", md: "17px" }} color="gray.600" maxW="60ch">
+            Display, online video and email — ranked on one metric that works across all three.
           </Text>
         </Box>
 
