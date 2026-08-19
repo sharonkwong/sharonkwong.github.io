@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-label="Video creative poster frame">
+  <rect width="640" height="360" fill="#2b3a2f"/>
+  <circle cx="540" cy="60" r="150" fill="#ffffff" opacity="0.05"/>
+  <text x="28" y="52" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700"
+    letter-spacing="1.8" fill="#e0561d">BELLA VITA PIZZA</text>
+  <text x="28" y="98" font-family="Inter, system-ui, sans-serif" font-size="38" font-weight="800" fill="#ffffff">Fresh out the oven</text>
+  <text x="28" y="128" font-family="Inter, system-ui, sans-serif" font-size="15" fill="#ffffff" opacity="0.72">hot at your door in 20 minutes</text>
+  <circle cx="320" cy="232" r="34" fill="#ffffff" opacity="0.92"/>
+  <path d="M 310 214 L 340 232 L 310 250 Z" fill="#2b3a2f"/>
+  <text x="632" y="350" text-anchor="end" font-family="ui-monospace, monospace" font-size="9"
+    fill="#ffffff" opacity="0.45">PLACEHOLDER · 640x360</text>
+</svg>
