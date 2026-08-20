@@ -55,7 +55,6 @@ export default function Dashboard({
   const ctr = rate(T.clicks, T.impressions);
   const cpa = rate(T.spend, T.conversions);
   const cpc = rate(T.spend, T.clicks);
-  const onlineCpa = rate(T.spend, T.onlineConversions);
   const causedConv = channels.reduce((s, c) => s + c.lift.incremental, 0);
   const cpm = { current: (T.spend.current / T.impressions.current) * 1000,
                 prior: (T.spend.prior / T.impressions.prior) * 1000 };
@@ -128,10 +127,7 @@ export default function Dashboard({
               tip: "Spend ÷ clicks. Derived." },
           ]} />
         <Kpi label="Cost per conversion" value={money(cpa.current, 2)} delta={d(cpa.current, cpa.prior)} lowerIsBetter
-          tip="Spend ÷ total conversions. Derived. It is the average across every conversion — the next one always costs more than the average, which is what the panel further down works out."
-          extras={[{ label: "Online only", value: money(onlineCpa.current, 2),
-                     delta: d(onlineCpa.current, onlineCpa.prior), lowerIsBetter: true,
-                     tip: "Spend ÷ online conversions. Derived. Shown because it is what a dashboard without store-visit data would report — and it ranks the channels differently." }]} />
+          tip="Spend ÷ total conversions, online and in-store together. Derived. It is the average across every conversion — the next one always costs more than the average, which is what the panel further down works out." />
 
         <Kpi label="Online conversions" value={nf(T.onlineConversions.current)}
           delta={d(T.onlineConversions.current, T.onlineConversions.prior)}
