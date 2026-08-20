@@ -37,6 +37,13 @@ export interface GeoZip {
 
 export interface Placement extends ShareRow { site: string }
 
+/** A clickable band of an email creative, as a fraction of the creative. */
+export interface CreativeSection {
+  key: string; label: string;
+  x: number; y: number; w: number; h: number;
+  clickShare: number;
+}
+
 export interface Creative extends ShareRow {
   id: string;
   campaign: string;
@@ -48,6 +55,7 @@ export interface Creative extends ShareRow {
   asset: string;
   poster: string | null;
   quartiles: number[] | null;
+  sections: CreativeSection[] | null;
   placements: Placement[];
 }
 

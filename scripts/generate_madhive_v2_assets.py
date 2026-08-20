@@ -8,6 +8,10 @@ The video file is Big Buck Bunny (c) Blender Foundation, CC BY 3.0.
 """
 import os
 import shutil
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from madhive_v2_email_layout import COPY, SECTIONS  # noqa: E402
 
 HERE = os.path.dirname(__file__)
 OUT = os.path.join(HERE, "..", "public", "madhive-v2-assets")
@@ -21,15 +25,16 @@ BASIL = "#5fb87a"
 PAPER = "#faf6ef"
 
 CREATIVES = [
+    # id,             w,   h,   eyebrow,         headline,             badge,      cta
     ("cr-01", 300, 250, "FAMILY BUNDLE", "Two larges,\nbreadsticks, soda", "$26", "Order now"),
     ("cr-02", 728,  90, "EVERY TUESDAY", "Second pizza half price", "2 for 1", "Order now"),
     ("cr-03", 300, 600, "NEW", "Detroit-style,\ncrispy edge", "Now baking", "Try a square"),
     ("cr-04", 300, 250, "STILL HUNGRY?", "Your cart is\nwaiting", "24 hrs", "Finish order"),
     ("cr-05", 160, 600, "STILL WARM", "Fresh from\nthe oven", "20 min", "Order"),
-    ("cr-06", 600, 900, "EVERY TUESDAY", "Second pizza half price,\nall day, all shops", "2 for 1", "Order for tonight"),
-    ("cr-07", 600, 900, "COME BACK", "It has been a while.\nHere is a slice on us", "Free slice", "See the deal"),
-    ("cr-08", 600, 750, "WE MISS YOU", "Take $5 off your\nnext order", "$5 off", "Redeem"),
 ]
+
+# id -> (w, h). Emails get the sectioned renderer below.
+EMAILS = {"cr-06": (600, 900), "cr-07": (600, 900), "cr-08": (600, 750)}
 
 def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -84,6 +89,103 @@ for c in CREATIVES:
     with open(os.path.join(OUT, f"{c[0]}.svg"), "w") as f:
         f.write(render(*c))
     print(f"  {c[0]}.svg  {c[1]}x{c[2]}")
+
+def render_email(cid, w, h):
+    """One band per section, drawn from the shared spec so the dashboard's
+    leader lines land on the band they name."""
+    c = COPY[cid]
+    box = {k: (x * w, y * h, bw * w, bh * h) for k, _l, x, y, bw, bh in SECTIONS}
+    parts = [
+        f'<rect width="{w}" height="{h}" fill="{PAPER}"/>',
+    ]
+
+    # header ---------------------------------------------------------------
+    hx, hy, hw, hh = box["header"]
+    parts += [
+        f'<rect x="0" y="{hy:.0f}" width="{hw:.0f}" height="{hh:.0f}" fill="{INK}"/>',
+        f'<text x="22" y="{hy + hh * 0.63:.0f}" font-family="Inter, sans-serif" font-size="17" '
+        f'font-weight="800" letter-spacing="1.4" fill="{CRUST}">ELITE PIZZA</text>',
+        f'<text x="{w - 22}" y="{hy + hh * 0.63:.0f}" text-anchor="end" font-family="Inter, sans-serif" '
+        f'font-size="11" fill="{PAPER}" opacity="0.6">Menu   Deals   Locations</text>',
+    ]
+
+    # hero -----------------------------------------------------------------
+    x, y, bw, bh = box["hero"]
+    parts += [
+        f'<rect x="0" y="{y:.0f}" width="{bw:.0f}" height="{bh:.0f}" fill="#26313f"/>',
+        f'<circle cx="{w * 0.82:.0f}" cy="{y + bh * 0.42:.0f}" r="{bh * 0.36:.0f}" fill="{SAUCE}" opacity="0.18"/>',
+        f'<text x="26" y="{y + 34:.0f}" font-family="Inter, sans-serif" font-size="11" font-weight="700" '
+        f'letter-spacing="2" fill="{BASIL}">{esc(c["eyebrow"])}</text>',
+        f'<text x="26" y="{y + bh * 0.44:.0f}" font-family="Inter, sans-serif" font-size="40" '
+        f'font-weight="800" fill="{CRUST}">{esc(c["hero_head"])}</text>',
+        f'<text x="26" y="{y + bh * 0.60:.0f}" font-family="Inter, sans-serif" font-size="15" '
+        f'fill="{PAPER}" opacity="0.8">{esc(c["hero_sub"])}</text>',
+        f'<rect x="26" y="{y + bh * 0.70:.0f}" width="196" height="44" rx="4" fill="{SAUCE}"/>',
+        f'<text x="124" y="{y + bh * 0.70 + 28:.0f}" text-anchor="middle" font-family="Inter, sans-serif" '
+        f'font-size="14" font-weight="700" fill="#ffffff">{esc(c["hero_cta"])}</text>',
+    ]
+
+    # menu grid ------------------------------------------------------------
+    x, y, bw, bh = box["menu"]
+    parts.append(f'<rect x="0" y="{y:.0f}" width="{bw:.0f}" height="{bh:.0f}" fill="{PAPER}"/>')
+    parts.append(f'<text x="26" y="{y + 30:.0f}" font-family="Inter, sans-serif" font-size="11" '
+                 f'font-weight="700" letter-spacing="2" fill="{INK}" opacity="0.55">TONIGHT\u2019S PICKS</text>')
+    gap, pad = 14, 26
+    tw = (w - pad * 2 - gap * 2) / 3
+    for i, name in enumerate(c["menu"]):
+        tx = pad + i * (tw + gap)
+        ty = y + 44
+        th = bh - 60
+        parts += [
+            f'<rect x="{tx:.0f}" y="{ty:.0f}" width="{tw:.0f}" height="{th:.0f}" rx="5" fill="#ece5d8"/>',
+            f'<circle cx="{tx + tw / 2:.0f}" cy="{ty + th * 0.40:.0f}" r="{th * 0.24:.0f}" fill="{CRUST}"/>',
+            f'<circle cx="{tx + tw / 2:.0f}" cy="{ty + th * 0.40:.0f}" r="{th * 0.17:.0f}" fill="{SAUCE}" opacity="0.75"/>',
+            f'<text x="{tx + tw / 2:.0f}" y="{ty + th * 0.76:.0f}" text-anchor="middle" '
+            f'font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="{INK}">{esc(name)}</text>',
+            f'<text x="{tx + tw / 2:.0f}" y="{ty + th * 0.92:.0f}" text-anchor="middle" '
+            f'font-family="Inter, sans-serif" font-size="11" fill="{INK}" opacity="0.6">Order</text>',
+        ]
+
+    # coupon ---------------------------------------------------------------
+    x, y, bw, bh = box["coupon"]
+    parts += [
+        f'<rect x="0" y="{y:.0f}" width="{bw:.0f}" height="{bh:.0f}" fill="#f1e7d5"/>',
+        f'<rect x="26" y="{y + 18:.0f}" width="{w - 52:.0f}" height="{bh - 36:.0f}" rx="6" '
+        f'fill="none" stroke="{SAUCE}" stroke-width="2" stroke-dasharray="7 6"/>',
+        f'<text x="46" y="{y + bh * 0.42:.0f}" font-family="Inter, sans-serif" font-size="19" '
+        f'font-weight="800" fill="{INK}">{esc(c["coupon_head"])}</text>',
+        f'<text x="46" y="{y + bh * 0.64:.0f}" font-family="ui-monospace, monospace" font-size="13" '
+        f'fill="{INK}" opacity="0.65">CODE {esc(c["coupon_code"])}</text>',
+        f'<rect x="{w - 200:.0f}" y="{y + bh * 0.36:.0f}" width="154" height="40" rx="4" fill="{INK}"/>',
+        f'<text x="{w - 123:.0f}" y="{y + bh * 0.36 + 25:.0f}" text-anchor="middle" '
+        f'font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="{CRUST}">{esc(c["coupon_cta"])}</text>',
+    ]
+
+    # footer ---------------------------------------------------------------
+    x, y, bw, bh = box["footer"]
+    parts += [
+        f'<rect x="0" y="{y:.0f}" width="{bw:.0f}" height="{bh:.0f}" fill="{INK}"/>',
+        f'<text x="{w / 2:.0f}" y="{y + bh * 0.30:.0f}" text-anchor="middle" font-family="Inter, sans-serif" '
+        f'font-size="14" font-weight="700" fill="{CRUST}">{esc(c["footer"])}</text>',
+    ]
+    for i in range(3):
+        parts.append(f'<circle cx="{w / 2 - 34 + i * 34:.0f}" cy="{y + bh * 0.55:.0f}" r="11" '
+                     f'fill="{PAPER}" opacity="0.18"/>')
+    parts.append(f'<text x="{w / 2:.0f}" y="{y + bh * 0.84:.0f}" text-anchor="middle" '
+                 f'font-family="Inter, sans-serif" font-size="10" fill="{PAPER}" opacity="0.45">'
+                 f'Unsubscribe   ·   Preferences   ·   View in browser</text>')
+
+    parts.append(f'<text x="{w - 6}" y="{h - 6}" text-anchor="end" font-family="ui-monospace, monospace" '
+                 f'font-size="8" fill="{PAPER}" opacity="0.35">ELITE PIZZA · {w}x{h}</text>')
+    return ('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" '
+            'role="img" aria-label="%s — placeholder email creative">%s</svg>\n'
+            % (w, h, w, h, esc(c["hero_head"]), "".join(parts)))
+
+
+for cid, (w, h) in EMAILS.items():
+    with open(os.path.join(OUT, f"{cid}.svg"), "w") as f:
+        f.write(render_email(cid, w, h))
+    print(f"  {cid}.svg  {w}x{h}  ({len(SECTIONS)} sections)")
 
 poster = f"""<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Video creative poster frame">
   <defs><linearGradient id="vp" x1="0" y1="0" x2="0.6" y2="1">

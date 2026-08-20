@@ -5,7 +5,7 @@ import {
   Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
-import { compact, defaultGrain, deviceTotals, geoAll, geoTotals, money, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
+import { compact, defaultGrain, deviceTotals, geoAll, geoTotals, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
 import type { View } from "./data";
 import type { Data, ShareMetric } from "./types";
 import GeoMap from "./GeoMap";
@@ -112,8 +112,6 @@ function Geo({ v, data }: { v: View; data: Data }) {
   const total = zips.reduce((s, z) => s + z.value, 0);
   const max = Math.max(...zips.map((z) => z.value), 1);
   const min = Math.min(...zips.map((z) => z.value));
-  const cols = Math.max(...data.geo.map((g) => g.col)) + 1;
-  const rowsN = Math.max(...data.geo.map((g) => g.row)) + 1;
   const shown = pinned ?? hover;
   const detail = zips.find((z) => z.zip === shown);
   const rank = [...zips].sort((a, b) => b.value - a.value);
@@ -130,7 +128,7 @@ function Geo({ v, data }: { v: View; data: Data }) {
       <Grid templateColumns={{ base: "1fr", lg: "1fr 268px" }} gap={5}>
         <Box>
           {shapes && (
-            <Box mb={4}>
+            <Box>
               <GeoMap shapes={shapes}
                 colorFor={(z) => step(byZip.get(z) ?? 0)}
                 isBright={(z) => bright(byZip.get(z) ?? 0)}
@@ -143,29 +141,6 @@ function Geo({ v, data }: { v: View; data: Data }) {
                 onSelect={(z) => setPinned((p) => (p === z ? null : z))} />
             </Box>
           )}
-          <Grid templateColumns={`repeat(${cols}, minmax(0, 1fr))`}
-            templateRows={`repeat(${rowsN}, 1fr)`} gap="4px" onMouseLeave={() => setHover(null)}>
-            {zips.map((z) => {
-              const on = shown === z.zip;
-              return (
-                <Box key={z.zip} as="button" type="button" gridColumn={z.col + 1} gridRow={z.row + 1}
-                  onMouseEnter={() => setHover(z.zip)}
-                  onClick={() => setPinned((p) => (p === z.zip ? null : z.zip))}
-                  aria-pressed={on} aria-label={`${z.zip} ${z.name}`}
-                  bg={step(z.value)} borderRadius="5px" px={2} py={2.5} textAlign="left"
-                  border="1.5px solid" borderColor={on ? T.ink : "transparent"}
-                  _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}
-                  transition="border-color .12s" minH="58px">
-                  <Text fontFamily={MONO} fontSize="12px" fontWeight={600}
-                    color={bright(z.value) ? T.bg : T.ink}>{z.zip}</Text>
-                  <Text fontFamily={MONO} fontSize="10.5px"
-                    color={bright(z.value) ? T.bg : T.muted} opacity={bright(z.value) ? 0.75 : 1}>
-                    {compact(z.value)}
-                  </Text>
-                </Box>
-              );
-            })}
-          </Grid>
           <Flex align="center" gap={2} mt={3}>
             <Label>Low</Label>
             <Flex gap="2px">
@@ -173,7 +148,7 @@ function Geo({ v, data }: { v: View; data: Data }) {
             </Flex>
             <Label>High</Label>
             <Text fontFamily={MONO} fontSize="10.5px" color={T.dim} ml="auto">
-              {compact(total)} {metric} · {zips.length} ZIPs · tile grid
+              {compact(total)} {metric} · {zips.length} ZIPs
             </Text>
           </Flex>
         </Box>
@@ -246,16 +221,10 @@ function ZipTable({ v, data }: { v: View; data: Data }) {
       sort: (r) => r.ctr, render: (r) => pct(r.ctr, 2) },
     { key: "cvr", label: "CVR", align: "right", numeric: true,
       sort: (r) => r.cvr, render: (r) => pct(r.cvr, 1) },
-    { key: "medianIncome", label: "Median income", align: "right", numeric: true,
-      sort: (r) => r.medianIncome, render: (r) => money(r.medianIncome) },
-    { key: "medianAge", label: "Median age", align: "right", numeric: true,
-      sort: (r) => r.medianAge, render: (r) => r.medianAge.toFixed(1) },
-    { key: "degreeShare", label: "Degree+", align: "right", numeric: true,
-      sort: (r) => r.degreeShare, render: (r) => pct(r.degreeShare, 0) },
   ];
   return (
     <Panel>
-      <DataTable columns={columns} rows={rows} rowKey={(r) => r.zip} minW="900px"
+      <DataTable columns={columns} rows={rows} rowKey={(r) => r.zip} minW="700px"
         initialSort={{ key: "impressions", dir: "desc" }} />
     </Panel>
   );

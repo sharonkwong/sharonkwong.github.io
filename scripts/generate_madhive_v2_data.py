@@ -12,7 +12,11 @@ import json
 import math
 import os
 import random
+import sys
 from datetime import date, timedelta
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from madhive_v2_email_layout import CLICK_SHARES, SECTIONS  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "data", "madhive-v2.json")
 random.seed(1509)
@@ -215,6 +219,12 @@ for cid, camp, name, fmt, dims, secs, (si, sc, sv) in CREATIVES:
                else f"../../madhive-v2-assets/{cid}.svg"),
         poster="../../madhive-v2-assets/video-poster.svg" if fmt == "Video" else None,
         quartiles=QUARTILES.get(cid),
+        # Where inside the email the clicks landed. Boxes come from the same
+        # spec the creative is drawn from, so a leader line cannot point at the
+        # wrong band.
+        sections=[dict(key=k, label=lbl, x=x, y=y, w=bw, h=bh,
+                       clickShare=CLICK_SHARES[cid][k])
+                  for k, lbl, x, y, bw, bh in SECTIONS] if cid in CLICK_SHARES else None,
         placements=placements,
     ))
 
