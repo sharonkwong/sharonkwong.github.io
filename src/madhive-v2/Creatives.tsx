@@ -156,8 +156,62 @@ function Sections({ row, color }: { row: Row; color: string }) {
   );
 }
 
+/* ------------------------------------------------------------ email funnel */
+/**
+ * Email's own funnel. Two open numbers are shown and neither is a denominator:
+ * Apple Mail Privacy Protection fetches the tracking pixel on delivery whether
+ * or not anyone opened, so the reported figure is inflated by an unknowable
+ * margin and click-to-open inherits it. Click rate is taken on delivered.
+ */
+function EmailFunnelBlock({ row, v, color }: { row: Row; v: View; color: string }) {
+  const f = v.email.byCampaign[row.campaign];
+  if (!f || f.sends === 0) return null;
+  const s = row.impressionShare;      // this creative's slice of the campaign's delivery
+  const sends = f.sends * s, delivered = f.delivered * s;
+  const rep = f.opensReported * s, mod = f.opensModelled * s, unsub = f.unsubs * s;
+
+  const rows: { label: string; value: number; rate: string; note?: string; tone?: "warn" | "dim" }[] = [
+    { label: "Sends", value: sends, rate: "" },
+    { label: "Delivered", value: delivered, rate: pct(delivered / sends, 1), note: "of sends" },
+    { label: "Opens reported", value: rep, rate: pct(rep / delivered, 1), note: "inflated by Apple MPP", tone: "warn" },
+    { label: "Opens modelled", value: mod, rate: pct(mod / delivered, 1), note: "not used as a denominator", tone: "dim" },
+    { label: "Clicks", value: row.clicks, rate: pct(row.clicks / delivered, 2), note: "of delivered" },
+    { label: "Conversions", value: row.conversions, rate: pct(row.conversions / row.clicks, 1), note: "of clicks" },
+    { label: "Unsubscribed", value: unsub, rate: pct(unsub / delivered, 2), note: "of delivered", tone: "warn" },
+  ];
+  const max = sends;
+
+  return (
+    <Box>
+      <Label as="div" mb={2.5}>Email funnel</Label>
+      <Flex direction="column" gap="7px">
+        {rows.map((r) => (
+          <Flex key={r.label} align="center" gap={2.5}>
+            <Text fontSize="11.5px" w="108px" flex="0 0 auto"
+              color={r.tone === "warn" ? T.down : r.tone === "dim" ? T.dim : T.muted}>{r.label}</Text>
+            <Box flex="1" bg={T.bg} borderRadius="3px" h="14px" overflow="hidden" minW={0}>
+              <Box h="100%" borderRadius="0 3px 3px 0"
+                bg={r.tone === "warn" ? T.down : r.tone === "dim" ? T.dim : color}
+                opacity={r.tone ? 0.5 : 0.85} w={`${Math.min(100, (r.value / max) * 100)}%`} />
+            </Box>
+            <Text fontFamily={MONO} fontSize="12px" fontWeight={600} color={T.ink} w="62px"
+              textAlign="right" flex="0 0 auto" sx={{ fontVariantNumeric: "tabular-nums" }}>
+              {nf(r.value)}
+            </Text>
+            <Text fontFamily={MONO} fontSize="10.5px" color={T.dim} w="52px" textAlign="right"
+              flex="0 0 auto">{r.rate}</Text>
+            <Text fontSize="10.5px" color={T.dim} w="128px" flex="0 0 auto" noOfLines={1}>
+              {r.note ?? ""}
+            </Text>
+          </Flex>
+        ))}
+      </Flex>
+    </Box>
+  );
+}
+
 /* ---------------------------------------------------------------- detail */
-function Detail({ row, data }: { row: Row; data: Data }) {
+function Detail({ row, data, v }: { row: Row; data: Data; v: View }) {
   const [metric, setMetric] = useState<ShareMetric>("impressions");
   const color = data.mediaTypes.find(
     (m) => m.key === data.campaigns.find((c) => c.id === row.campaign)!.mediaType)!.color;
@@ -180,18 +234,22 @@ function Detail({ row, data }: { row: Row; data: Data }) {
             )}
           </Box>
         )}
-        <Flex gap={5} mt={4} wrap="wrap">
-          {[["Impressions", compact(row.impressions)], ["Clicks", nf(row.clicks)],
-            ["Conversions", nf(row.conversions)],
-            ["CTR", pct(row.clicks / row.impressions, 2)],
-            ["CVR", pct(row.conversions / row.clicks, 1)]].map(([k, val]) => (
-            <Box key={k}>
-              <Label as="div">{k}</Label>
-              <Text fontFamily={MONO} fontSize="14px" fontWeight={600} color={T.ink}
-                sx={{ fontVariantNumeric: "tabular-nums" }}>{val}</Text>
-            </Box>
-          ))}
-        </Flex>
+        {row.sections ? (
+          <Box mt={5}><EmailFunnelBlock row={row} v={v} color={color} /></Box>
+        ) : (
+          <Flex gap={5} mt={4} wrap="wrap">
+            {[["Impressions", compact(row.impressions)], ["Clicks", nf(row.clicks)],
+              ["Conversions", nf(row.conversions)],
+              ["CTR", pct(row.clicks / row.impressions, 2)],
+              ["CVR", pct(row.conversions / row.clicks, 1)]].map(([k, val]) => (
+              <Box key={k}>
+                <Label as="div">{k}</Label>
+                <Text fontFamily={MONO} fontSize="14px" fontWeight={600} color={T.ink}
+                  sx={{ fontVariantNumeric: "tabular-nums" }}>{val}</Text>
+              </Box>
+            ))}
+          </Flex>
+        )}
         {row.quartiles && <Box mt={4}><Quartiles q={row.quartiles} color={color} /></Box>}
       </Box>
 
@@ -288,7 +346,7 @@ export default function Creatives({ v, data }: { v: View; data: Data }) {
         const r = rows.find((x) => x.id === id);
         return r ? (
           <Box key={id} mt={3}>
-            <Panel title={r.name}><Detail row={r} data={data} /></Panel>
+            <Panel title={r.name}><Detail row={r} data={data} v={v} /></Panel>
           </Box>
         ) : null;
       })}

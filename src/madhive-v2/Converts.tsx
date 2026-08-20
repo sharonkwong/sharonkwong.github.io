@@ -6,6 +6,7 @@ import {
 import { compact, defaultGrain, GRAIN_OPTIONS, money, nf, pct, rollup, seriesByMedia, shortDate } from "./data";
 import type { Grain, View } from "./data";
 import type { Data, MediaKey, Metric } from "./types";
+import Funnel from "./Funnel";
 import { Label, Legend, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
 
 function DemoBars({ title, rows, color }: {
@@ -119,6 +120,11 @@ export default function Converts({ v, data, days }: { v: View; data: Data; days:
           )}
         </Panel>
       </Grid>
+
+      <Box mt={5}>
+        <Question>Where do impressions stop?</Question>
+        <Funnel v={v} />
+      </Box>
 
       <Box mt={5}>
         <Question>Which days did your customers engage with the ad the most?</Question>

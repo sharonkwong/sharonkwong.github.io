@@ -16,9 +16,9 @@ const VOLUME: Record<string, Metric> = {
   impressions: "impressions", clicks: "clicks", conversions: "conversions", spend: "spend",
 };
 
-function Card({ label, value, second, delta: d, lowerIsBetter, open, onClick }: {
+function Card({ label, value, second, delta: d, lowerIsBetter, note, open, onClick }: {
   label: string; value: string; second?: string; delta: number;
-  lowerIsBetter?: boolean; open: boolean; onClick: () => void;
+  lowerIsBetter?: boolean; note?: string; open: boolean; onClick: () => void;
 }) {
   return (
     <Box as="button" type="button" onClick={onClick} aria-expanded={open} textAlign="left"
@@ -38,6 +38,9 @@ function Card({ label, value, second, delta: d, lowerIsBetter, open, onClick }: 
         )}
       </Flex>
       <Box mt={1.5}><Delta value={d} lowerIsBetter={lowerIsBetter} /></Box>
+      {note && (
+        <Text fontFamily={MONO} fontSize="10px" color={T.dim} mt="3px" noOfLines={1}>{note}</Text>
+      )}
     </Box>
   );
 }
@@ -137,19 +140,31 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
   const cost = (a: number, b: number) => (b > 0 ? a / b : 0);
   const toggle = (id: CardId) => setOpen((o) => (o === id ? null : id));
 
-  const cards: { id: CardId; label: string; value: string; second?: string; delta: number; lower?: boolean }[] = [
-    { id: "impressions", label: "Total Impressions", value: compact(t.impressions),
+  // Email has no impressions; the same field carries delivered. Label it for
+  // whatever is actually in scope rather than averaging two different events
+  // under one word.
+  const mixedEmail = v.email.present && !v.email.only;
+  const cards: { id: CardId; label: string; value: string; second?: string; delta: number; lower?: boolean; note?: string }[] = [
+    { id: "impressions",
+      label: v.email.only ? "Total Delivered" : "Total Impressions",
+      value: compact(t.impressions),
+      note: mixedEmail ? "email counted as delivered" : undefined,
       delta: delta(t.impressions, p.impressions) },
     { id: "clicks", label: "Total Clicks / Click Rate", value: nf(t.clicks),
       second: pct(rate(t.clicks, t.impressions), 2),
+      // On delivered for email, never on opens: Apple MPP inflates opens, and
+      // click-to-open inherits the problem through its denominator.
+      note: v.email.only ? "of delivered" : undefined,
       delta: delta(t.clicks, p.clicks) },
     { id: "conversions", label: "Total Conversions / Conversion Rate", value: nf(t.conversions),
       second: pct(rate(t.conversions, t.clicks), 1),
       delta: delta(t.conversions, p.conversions) },
     { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true },
   ];
-  const costs: { id: CardId; label: string; value: string; delta: number }[] = [
-    { id: "cpm", label: "Cost per Mille", value: money(cost(t.spend, t.impressions) * 1000, 2),
+  const costs: { id: CardId; label: string; value: string; delta: number; note?: string }[] = [
+    { id: "cpm", label: v.email.only ? "Cost per Mille Delivered" : "Cost per Mille",
+      note: mixedEmail ? "email per 1,000 delivered" : undefined,
+      value: money(cost(t.spend, t.impressions) * 1000, 2),
       delta: delta(cost(t.spend, t.impressions), cost(p.spend, p.impressions)) },
     { id: "cpc", label: "Cost per Click", value: money(cost(t.spend, t.clicks), 2),
       delta: delta(cost(t.spend, t.clicks), cost(p.spend, p.clicks)) },

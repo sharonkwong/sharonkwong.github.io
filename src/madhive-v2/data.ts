@@ -139,7 +139,24 @@ export interface View {
   byMedia: Record<MediaKey, Totals>;
   dates: string[];
   media: { key: MediaKey; label: string; color: string }[];
+  /** Email's own funnel. Opens are carried but never used as a denominator. */
+  email: {
+    present: boolean;
+    only: boolean;
+    totals: EmailFunnel;
+    byCampaign: Record<string, EmailFunnel>;
+  };
 }
+
+export interface EmailFunnel {
+  sends: number; delivered: number;
+  opensReported: number; opensModelled: number;
+  clicks: number; conversions: number; unsubs: number;
+}
+const EMPTY_FUNNEL = (): EmailFunnel => ({
+  sends: 0, delivered: 0, opensReported: 0, opensModelled: 0,
+  clicks: 0, conversions: 0, unsubs: 0,
+});
 
 export function useView(data: Data | null, f: Filters | null): View | null {
   return useMemo(() => {
@@ -175,10 +192,33 @@ export function useView(data: Data | null, f: Filters | null): View | null {
     const dates = [...new Set(rows.map((r) => r.date))].sort();
     const media = data.mediaTypes.filter((m) => campaigns.some((c) => c.mediaType === m.key));
 
+    const emailIds = new Set(campaigns.filter((c) => c.mediaType === "email").map((c) => c.id));
+    const emailByCampaign: Record<string, EmailFunnel> = {};
+    const emailTotals = EMPTY_FUNNEL();
+    for (const r of rows) {
+      if (!emailIds.has(r.campaign)) continue;
+      const f = (emailByCampaign[r.campaign] ??= EMPTY_FUNNEL());
+      for (const t of [f, emailTotals]) {
+        t.sends += r.sends ?? 0;
+        t.delivered += r.impressions;
+        t.opensReported += r.opensReported ?? 0;
+        t.opensModelled += r.opensModelled ?? 0;
+        t.clicks += r.clicks;
+        t.conversions += r.conversions;
+        t.unsubs += r.unsubs ?? 0;
+      }
+    }
+
     return {
       campaigns, ids, rows, priorRows,
       totals: sumRows(rows), priorTotals: sumRows(priorRows),
       byCampaign, byMedia, dates, media,
+      email: {
+        present: emailIds.size > 0,
+        only: emailIds.size > 0 && emailIds.size === campaigns.length,
+        totals: emailTotals,
+        byCampaign: emailByCampaign,
+      },
     };
   }, [data, f]);
 }

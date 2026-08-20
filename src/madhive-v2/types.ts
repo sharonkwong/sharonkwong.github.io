@@ -6,10 +6,16 @@ export interface Campaign { id: string; name: string; mediaType: MediaKey }
 export interface DailyRow {
   date: string;
   campaign: string;
+  /** Served impressions. For email campaigns this carries DELIVERED. */
   impressions: number;
   clicks: number;
   conversions: number;
   spend: number;
+  /* Email only. Absent on display and video rows. */
+  sends?: number;
+  opensReported?: number;
+  opensModelled?: number;
+  unsubs?: number;
 }
 
 /** A breakdown is a share of its campaign, never a standalone count. */
@@ -73,6 +79,9 @@ export interface Data {
   demographics: Demographics;
   geo: GeoZip[];
   creatives: Creative[];
+  emailFunnel: Record<string, {
+    deliveryRate: number; openReported: number; openModelled: number; unsubRate: number;
+  }>;
 }
 
 export type Metric = "impressions" | "clicks" | "conversions" | "spend";

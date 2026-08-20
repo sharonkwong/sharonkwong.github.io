@@ -49,6 +49,20 @@ CAMPAIGNS = [
          impressions=500_000, clicks=1_200, conversions=370, spend=12_500),
 ]
 
+# Email does not have impressions. What it has is sends, of which some are
+# delivered, of which some report an open. The `impressions` field carries
+# DELIVERED for email campaigns; these ratios put the rest of the funnel around
+# it so nothing has to be inferred in the UI.
+#
+# Two open numbers are carried and neither is ever a denominator. Apple Mail
+# Privacy Protection fetches the tracking pixel on delivery whether or not
+# anyone opened, so the reported figure is inflated by an unknowable margin and
+# click-to-open inherits the problem. Click rate is taken on delivered.
+EMAIL_FUNNEL = {
+    "c-em-1": dict(deliveryRate=0.978, openReported=0.468, openModelled=0.302, unsubRate=0.0038),
+    "c-em-2": dict(deliveryRate=0.971, openReported=0.414, openModelled=0.267, unsubRate=0.0062),
+}
+
 # ------------------------------------------------------------------- daily
 def shape(seed, i, media):
     weekly = [1.02, 0.96, 0.94, 0.98, 1.05, 1.16, 1.19][i % 7]
@@ -68,15 +82,25 @@ for ci, c in enumerate(CAMPAIGNS):
     w_spd = [w * (1 + 0.05 * math.cos(i * 1.11 + ci)) for i, w in enumerate(w_imp)]
     n = {k: sum(v[DAYS - WINDOW:]) for k, v in
          dict(imp=w_imp, clk=w_clk, cnv=w_cnv, spd=w_spd).items()}
+    fn = EMAIL_FUNNEL.get(c["id"])
     for i in range(DAYS):
-        daily.append(dict(
+        delivered = round(c["impressions"] * w_imp[i] / n["imp"])
+        row = dict(
             date=(START + timedelta(days=i)).isoformat(),
             campaign=c["id"],
-            impressions=round(c["impressions"] * w_imp[i] / n["imp"]),
+            impressions=delivered,          # email: delivered, not served
             clicks=round(c["clicks"] * w_clk[i] / n["clk"]),
             conversions=round(c["conversions"] * w_cnv[i] / n["cnv"], 2),
             spend=round(c["spend"] * w_spd[i] / n["spd"], 2),
-        ))
+        )
+        if fn:
+            row.update(
+                sends=round(delivered / fn["deliveryRate"]),
+                opensReported=round(delivered * fn["openReported"]),
+                opensModelled=round(delivered * fn["openModelled"]),
+                unsubs=round(delivered * fn["unsubRate"], 2),
+            )
+        daily.append(row)
 
 # -------------------------------------------------------------- breakdowns
 def norm(d):
@@ -242,6 +266,7 @@ data = dict(
     campaigns=[{k: v for k, v in c.items()
                 if k in ("id", "name", "mediaType")} for c in CAMPAIGNS],
     daily=daily,
+    emailFunnel=EMAIL_FUNNEL,
     devices=devices,
     demographics=demographics,
     geo=geo,
@@ -257,6 +282,17 @@ w = [d for d in daily if d["date"] >= data["meta"]["defaultStart"]]
 print("Wrote %s  (%.0f KB)" % (os.path.relpath(OUT), kb))
 print("  %d campaigns · %d days · %d creatives · %d ZIPs"
       % (len(CAMPAIGNS), DAYS, len(creatives), len(geo)))
+em = [d for d in w if d["campaign"] in EMAIL_FUNNEL]
+if em:
+    s = {k: sum(d.get(k, 0) for d in em) for k in
+         ("sends", "impressions", "opensReported", "opensModelled", "clicks", "conversions", "unsubs")}
+    print("  email funnel  sends %s -> delivered %s (%.1f%%) -> opens %s reported / %s modelled "
+          "-> clicks %s (%.2f%% of delivered) -> conv %s   unsub %.2f%%"
+          % (f"{s['sends']:,}", f"{s['impressions']:,}", s["impressions"] / s["sends"] * 100,
+             f"{s['opensReported']:,}", f"{s['opensModelled']:,}", f"{s['clicks']:,}",
+             s["clicks"] / s["impressions"] * 100, f"{s['conversions']:,.0f}",
+             s["unsubs"] / s["impressions"] * 100))
+
 for m in MEDIA:
     ids = {c["id"] for c in CAMPAIGNS if c["mediaType"] == m["key"]}
     r = [d for d in w if d["campaign"] in ids]
