@@ -15,8 +15,11 @@ export const T = {
   up: "#3fb950",
   down: "#f85149",
   focus: "#58a6ff",
-  /* Sequential ramp for the geo tiles: one hue, monotonic lightness. */
+  /* Sequential ramp for the geo map: one hue, monotonic lightness. */
   ramp: ["#141b26", "#173355", "#1f4d7a", "#2b6cb0", "#4a91d8", "#79c0ff"],
+  /* Funnel stages are ordered, not categorical, so they take a single hue that
+     gets brighter with depth. Every pair clears CVD separation on this surface. */
+  stage: { impressions: "#2b6cb0", clicks: "#5aa0e0", conversions: "#a6d3ff" },
 };
 
 export const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";

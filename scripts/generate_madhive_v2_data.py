@@ -168,8 +168,43 @@ ZIPS = [
     ("97219", 1, 4, "Multnomah Village",   0.79,  99_800, 41.3, .58),
     ("97266", 3, 4, "Lents",               0.61,  57_600, 34.4, .22),
 ]
-geo = []
+# Device and mobile-OS profile per ZIP. Modelled, not measured: the tilt is
+# seeded off median income and then reconciled by iterative proportional
+# fitting so that, weighted by impressions, the ZIP-level device split adds
+# back up to the campaign-level one. Without that step the map and the device
+# chart would be two numbers that must agree and quietly do not.
+DEVICES = ["Mobile", "Desktop", "Tablet"]
+
+def zip_device_matrix(zips, target_share, row_weight):
+    tilt = []
+    for (_z, _c, _r, _n, _w, inc, _age, _deg) in zips:
+        lean = (inc - 82_000) / 82_000          # richer areas skew to desktop
+        tilt.append([max(0.05, 1 - 0.45 * lean), max(0.05, 1 + 0.80 * lean), 1.0])
+    m = [[t[j] * target_share[DEVICES[j]] for j in range(3)] for t in tilt]
+    for _ in range(60):                          # rows to impressions, columns to target
+        for i, r in enumerate(m):
+            s = sum(r) or 1
+            for j in range(3):
+                m[i][j] *= row_weight[i] / s
+        for j in range(3):
+            s = sum(m[i][j] for i in range(len(m))) or 1
+            for i in range(len(m)):
+                m[i][j] *= target_share[DEVICES[j]] / s
+    return m
+
+_imp_by_zip = []
 for z, col, row, name, w, inc, age, deg in ZIPS:
+    _imp_by_zip.append(w)
+_tot_w = sum(_imp_by_zip)
+_row_weight = [x / _tot_w for x in _imp_by_zip]
+_blend = {d: sum(c["impressions"] * DEVICE_SPLIT[c["mediaType"]][d][0] for c in CAMPAIGNS)
+          for d in DEVICES}
+_bt = sum(_blend.values())
+_target = {d: v / _bt for d, v in _blend.items()}
+_matrix = zip_device_matrix(ZIPS, _target, _row_weight)
+
+geo = []
+for zi, (z, col, row, name, w, inc, age, deg) in enumerate(ZIPS):
     shares = {}
     for c in CAMPAIGNS:
         jitter = 1 + random.uniform(-0.22, 0.22)
@@ -179,8 +214,16 @@ for z, col, row, name, w, inc, age, deg in ZIPS:
             clickShare=round(w * jitter * (1 + random.uniform(-0.14, 0.14)), 4),
             conversionShare=round((w ** 1.35) * jitter * (1 + random.uniform(-0.18, 0.18)), 4),
         )
+    dev_row = _matrix[zi]
+    dev_tot = sum(dev_row)
+    # iOS share of this ZIP's mobile traffic. Modelled off income, bounded so no
+    # area lands somewhere the real world does not.
+    ios = min(0.78, max(0.34, 0.52 + (inc - 82_000) / 82_000 * 0.30
+                        + random.uniform(-0.035, 0.035)))
     geo.append(dict(zip=z, name=name, col=col, row=row, shares=shares,
-                    medianIncome=inc, medianAge=age, degreeShare=deg))
+                    medianIncome=inc, medianAge=age, degreeShare=deg,
+                    devices={d: round(dev_row[j] / dev_tot, 4) for j, d in enumerate(DEVICES)},
+                    os={"iOS": round(ios, 4), "Android": round(1 - ios, 4)}))
 for field in ("impressionShare", "clickShare", "conversionShare"):
     for c in CAMPAIGNS:
         t = sum(g["shares"][c["id"]][field] for g in geo)

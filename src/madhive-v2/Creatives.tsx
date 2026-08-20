@@ -13,6 +13,19 @@ export type Row = ReturnType<typeof creativeTotals>[number];
 
 const MAX_OPEN = 3;
 
+/* --------------------------------------------------------------- size tag */
+/** The rendered size never matches the real one, so the creative says its own. */
+function SizeTag({ row }: { row: Row }) {
+  return (
+    <Box position="absolute" top="6px" right="6px" zIndex={1} pointerEvents="none"
+      bg="rgba(255,255,255,0.14)" color="rgba(255,255,255,0.88)"
+      backdropFilter="blur(2px)" borderRadius="3px" px="6px" py="2px"
+      fontFamily={MONO} fontSize="10px" fontWeight={500} whiteSpace="nowrap">
+      {row.dimensions}{row.seconds ? ` · :${row.seconds}` : ""}
+    </Box>
+  );
+}
+
 /* ------------------------------------------------------------ select dot */
 function Dot({ on, disabled }: { on: boolean; disabled: boolean }) {
   return (
@@ -101,6 +114,7 @@ function Sections({ row, color }: { row: Row; color: string }) {
         <Box position="relative" w={`${IMG_W}px`} h={`${imgH}px`} flex="0 0 auto">
           <Box as="img" src={row.asset} alt={`${row.name} creative`}
             w={`${IMG_W}px`} h={`${imgH}px`} display="block" borderRadius="4px" />
+          <SizeTag row={row} />
           {sections.map((s) => {
             const on = hover === s.key;
             return (
@@ -223,7 +237,9 @@ function Detail({ row, data, v }: { row: Row; data: Data; v: View }) {
       <Box>
         {row.sections ? <Sections row={row} color={color} /> : (
           <Box bg={T.bg} border="1px solid" borderColor={T.line} borderRadius="6px" p={3}
-            display="flex" alignItems="center" justifyContent="center" minH="200px">
+            display="flex" alignItems="center" justifyContent="center" minH="200px"
+            position="relative">
+            <SizeTag row={row} />
             {row.assetKind === "video" ? (
               <Box as="video" src={row.asset} poster={row.poster ?? undefined} controls muted
                 playsInline preload="none" w="100%" borderRadius="4px"

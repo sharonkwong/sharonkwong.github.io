@@ -39,6 +39,10 @@ export interface GeoZip {
   medianIncome: number;
   medianAge: number;
   degreeShare: number;
+  /** Share of this ZIP's impressions, reconciled to the campaign-level split. */
+  devices: Record<string, number>;
+  /** Share of this ZIP's mobile impressions. */
+  os: Record<string, number>;
 }
 
 export interface Placement extends ShareRow { site: string }
