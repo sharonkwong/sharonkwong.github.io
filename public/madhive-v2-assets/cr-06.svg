@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900" role="img" aria-label="2 for 1 — placeholder creative, 600 by 900">
+  <defs><linearGradient id="gcr-06" x1="0" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#12161d"/><stop offset="100%" stop-color="#26313f"/>
+  </linearGradient></defs>
+  <rect width="600" height="900" fill="url(#gcr-06)"/>
+  <circle cx="300" cy="468" r="114" fill="#e8543f" opacity="0.16"/>
+  <circle cx="300" cy="468" r="82" fill="none" stroke="#e8c07d" stroke-width="1.5" opacity="0.5"/>
+  <text x="300" y="486" text-anchor="middle" font-family="Inter, system-ui, sans-serif"
+    font-size="52" font-weight="800" fill="#e8c07d">2 for 1</text>
+  <text x="22" y="38" font-family="Inter, system-ui, sans-serif" font-size="10"
+    font-weight="700" letter-spacing="1.7" fill="#5fb87a">EVERY TUESDAY</text>
+  <text x="22" y="70" font-family="Inter, system-ui, sans-serif" font-size="23" font-weight="600" fill="#faf6ef" opacity="0.88">Second pizza half price,</text><text x="22" y="97" font-family="Inter, system-ui, sans-serif" font-size="23" font-weight="600" fill="#faf6ef" opacity="0.88">all day, all shops</text>
+  <rect x="22" y="826" width="556" height="52" rx="4" fill="#e8543f"/>
+  <text x="300" y="857" text-anchor="middle"
+    font-family="Inter, system-ui, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Order for tonight</text>
+  <text x="595" y="895" text-anchor="end" font-family="ui-monospace, monospace"
+    font-size="7.5" fill="#faf6ef" opacity="0.4">ELITE PIZZA · 600x900</text>
+</svg>

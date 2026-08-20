@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="600" viewBox="0 0 160 600" role="img" aria-label="20 min — placeholder creative, 160 by 600">
+  <defs><linearGradient id="gcr-05" x1="0" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#12161d"/><stop offset="100%" stop-color="#26313f"/>
+  </linearGradient></defs>
+  <rect width="160" height="600" fill="url(#gcr-05)"/>
+  <circle cx="80" cy="312" r="30" fill="#e8543f" opacity="0.16"/>
+  <circle cx="80" cy="312" r="22" fill="none" stroke="#e8c07d" stroke-width="1.5" opacity="0.5"/>
+  <text x="80" y="321" text-anchor="middle" font-family="Inter, system-ui, sans-serif"
+    font-size="26" font-weight="800" fill="#e8c07d">20 min</text>
+  <text x="10" y="26" font-family="Inter, system-ui, sans-serif" font-size="8"
+    font-weight="700" letter-spacing="1.7" fill="#5fb87a">STILL WARM</text>
+  <text x="10" y="48" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600" fill="#faf6ef" opacity="0.88">Fresh from</text><text x="10" y="65" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600" fill="#faf6ef" opacity="0.88">the oven</text>
+  <rect x="10" y="560" width="140" height="30" rx="4" fill="#e8543f"/>
+  <text x="80" y="579" text-anchor="middle"
+    font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#ffffff">Order</text>
+  <text x="155" y="595" text-anchor="end" font-family="ui-monospace, monospace"
+    font-size="7.5" fill="#faf6ef" opacity="0.4">ELITE PIZZA · 160x600</text>
+</svg>

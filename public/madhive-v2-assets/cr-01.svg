@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="250" viewBox="0 0 300 250" role="img" aria-label="$26 — placeholder creative, 300 by 250">
+  <defs><linearGradient id="gcr-01" x1="0" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#12161d"/><stop offset="100%" stop-color="#26313f"/>
+  </linearGradient></defs>
+  <rect width="300" height="250" fill="url(#gcr-01)"/>
+  <circle cx="150" cy="155" r="55" fill="#e8543f" opacity="0.16"/>
+  <circle cx="150" cy="155" r="40" fill="none" stroke="#e8c07d" stroke-width="1.5" opacity="0.5"/>
+  <text x="150" y="167" text-anchor="middle" font-family="Inter, system-ui, sans-serif"
+    font-size="34" font-weight="800" fill="#e8c07d">$26</text>
+  <text x="22" y="38" font-family="Inter, system-ui, sans-serif" font-size="10"
+    font-weight="700" letter-spacing="1.7" fill="#5fb87a">FAMILY BUNDLE</text>
+  <text x="22" y="70" font-family="Inter, system-ui, sans-serif" font-size="17" font-weight="600" fill="#faf6ef" opacity="0.88">Two larges,</text><text x="22" y="91" font-family="Inter, system-ui, sans-serif" font-size="17" font-weight="600" fill="#faf6ef" opacity="0.88">breadsticks, soda</text>
+  <rect x="22" y="190" width="256" height="38" rx="4" fill="#e8543f"/>
+  <text x="150" y="213" text-anchor="middle"
+    font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">Order now</text>
+  <text x="295" y="245" text-anchor="end" font-family="ui-monospace, monospace"
+    font-size="7.5" fill="#faf6ef" opacity="0.4">ELITE PIZZA · 300x250</text>
+</svg>

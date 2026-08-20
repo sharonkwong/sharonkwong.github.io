@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="600" viewBox="0 0 300 600" role="img" aria-label="Now baking — placeholder creative, 300 by 600">
+  <defs><linearGradient id="gcr-03" x1="0" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#12161d"/><stop offset="100%" stop-color="#26313f"/>
+  </linearGradient></defs>
+  <rect width="300" height="600" fill="url(#gcr-03)"/>
+  <circle cx="150" cy="312" r="57" fill="#e8543f" opacity="0.16"/>
+  <circle cx="150" cy="312" r="41" fill="none" stroke="#e8c07d" stroke-width="1.5" opacity="0.5"/>
+  <text x="150" y="324" text-anchor="middle" font-family="Inter, system-ui, sans-serif"
+    font-size="34" font-weight="800" fill="#e8c07d">Now baking</text>
+  <text x="22" y="38" font-family="Inter, system-ui, sans-serif" font-size="10"
+    font-weight="700" letter-spacing="1.7" fill="#5fb87a">NEW</text>
+  <text x="22" y="70" font-family="Inter, system-ui, sans-serif" font-size="17" font-weight="600" fill="#faf6ef" opacity="0.88">Detroit-style,</text><text x="22" y="91" font-family="Inter, system-ui, sans-serif" font-size="17" font-weight="600" fill="#faf6ef" opacity="0.88">crispy edge</text>
+  <rect x="22" y="540" width="256" height="38" rx="4" fill="#e8543f"/>
+  <text x="150" y="563" text-anchor="middle"
+    font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">Try a square</text>
+  <text x="295" y="595" text-anchor="end" font-family="ui-monospace, monospace"
+    font-size="7.5" fill="#faf6ef" opacity="0.4">ELITE PIZZA · 300x600</text>
+</svg>
