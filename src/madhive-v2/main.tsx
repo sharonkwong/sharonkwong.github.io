@@ -6,7 +6,6 @@ import Creatives from "./Creatives";
 import Delivery from "./Delivery";
 import FilterBar from "./Filters";
 import SankeyFlow from "./Sankey";
-import Summary from "./Summary";
 import TopLine from "./TopLine";
 import { compact, daysBetween, money, nf, useData, useFilters, useView } from "./data";
 import { Label, MONO, Question, SectionTitle, T } from "./ui";
@@ -82,10 +81,7 @@ function Page() {
 
         <FilterBar data={data} f={f} set={set} />
 
-        <SectionTitle>Summary</SectionTitle>
-        <Summary v={v} data={data} />
-
-        <Box mt={9}><SectionTitle>Top Line Metrics</SectionTitle></Box>
+        <SectionTitle>Top Line Metrics</SectionTitle>
         <TopLine v={v} data={data} />
 
         <Box mt={9}><SectionTitle>What, When &amp; Who Converts</SectionTitle></Box>
