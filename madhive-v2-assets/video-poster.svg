@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Video creative poster frame">
+  <defs><linearGradient id="vp" x1="0" y1="0" x2="0.6" y2="1">
+    <stop offset="0%" stop-color="#12161d"/><stop offset="100%" stop-color="#26313f"/>
+  </linearGradient></defs>
+  <rect width="1280" height="720" fill="url(#vp)"/>
+  <circle cx="1040" cy="180" r="300" fill="#e8543f" opacity="0.12"/>
+  <text x="64" y="112" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="700"
+    letter-spacing="4" fill="#5fb87a">ELITE PIZZA</text>
+  <text x="64" y="204" font-family="Inter, system-ui, sans-serif" font-size="76" font-weight="800" fill="#e8c07d">Fresh out the oven</text>
+  <text x="64" y="262" font-family="Inter, system-ui, sans-serif" font-size="30" fill="#faf6ef" opacity="0.75">hot at your door in 20 minutes</text>
+  <circle cx="640" cy="470" r="62" fill="#faf6ef" opacity="0.92"/>
+  <path d="M 620 436 L 678 470 L 620 504 Z" fill="#12161d"/>
+  <text x="1264" y="706" text-anchor="end" font-family="ui-monospace, monospace" font-size="16"
+    fill="#faf6ef" opacity="0.4">ELITE PIZZA · 1280x720</text>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750" role="img" aria-label="$5 off — placeholder creative, 600 by 750">
+  <defs><linearGradient id="gcr-08" x1="0" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#12161d"/><stop offset="100%" stop-color="#26313f"/>
+  </linearGradient></defs>
+  <rect width="600" height="750" fill="url(#gcr-08)"/>
+  <circle cx="300" cy="390" r="114" fill="#e8543f" opacity="0.16"/>
+  <circle cx="300" cy="390" r="82" fill="none" stroke="#e8c07d" stroke-width="1.5" opacity="0.5"/>
+  <text x="300" y="408" text-anchor="middle" font-family="Inter, system-ui, sans-serif"
+    font-size="52" font-weight="800" fill="#e8c07d">$5 off</text>
+  <text x="22" y="38" font-family="Inter, system-ui, sans-serif" font-size="10"
+    font-weight="700" letter-spacing="1.7" fill="#5fb87a">WE MISS YOU</text>
+  <text x="22" y="70" font-family="Inter, system-ui, sans-serif" font-size="23" font-weight="600" fill="#faf6ef" opacity="0.88">Take $5 off your</text><text x="22" y="97" font-family="Inter, system-ui, sans-serif" font-size="23" font-weight="600" fill="#faf6ef" opacity="0.88">next order</text>
+  <rect x="22" y="676" width="556" height="52" rx="4" fill="#e8543f"/>
+  <text x="300" y="707" text-anchor="middle"
+    font-family="Inter, system-ui, sans-serif" font-size="15" font-weight="700" fill="#ffffff">Redeem</text>
+  <text x="595" y="745" text-anchor="end" font-family="ui-monospace, monospace"
+    font-size="7.5" fill="#faf6ef" opacity="0.4">ELITE PIZZA · 600x750</text>
+</svg>
