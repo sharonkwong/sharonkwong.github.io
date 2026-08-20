@@ -14,6 +14,7 @@ export default defineConfig({
         madhive: 'madhive/index.html',
         modeling: 'madhive/modeling/index.html',
         madhiveV2: 'madhive/v2/index.html',
+        madhiveModels: 'madhive/models/index.html',
       },
     },
   },
