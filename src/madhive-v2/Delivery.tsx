@@ -123,9 +123,14 @@ function Geo({ v, data }: { v: View; data: Data }) {
     (max > min ? (val - min) / (max - min) : 1) > 0.6;
 
   return (
-    <Panel right={<Toggle ariaLabel="Geo measure" options={METRIC_OPTS} value={metric} onChange={setMetric} />}>
-      <Grid templateColumns={{ base: "1fr", lg: "1fr 268px" }} gap={5}>
+    <Panel>
+      {/* The toggle sits in the map column, so the divider runs the full height
+          of the panel and the control lines up with the map's right edge. */}
+      <Grid templateColumns={{ base: "1fr", lg: "1fr 268px" }} gap={5} alignItems="stretch">
         <Box>
+          <Flex justify="flex-end" mb={3}>
+            <Toggle ariaLabel="Geo measure" options={METRIC_OPTS} value={metric} onChange={setMetric} />
+          </Flex>
           {shapes && (
             <Box>
               <GeoMap shapes={shapes}
