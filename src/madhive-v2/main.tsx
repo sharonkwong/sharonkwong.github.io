@@ -5,6 +5,7 @@ import Converts from "./Converts";
 import Creatives from "./Creatives";
 import Delivery from "./Delivery";
 import FilterBar from "./Filters";
+import Summary from "./Summary";
 import TopLine from "./TopLine";
 import { compact, daysBetween, money, nf, useData, useFilters, useView } from "./data";
 import { Label, MONO, SectionTitle, T } from "./ui";
@@ -80,7 +81,10 @@ function Page() {
 
         <FilterBar data={data} f={f} set={set} />
 
-        <SectionTitle>Top Line Metrics</SectionTitle>
+        <SectionTitle>Summary</SectionTitle>
+        <Summary v={v} data={data} />
+
+        <Box mt={9}><SectionTitle>Top Line Metrics</SectionTitle></Box>
         <TopLine v={v} data={data} />
 
         <Box mt={9}><SectionTitle>What, When &amp; Who Converts</SectionTitle></Box>

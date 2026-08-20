@@ -115,7 +115,6 @@ function CopyLink() {
   };
   return (
     <Button onClick={copy} aria-label="Copy a link to this report"
-      color={done ? T.up : undefined} borderColor={done ? T.up : undefined}
       px={2.5} display="inline-flex" alignItems="center" gap={1.5}>
       <Box as="svg" viewBox="0 0 16 16" w="13px" h="13px" fill="none"
         stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" flex="0 0 auto">
