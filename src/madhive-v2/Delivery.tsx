@@ -1,8 +1,7 @@
-import type React from "react";
 import { Box, Flex, Grid, Text } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import {
-  Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer,
+  CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ReferenceLine, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
 import { compact, defaultGrain, GRAIN_OPTIONS, deviceTotals, geoAll, geoTotals, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
@@ -75,60 +74,75 @@ const STAGES = [
   { key: "conversions" as const, label: "Conversions" },
 ];
 
+const RAD = Math.PI / 180;
+
 /**
- * One group per device, one bar per funnel stage. The bars carry each device's
- * SHARE of that stage, not its count: impressions run to millions and
- * conversions to thousands, so on one linear axis of counts the two smaller
- * series would be invisible. Shares put all three on the same axis and answer
- * the question the chart is for -- whether a device over- or under-indexes as
- * you go deeper.
+ * One pie per funnel stage, split by device.
+ *
+ * Three separate wholes rather than one: impressions run to millions and
+ * conversions to thousands, so the interesting comparison is between the
+ * compositions, not between the totals. Each pie is 100% of its own stage and
+ * says so underneath.
  */
 function Devices({ v, data }: { v: View; data: Data }) {
-  const totals = Object.fromEntries(STAGES.map((s) => {
+  const stages = STAGES.map((s) => {
     const rows = deviceTotals(v, data.devices, s.key);
-    const sum = rows.reduce((a, r) => a + r.value, 0) || 1;
-    return [s.key, { rows, sum }];
-  })) as Record<ShareMetric, { rows: { device: string; value: number }[]; sum: number }>;
-
-  const devices = totals.impressions.rows.map((r) => r.device);
-  const rows = devices.map((device) => {
-    const o: Record<string, number | string> = { device };
-    for (const s of STAGES) {
-      const hit = totals[s.key].rows.find((r) => r.device === device);
-      o[s.key] = (hit?.value ?? 0) / totals[s.key].sum;
-      o[`${s.key}Abs`] = hit?.value ?? 0;
-    }
-    return o;
+    const total = rows.reduce((a, r) => a + r.value, 0);
+    return { ...s, rows, total };
   });
+  const devices = stages[0].rows.map((r) => r.device);
+
+  const label = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: {
+    cx: number; cy: number; midAngle: number;
+    innerRadius: number; outerRadius: number; percent: number;
+  }) => {
+    // Small slices cannot hold their own label, so those sit just outside.
+    const inside = percent >= 0.12;
+    const r = inside ? innerRadius + (outerRadius - innerRadius) * 0.55 : outerRadius + 15;
+    const x = cx + r * Math.cos(-midAngle * RAD);
+    const y = cy + r * Math.sin(-midAngle * RAD);
+    return (
+      <text x={x} y={y} fill={inside ? T.bg : T.muted}
+        textAnchor={inside ? "middle" : x > cx ? "start" : "end"} dominantBaseline="central"
+        fontFamily={MONO} fontSize={inside ? 12.5 : 11} fontWeight={inside ? 700 : 500}>
+        {`${(percent * 100).toFixed(percent < 0.1 ? 1 : 0)}%`}
+      </text>
+    );
+  };
 
   return (
-    <Panel right={<Legend items={STAGES.map((s) => ({ label: s.label, color: T.stage[s.key] }))} />}>
-      <Box h="250px">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={rows} margin={{ top: 18, right: 8, bottom: 0, left: 0 }} barCategoryGap="26%">
-            <CartesianGrid stroke={T.lineSoft} vertical={false} />
-            <XAxis dataKey="device" tick={{ fontSize: 12, fill: T.muted }} stroke={T.line} />
-            <YAxis tickFormatter={(n: number) => `${Math.round(n * 100)}%`} domain={[0, "auto"]}
-              width={46} tick={{ fontSize: 10, fill: T.dim, fontFamily: MONO }} stroke={T.line} />
-            <Tooltip cursor={{ fill: T.lineSoft }} content={({ active, payload, label }) =>
-              active && payload?.length ? (
-                <Tip title={String(label)} rows={payload.map((p) => {
-                  const k = String(p.dataKey);
-                  return {
-                    label: STAGES.find((s) => s.key === k)?.label ?? k,
-                    value: `${nf(Number(p.payload[`${k}Abs`]))}  ${pct(Number(p.value), 1)}`,
-                    color: String(p.fill),
-                  };
-                })} />) : null} />
-            {STAGES.map((s) => (
-              <Bar key={s.key} dataKey={s.key} fill={T.stage[s.key]} radius={[3, 3, 0, 0]}
-                maxBarSize={46} isAnimationActive={false}
-                label={{ position: "top", formatter: (n: React.ReactNode) => `${Math.round(Number(n) * 100)}%`,
-                  fill: T.dim, fontSize: 10, fontFamily: MONO }} />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
-      </Box>
+    <Panel right={
+      <Legend items={devices.map((d) => ({ label: d, color: T.device[d] ?? T.dim }))} />
+    }>
+      <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={4}>
+        {stages.map((s) => (
+          <Box key={s.key}>
+            <Flex justify="center" align="baseline" gap={2} mb={1}>
+              <Text fontSize="12.5px" fontWeight={600} color={T.ink}>{s.label}</Text>
+              <Text fontFamily={MONO} fontSize="11px" color={T.dim}>{compact(s.total)}</Text>
+            </Flex>
+            <Box h="212px">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 6, right: 6, bottom: 6, left: 6 }}>
+                  <Pie data={s.rows} dataKey="value" nameKey="device" cx="50%" cy="50%"
+                    outerRadius="76%" stroke={T.surface} strokeWidth={2}
+                    labelLine={false} label={label as never} isAnimationActive={false}>
+                    {s.rows.map((r) => (
+                      <Cell key={r.device} fill={T.device[r.device] ?? T.dim} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={({ active, payload }) =>
+                    active && payload?.length ? (
+                      <Tip title={`${s.label} — ${String(payload[0].name)}`} rows={[
+                        { label: "count", value: nf(Number(payload[0].value)) },
+                        { label: "share", value: pct(Number(payload[0].value) / s.total, 1) },
+                      ]} />) : null} />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
+          </Box>
+        ))}
+      </Grid>
     </Panel>
   );
 }
@@ -240,7 +254,7 @@ function Geo({ v, data }: { v: View; data: Data }) {
               <Label as="div" mt={4} mb={2}>Device</Label>
               <SplitBars rows={Object.entries(detail.devices)} color={T.ramp[4]} />
               <Label as="div" mt={4} mb={2}>Mobile OS</Label>
-              <SplitBars rows={Object.entries(detail.os)} color={T.stage.clicks} />
+              <SplitBars rows={Object.entries(detail.os)} color={T.device.Mobile} />
               <Label as="div" mt={4} mb={2}>Area profile</Label>
               <Flex direction="column" gap={2}>
                 {[["Median income", `$${detail.medianIncome.toLocaleString("en-US")}`],

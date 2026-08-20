@@ -17,9 +17,10 @@ export const T = {
   focus: "#58a6ff",
   /* Sequential ramp for the geo map: one hue, monotonic lightness. */
   ramp: ["#141b26", "#173355", "#1f4d7a", "#2b6cb0", "#4a91d8", "#79c0ff"],
-  /* Funnel stages are ordered, not categorical, so they take a single hue that
-     gets brighter with depth. Every pair clears CVD separation on this surface. */
-  stage: { impressions: "#2b6cb0", clicks: "#5aa0e0", conversions: "#a6d3ff" },
+  /* Devices are their own categorical dimension, so they get their own hues --
+     deliberately not the media-type set, which means something else on this
+     page. Every pair clears CVD separation on this surface. */
+  device: { Mobile: "#56d4dd", Desktop: "#a78bfa", Tablet: "#fb923c" } as Record<string, string>,
 };
 
 export const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
