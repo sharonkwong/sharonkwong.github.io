@@ -49,14 +49,45 @@ export interface Filters {
   end: string;
 }
 
+const MEDIA_KEYS: MediaKey[] = ["display", "email", "video"];
+const isDate = (s: string | null): s is string => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+function fromUrl(data: Data): Filters {
+  const q = new URLSearchParams(window.location.search);
+  const csv = (k: string) => (q.get(k) ?? "").split(",").filter(Boolean);
+  const start = q.get("start"), end = q.get("end");
+  return {
+    media: csv("media").filter((m): m is MediaKey => MEDIA_KEYS.includes(m as MediaKey)),
+    campaigns: csv("campaigns").filter((c) => data.campaigns.some((x) => x.id === c)),
+    start: isDate(start) ? start : data.meta.defaultStart,
+    end: isDate(end) ? end : data.meta.defaultEnd,
+  };
+}
+
+function toUrl(f: Filters, data: Data) {
+  const q = new URLSearchParams();
+  if (f.media.length) q.set("media", f.media.join(","));
+  if (f.campaigns.length) q.set("campaigns", f.campaigns.join(","));
+  if (f.start !== data.meta.defaultStart) q.set("start", f.start);
+  if (f.end !== data.meta.defaultEnd) q.set("end", f.end);
+  const s = q.toString();
+  window.history.replaceState(null, "", `${window.location.pathname}${s ? `?${s}` : ""}`);
+}
+
+/** Filters live in the query string, so any view of this page is a link. */
 export function useFilters(data: Data | null) {
   const [f, setF] = useState<Filters | null>(null);
   useEffect(() => {
-    if (data && !f) {
-      setF({ media: [], campaigns: [], start: data.meta.defaultStart, end: data.meta.defaultEnd });
-    }
+    if (data && !f) setF(fromUrl(data));
   }, [data, f]);
-  return [f, (patch: Partial<Filters>) => setF((p) => (p ? { ...p, ...patch } : p))] as const;
+  const set = (patch: Partial<Filters>) =>
+    setF((p) => {
+      if (!p || !data) return p;
+      const next = { ...p, ...patch };
+      toUrl(next, data);
+      return next;
+    });
+  return [f, set] as const;
 }
 
 /** Campaigns surviving the media-type and campaign filters. */
@@ -227,30 +258,46 @@ export function placementTotals(c: ReturnType<typeof creativeTotals>[number], me
 }
 
 /** Roll a daily series up to week starts. 90 daily points is a picket fence. */
-export function rollup(rows: MediaSeriesRow[], grain: "day" | "week"): MediaSeriesRow[] {
+export type Grain = "day" | "week" | "month";
+
+const daysInMonth = (iso: string) => {
+  const d = new Date(`${iso}T00:00:00`);
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+};
+
+export function rollup(rows: MediaSeriesRow[], grain: Grain): MediaSeriesRow[] {
   if (grain === "day") return rows;
   const keys: MediaKey[] = ["display", "email", "video"];
   const out = new Map<string, MediaSeriesRow>();
   const days = new Map<string, number>();
   for (const r of rows) {
     const d = new Date(`${r.date}T00:00:00`);
-    d.setDate(d.getDate() - d.getDay());          // week starts Sunday
-    const k = d.toISOString().slice(0, 10);
+    if (grain === "week") d.setDate(d.getDate() - d.getDay());   // week starts Sunday
+    else d.setDate(1);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     days.set(k, (days.get(k) ?? 0) + 1);
     const acc = out.get(k);
     if (!acc) out.set(k, { ...r, date: k });
     else for (const m of keys) acc[m] += r[m];
   }
-  // A part-week at either edge plots as a cliff that never happened. Drop them,
-  // but never so far that nothing is left to draw.
-  let weeks = [...out.values()];
-  while (weeks.length > 2 && (days.get(weeks[0].date) ?? 0) < 7) weeks = weeks.slice(1);
-  while (weeks.length > 2 && (days.get(weeks[weeks.length - 1].date) ?? 0) < 7) weeks = weeks.slice(0, -1);
-  return weeks;
+  // A part-bucket at either edge plots as a cliff that never happened. Drop
+  // them, but never so far that nothing is left to draw.
+  const full = (k: string) => (days.get(k) ?? 0) >= (grain === "week" ? 7 : daysInMonth(k));
+  let out2 = [...out.values()];
+  while (out2.length > 2 && !full(out2[0].date)) out2 = out2.slice(1);
+  while (out2.length > 2 && !full(out2[out2.length - 1].date)) out2 = out2.slice(0, -1);
+  return out2;
 }
 
-/** Long windows are unreadable at daily grain, so they open weekly. */
-export const defaultGrain = (days: number): "day" | "week" => (days > 45 ? "week" : "day");
+/** Long windows are unreadable at daily grain, so they open coarser. */
+export const defaultGrain = (days: number): Grain =>
+  days > 120 ? "month" : days > 45 ? "week" : "day";
+
+export const GRAIN_OPTIONS = [
+  { value: "day" as Grain, label: "Day" },
+  { value: "week" as Grain, label: "Week" },
+  { value: "month" as Grain, label: "Month" },
+];
 
 /* ---------------------------------------------------------------- formatting */
 

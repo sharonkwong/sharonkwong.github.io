@@ -3,8 +3,8 @@ import { useState } from "react";
 import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { compact, defaultGrain, money, nf, pct, rollup, seriesByMedia, shortDate } from "./data";
-import type { View } from "./data";
+import { compact, defaultGrain, GRAIN_OPTIONS, money, nf, pct, rollup, seriesByMedia, shortDate } from "./data";
+import type { Grain, View } from "./data";
 import type { Data, MediaKey, Metric } from "./types";
 import { Label, Legend, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
 
@@ -35,7 +35,7 @@ function DemoBars({ title, rows, color }: {
 export default function Converts({ v, data, days }: { v: View; data: Data; days: number }) {
   const [picked, setPicked] = useState<MediaKey | null>(null);
   const [metric, setMetric] = useState<Metric>("clicks");
-  const [grain, setGrain] = useState<"day" | "week">(defaultGrain(days));
+  const [grain, setGrain] = useState<Grain>(defaultGrain(days));
 
   const rows = v.media.map((m) => {
     const t = v.byMedia[m.key];
@@ -132,8 +132,7 @@ export default function Converts({ v, data, days }: { v: View; data: Data; days:
                   { value: "conversions" as Metric, label: "Conversions" },
                   { value: "impressions" as Metric, label: "Impressions" },
                 ]} />
-              <Toggle ariaLabel="Granularity" value={grain} onChange={setGrain}
-                options={[{ value: "day" as const, label: "Day" }, { value: "week" as const, label: "Week" }]} />
+              <Toggle ariaLabel="Granularity" value={grain} onChange={setGrain} options={GRAIN_OPTIONS} />
             </Flex>
           }>
           <Box h="260px">

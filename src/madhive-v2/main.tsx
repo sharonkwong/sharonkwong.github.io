@@ -6,8 +6,8 @@ import Creatives from "./Creatives";
 import Delivery from "./Delivery";
 import FilterBar from "./Filters";
 import TopLine from "./TopLine";
-import { daysBetween, useData, useFilters, useView } from "./data";
-import { MONO, SectionTitle, T } from "./ui";
+import { compact, daysBetween, money, nf, useData, useFilters, useView } from "./data";
+import { Label, MONO, SectionTitle, T } from "./ui";
 
 const theme = extendTheme({
   config: { initialColorMode: "dark", useSystemColorMode: false },
@@ -42,9 +42,19 @@ function Page() {
   }
 
   const days = daysBetween(f.start, f.end);
-  const names = f.campaigns.length
-    ? data.campaigns.filter((c) => f.campaigns.includes(c.id)).map((c) => c.name)
-    : v.campaigns.map((c) => c.name);
+  // Lifetime: every campaign, every day on record. Deliberately not filtered —
+  // it is the account's standing total, not a view of the current selection.
+  const life = data.daily.reduce((a, r) => ({
+    impressions: a.impressions + r.impressions,
+    conversions: a.conversions + r.conversions,
+    spend: a.spend + r.spend,
+  }), { impressions: 0, conversions: 0, spend: 0 });
+  const lifetime = [
+    ["Campaigns", nf(data.campaigns.length)],
+    ["Impressions", compact(life.impressions)],
+    ["Conversions", nf(life.conversions)],
+    ["Spend", money(life.spend)],
+  ] as const;
 
   return (
     <Box bg={T.bg} minH="100vh" color={T.ink}>
@@ -57,15 +67,15 @@ function Page() {
             <Text fontSize={{ base: "23px", md: "27px" }} fontWeight={650} letterSpacing="-0.022em"
               lineHeight={1.15} color={T.muted}>Ad Performance</Text>
           </Box>
-          <Box textAlign="right" maxW="330px">
-            {names.slice(0, 3).map((n) => (
-              <Text key={n} fontSize="12.5px" color={T.muted} noOfLines={1}>{n}</Text>
+          <Flex gap={{ base: 5, md: 7 }} wrap="wrap" pt={1}>
+            {lifetime.map(([k, val]) => (
+              <Box key={k} textAlign={{ base: "left", sm: "right" }}>
+                <Label as="div" mb="3px">Lifetime {k}</Label>
+                <Text fontFamily={MONO} fontSize="16px" fontWeight={600} color={T.ink}
+                  sx={{ fontVariantNumeric: "tabular-nums" }}>{val}</Text>
+              </Box>
             ))}
-            {names.length > 3 && (
-              <Text fontSize="12.5px" color={T.dim}>+{names.length - 3} more</Text>
-            )}
-            <Text fontFamily={MONO} fontSize="11px" color={T.dim} mt={1.5}>{days} days</Text>
-          </Box>
+          </Flex>
         </Flex>
 
         <FilterBar data={data} f={f} set={set} />

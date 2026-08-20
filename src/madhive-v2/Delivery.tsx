@@ -5,8 +5,8 @@ import {
   Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
-import { compact, defaultGrain, deviceTotals, geoAll, geoTotals, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
-import type { View } from "./data";
+import { compact, defaultGrain, GRAIN_OPTIONS, deviceTotals, geoAll, geoTotals, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
+import type { Grain, View } from "./data";
 import type { Data, ShareMetric } from "./types";
 import GeoMap from "./GeoMap";
 import { DataTable, Label, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
@@ -20,14 +20,13 @@ const METRIC_OPTS = [
 
 /* --------------------------------------------------------------- delivery */
 function Pacing({ v, data, days }: { v: View; data: Data; days: number }) {
-  const [grain, setGrain] = useState<"day" | "week">(defaultGrain(days));
+  const [grain, setGrain] = useState<Grain>(defaultGrain(days));
   const series = rollup(seriesByMedia(v, data, "impressions"), grain);
   // Display runs ~5x video and ~12x email. On one shared axis the two smaller
   // series flatten into the floor, so each gets its own panel and its own scale.
   return (
     <Panel right={
-      <Toggle ariaLabel="Granularity" value={grain} onChange={setGrain}
-        options={[{ value: "day" as const, label: "Day" }, { value: "week" as const, label: "Week" }]} />
+      <Toggle ariaLabel="Granularity" value={grain} onChange={setGrain} options={GRAIN_OPTIONS} />
     }>
       <Grid templateColumns={{ base: "1fr", md: `repeat(${v.media.length}, 1fr)` }} gap={4}>
         {v.media.map((m) => {
@@ -39,7 +38,7 @@ function Pacing({ v, data, days }: { v: View; data: Data; days: number }) {
                 <Box w="9px" h="9px" borderRadius="2px" bg={m.color} />
                 <Text fontSize="12px" color={T.ink}>{m.label}</Text>
                 <Text ml="auto" fontFamily={MONO} fontSize="11px" color={T.dim}>
-                  avg {compact(mean)}/{grain === "day" ? "day" : "wk"}
+                  avg {compact(mean)}/{grain === "day" ? "day" : grain === "week" ? "wk" : "mo"}
                 </Text>
               </Flex>
               <Box h="170px">
