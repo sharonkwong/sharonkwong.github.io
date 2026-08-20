@@ -4,6 +4,7 @@ import type {
 } from "./types";
 
 const URL = "../../data/madhive-v2.json";
+const SHAPES_URL = "../../data/madhive-v2-shapes.json";
 
 export function useData() {
   const [data, setData] = useState<Data | null>(null);
@@ -17,6 +18,26 @@ export function useData() {
     return () => { live = false; };
   }, []);
   return { data, error };
+}
+
+export interface Shapes {
+  source: { zcta: string; nation: string; url: string; note: string };
+  zips: { zip: string; rings: number[][][] }[];
+  nation: number[][][];
+}
+
+/** Boundaries load on their own so the dashboard paints before the geometry. */
+export function useShapes() {
+  const [shapes, setShapes] = useState<Shapes | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch(SHAPES_URL)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s: Shapes | null) => live && setShapes(s))
+      .catch(() => undefined);
+    return () => { live = false; };
+  }, []);
+  return shapes;
 }
 
 /* ------------------------------------------------------------------ filters */
@@ -155,6 +176,23 @@ export function geoTotals(v: View, geo: GeoZip[], metric: ShareMetric) {
     value: v.campaigns.reduce(
       (s, c) => s + (v.byCampaign[c.id]?.[metric] ?? 0) * (g.shares[c.id]?.[f] ?? 0), 0),
   }));
+}
+
+/** Every metric for every ZIP at once — what the ZIP table lists. */
+export function geoAll(v: View, geo: GeoZip[]) {
+  return geo.map((g) => {
+    const t = (m: ShareMetric, f: "impressionShare" | "clickShare" | "conversionShare") =>
+      v.campaigns.reduce((s, c) => s + (v.byCampaign[c.id]?.[m] ?? 0) * (g.shares[c.id]?.[f] ?? 0), 0);
+    const impressions = t("impressions", "impressionShare");
+    const clicks = t("clicks", "clickShare");
+    const conversions = t("conversions", "conversionShare");
+    return {
+      zip: g.zip, name: g.name, impressions, clicks, conversions,
+      ctr: impressions > 0 ? clicks / impressions : 0,
+      cvr: clicks > 0 ? conversions / clicks : 0,
+      medianIncome: g.medianIncome, medianAge: g.medianAge, degreeShare: g.degreeShare,
+    };
+  });
 }
 
 export function deviceTotals(v: View, devices: Data["devices"], metric: ShareMetric) {

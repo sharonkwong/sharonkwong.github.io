@@ -1,4 +1,5 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 
 /* Dark surface set. Every colour on the page comes from here. */
@@ -138,5 +139,123 @@ export function Legend({ items }: { items: { label: string; color: string; onCli
         </Flex>
       ))}
     </Flex>
+  );
+}
+
+/* ------------------------------------------------------------------ table */
+
+export interface Column<R> {
+  key: string;
+  label: string;
+  align?: "right";
+  width?: string;
+  /** What the cell shows. Defaults to the sort value. */
+  render?: (row: R) => ReactNode;
+  /** What the column sorts on. Omit to make the column unsortable. */
+  sort?: (row: R) => number | string;
+  /** Numbers read better descending first; text ascending. */
+  numeric?: boolean;
+}
+
+/**
+ * Sortable table. Every column that declares `sort` is clickable, shows its
+ * direction when active, and hints on hover when not.
+ */
+export function DataTable<R>({
+  columns, rows, rowKey, initialSort, minW, onRowClick, isOpen, expanded,
+}: {
+  columns: Column<R>[];
+  rows: R[];
+  rowKey: (row: R) => string;
+  initialSort?: { key: string; dir: "asc" | "desc" };
+  minW?: string;
+  onRowClick?: (row: R) => void;
+  isOpen?: (row: R) => boolean;
+  expanded?: (row: R) => ReactNode;
+}) {
+  const [sort, setSort] = useState(initialSort ?? { key: columns[0].key, dir: "asc" as const });
+  const col = columns.find((c) => c.key === sort.key);
+
+  const sorted = col?.sort
+    ? [...rows].sort((a, b) => {
+        const x = col.sort!(a), y = col.sort!(b);
+        const c = typeof x === "number" && typeof y === "number"
+          ? x - y : String(x).localeCompare(String(y));
+        return sort.dir === "asc" ? c : -c;
+      })
+    : rows;
+
+  const click = (c: Column<R>) => {
+    if (!c.sort) return;
+    setSort((s) => s.key === c.key
+      ? { key: c.key, dir: s.dir === "asc" ? "desc" : "asc" }
+      : { key: c.key, dir: c.numeric ? "desc" : "asc" });
+  };
+
+  return (
+    <Box overflowX="auto">
+      <Box as="table" w="100%" minW={minW} style={{ borderCollapse: "collapse" }}>
+        <Box as="thead">
+          <Box as="tr">
+            {columns.map((c) => {
+              const on = sort.key === c.key && !!c.sort;
+              return (
+                <Box as="th" key={c.key} textAlign={c.align ?? "left"} w={c.width}
+                  py={2} px={2.5} borderBottom="1px solid" borderColor={T.line}
+                  whiteSpace="nowrap" role={c.sort ? "columnheader" : undefined}
+                  aria-sort={on ? (sort.dir === "asc" ? "ascending" : "descending") : undefined}>
+                  <Box as={c.sort ? "button" : "span"}
+                    onClick={() => click(c)} display="inline-flex" alignItems="center" gap="4px"
+                    fontFamily={MONO} fontSize="10px" letterSpacing="0.08em"
+                    textTransform="uppercase" fontWeight={on ? 600 : 500}
+                    color={on ? T.ink : T.dim} cursor={c.sort ? "pointer" : "default"}
+                    flexDirection={c.align === "right" ? "row-reverse" : "row"}
+                    _hover={c.sort ? { color: T.ink, "& .arw": { opacity: 1 } } : undefined}
+                    _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "2px" }}
+                    transition="color .12s">
+                    {c.label}
+                    {c.sort && (
+                      <Box as="span" className="arw" fontSize="8px" lineHeight={1}
+                        opacity={on ? 1 : 0.32} transition="opacity .12s">
+                        {on ? (sort.dir === "asc" ? "▲" : "▼") : "▲▼"}
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+        <Box as="tbody">
+          {sorted.map((r) => {
+            const open = isOpen?.(r) ?? false;
+            return (
+              <Box as="tr" key={rowKey(r)}
+                onClick={onRowClick ? () => onRowClick(r) : undefined}
+                cursor={onRowClick ? "pointer" : "default"}
+                bg={open ? T.raised : "transparent"}
+                _hover={onRowClick ? { bg: open ? T.raised : T.lineSoft } : undefined}
+                transition="background .12s">
+                {columns.map((c) => (
+                  <Box as="td" key={c.key} py={2.5} px={2.5} borderBottom="1px solid"
+                    borderColor={T.lineSoft} textAlign={c.align ?? "left"}
+                    fontSize={c.align === "right" ? "12px" : "12.5px"}
+                    fontFamily={c.align === "right" ? MONO : undefined}
+                    sx={c.align === "right" ? { fontVariantNumeric: "tabular-nums" } : undefined}
+                    color={sort.key === c.key ? T.ink : T.muted}
+                    fontWeight={sort.key === c.key ? 600 : 400}
+                    whiteSpace="nowrap">
+                    {c.render ? c.render(r) : String(c.sort?.(r) ?? "")}
+                  </Box>
+                ))}
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+      {expanded && sorted.filter((r) => isOpen?.(r)).map((r) => (
+        <Box key={`x-${rowKey(r)}`}>{expanded(r)}</Box>
+      ))}
+    </Box>
   );
 }

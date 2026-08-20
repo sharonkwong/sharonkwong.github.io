@@ -6,21 +6,10 @@ import {
 import { compact, creativeTotals, nf, pct, placementTotals } from "./data";
 import type { View } from "./data";
 import type { Data, ShareMetric } from "./types";
-import { Label, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
+import { DataTable, Label, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
+import type { Column } from "./ui";
 
-type Row = ReturnType<typeof creativeTotals>[number];
-
-const COLS: { key: string; label: string; align?: "right" }[] = [
-  { key: "name", label: "Creative" },
-  { key: "campaign", label: "Campaign" },
-  { key: "format", label: "Format" },
-  { key: "size", label: "Size" },
-  { key: "impressions", label: "Impressions", align: "right" },
-  { key: "clicks", label: "Clicks", align: "right" },
-  { key: "conversions", label: "Conversions", align: "right" },
-  { key: "ctr", label: "CTR", align: "right" },
-  { key: "cvr", label: "CVR", align: "right" },
-];
+export type Row = ReturnType<typeof creativeTotals>[number];
 
 function Quartiles({ q, color }: { q: number[]; color: string }) {
   const rows = q.map((v, i) => ({ stage: ["Start", "25%", "50%", "75%", "100%"][i], value: v }));
@@ -129,72 +118,48 @@ function Detail({ row, data }: { row: Row; data: Data }) {
 
 export default function Creatives({ v, data }: { v: View; data: Data }) {
   const [open, setOpen] = useState<string | null>(null);
-  const [sort, setSort] = useState<"impressions" | "clicks" | "conversions">("conversions");
   const campaignName = Object.fromEntries(data.campaigns.map((c) => [c.id, c.name]));
-
-  const rows = useMemo(
-    () => creativeTotals(v, data.creatives).sort((a, b) => b[sort] - a[sort]),
-    [v, data.creatives, sort]);
+  const rows = useMemo(() => creativeTotals(v, data.creatives), [v, data.creatives]);
   const selected = rows.find((r) => r.id === open);
+
+  const columns: Column<Row>[] = [
+    { key: "name", label: "Creative", sort: (r) => r.name,
+      render: (r) => (
+        <>
+          <Text as="span" color={T.dim} fontSize="10px" mr={1.5}>{open === r.id ? "▾" : "▸"}</Text>
+          {r.name}
+        </>
+      ) },
+    { key: "campaign", label: "Campaign", sort: (r) => campaignName[r.campaign],
+      render: (r) => campaignName[r.campaign] },
+    { key: "format", label: "Format", sort: (r) => r.format },
+    { key: "size", label: "Size", sort: (r) => r.dimensions,
+      render: (r) => (
+        <Text as="span" fontFamily={MONO} fontSize="11.5px">
+          {r.dimensions}{r.seconds ? ` · :${r.seconds}` : ""}
+        </Text>
+      ) },
+    { key: "impressions", label: "Impressions", align: "right", numeric: true,
+      sort: (r) => r.impressions, render: (r) => compact(r.impressions) },
+    { key: "clicks", label: "Clicks", align: "right", numeric: true,
+      sort: (r) => r.clicks, render: (r) => nf(r.clicks) },
+    { key: "conversions", label: "Conversions", align: "right", numeric: true,
+      sort: (r) => r.conversions, render: (r) => nf(r.conversions) },
+    { key: "ctr", label: "CTR", align: "right", numeric: true,
+      sort: (r) => r.clicks / r.impressions, render: (r) => pct(r.clicks / r.impressions, 2) },
+    { key: "cvr", label: "CVR", align: "right", numeric: true,
+      sort: (r) => r.conversions / r.clicks, render: (r) => pct(r.conversions / r.clicks, 1) },
+  ];
 
   return (
     <>
       <Question>Which creative performed the best?</Question>
-      <Panel
-        right={<Toggle ariaLabel="Sort creatives" value={sort} onChange={setSort}
-          options={[
-            { value: "impressions" as const, label: "Impressions" },
-            { value: "clicks" as const, label: "Clicks" },
-            { value: "conversions" as const, label: "Conversions" },
-          ]} />}>
-        <Box overflowX="auto">
-          <Box as="table" w="100%" minW="820px" style={{ borderCollapse: "collapse" }}>
-            <Box as="thead">
-              <Box as="tr">
-                {COLS.map((c) => (
-                  <Box as="th" key={c.key} textAlign={c.align ?? "left"} fontFamily={MONO}
-                    fontSize="10px" letterSpacing="0.08em" textTransform="uppercase" color={T.dim}
-                    fontWeight={500} py={2} px={2.5} borderBottom="1px solid" borderColor={T.line}
-                    whiteSpace="nowrap">{c.label}</Box>
-                ))}
-              </Box>
-            </Box>
-            <Box as="tbody">
-              {rows.map((r) => {
-                const on = open === r.id;
-                return (
-                  <Box as="tr" key={r.id} onClick={() => setOpen(on ? null : r.id)}
-                    cursor="pointer" bg={on ? T.raised : "transparent"}
-                    _hover={{ bg: on ? T.raised : T.lineSoft }} transition="background .12s">
-                    <Box as="td" py={2.5} px={2.5} borderBottom="1px solid" borderColor={T.lineSoft}
-                      color={T.ink} fontSize="12.5px" fontWeight={on ? 600 : 400} whiteSpace="nowrap">
-                      <Text as="span" color={T.dim} fontSize="10px" mr={1.5}>{on ? "▾" : "▸"}</Text>
-                      {r.name}
-                    </Box>
-                    <Box as="td" py={2.5} px={2.5} borderBottom="1px solid" borderColor={T.lineSoft}
-                      color={T.muted} fontSize="12px" whiteSpace="nowrap">{campaignName[r.campaign]}</Box>
-                    <Box as="td" py={2.5} px={2.5} borderBottom="1px solid" borderColor={T.lineSoft}
-                      color={T.muted} fontSize="12px" whiteSpace="nowrap">{r.format}</Box>
-                    <Box as="td" py={2.5} px={2.5} borderBottom="1px solid" borderColor={T.lineSoft}
-                      color={T.muted} fontFamily={MONO} fontSize="11.5px" whiteSpace="nowrap">
-                      {r.dimensions}{r.seconds ? ` · :${r.seconds}` : ""}
-                    </Box>
-                    {([["impressions", compact(r.impressions)], ["clicks", nf(r.clicks)],
-                       ["conversions", nf(r.conversions)],
-                       ["ctr", pct(r.clicks / r.impressions, 2)],
-                       ["cvr", pct(r.conversions / r.clicks, 1)]] as const).map(([k, val]) => (
-                      <Box as="td" key={k} py={2.5} px={2.5} borderBottom="1px solid"
-                        borderColor={T.lineSoft} textAlign="right" fontFamily={MONO} fontSize="12px"
-                        sx={{ fontVariantNumeric: "tabular-nums" }}
-                        color={k === sort ? T.ink : T.muted}
-                        fontWeight={k === sort ? 600 : 400}>{val}</Box>
-                    ))}
-                  </Box>
-                );
-              })}
-            </Box>
-          </Box>
-        </Box>
+      <Panel>
+        <DataTable
+          columns={columns} rows={rows} rowKey={(r) => r.id} minW="860px"
+          initialSort={{ key: "conversions", dir: "desc" }}
+          onRowClick={(r) => setOpen(open === r.id ? null : r.id)}
+          isOpen={(r) => open === r.id} />
       </Panel>
       {selected && (
         <Box mt={3}>

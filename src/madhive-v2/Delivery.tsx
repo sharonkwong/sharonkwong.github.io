@@ -5,10 +5,12 @@ import {
   Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
-import { compact, defaultGrain, deviceTotals, geoTotals, nf, pct, rollup, seriesByMedia, shortDate } from "./data";
+import { compact, defaultGrain, deviceTotals, geoAll, geoTotals, money, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
 import type { View } from "./data";
 import type { Data, ShareMetric } from "./types";
-import { Label, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
+import GeoMap from "./GeoMap";
+import { DataTable, Label, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
+import type { Column } from "./ui";
 
 const METRIC_OPTS = [
   { value: "impressions" as ShareMetric, label: "Impressions" },
@@ -104,7 +106,9 @@ function Geo({ v, data }: { v: View; data: Data }) {
   const [pinned, setPinned] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
 
+  const shapes = useShapes();
   const zips = useMemo(() => geoTotals(v, data.geo, metric), [v, data.geo, metric]);
+  const byZip = useMemo(() => new Map(zips.map((z) => [z.zip, z.value])), [zips]);
   const total = zips.reduce((s, z) => s + z.value, 0);
   const max = Math.max(...zips.map((z) => z.value), 1);
   const min = Math.min(...zips.map((z) => z.value));
@@ -125,6 +129,20 @@ function Geo({ v, data }: { v: View; data: Data }) {
     <Panel right={<Toggle ariaLabel="Geo measure" options={METRIC_OPTS} value={metric} onChange={setMetric} />}>
       <Grid templateColumns={{ base: "1fr", lg: "1fr 268px" }} gap={5}>
         <Box>
+          {shapes && (
+            <Box mb={4}>
+              <GeoMap shapes={shapes}
+                colorFor={(z) => step(byZip.get(z) ?? 0)}
+                isBright={(z) => bright(byZip.get(z) ?? 0)}
+                labelFor={(z) => {
+                  const g = zips.find((x) => x.zip === z);
+                  return g ? `${g.name} · ${compact(g.value)} ${metric}` : "";
+                }}
+                selected={shown ?? null}
+                onHover={setHover}
+                onSelect={(z) => setPinned((p) => (p === z ? null : z))} />
+            </Box>
+          )}
           <Grid templateColumns={`repeat(${cols}, minmax(0, 1fr))`}
             templateRows={`repeat(${rowsN}, 1fr)`} gap="4px" onMouseLeave={() => setHover(null)}>
             {zips.map((z) => {
@@ -211,6 +229,38 @@ function Geo({ v, data }: { v: View; data: Data }) {
   );
 }
 
+function ZipTable({ v, data }: { v: View; data: Data }) {
+  const rows = useMemo(() => geoAll(v, data.geo), [v, data.geo]);
+  type R = (typeof rows)[number];
+  const columns: Column<R>[] = [
+    { key: "zip", label: "ZIP", sort: (r) => r.zip, width: "78px",
+      render: (r) => <Text as="span" fontFamily={MONO} fontSize="12px">{r.zip}</Text> },
+    { key: "name", label: "Area", sort: (r) => r.name },
+    { key: "impressions", label: "Impressions", align: "right", numeric: true,
+      sort: (r) => r.impressions, render: (r) => nf(r.impressions) },
+    { key: "clicks", label: "Clicks", align: "right", numeric: true,
+      sort: (r) => r.clicks, render: (r) => nf(r.clicks) },
+    { key: "conversions", label: "Conversions", align: "right", numeric: true,
+      sort: (r) => r.conversions, render: (r) => nf(r.conversions) },
+    { key: "ctr", label: "CTR", align: "right", numeric: true,
+      sort: (r) => r.ctr, render: (r) => pct(r.ctr, 2) },
+    { key: "cvr", label: "CVR", align: "right", numeric: true,
+      sort: (r) => r.cvr, render: (r) => pct(r.cvr, 1) },
+    { key: "medianIncome", label: "Median income", align: "right", numeric: true,
+      sort: (r) => r.medianIncome, render: (r) => money(r.medianIncome) },
+    { key: "medianAge", label: "Median age", align: "right", numeric: true,
+      sort: (r) => r.medianAge, render: (r) => r.medianAge.toFixed(1) },
+    { key: "degreeShare", label: "Degree+", align: "right", numeric: true,
+      sort: (r) => r.degreeShare, render: (r) => pct(r.degreeShare, 0) },
+  ];
+  return (
+    <Panel>
+      <DataTable columns={columns} rows={rows} rowKey={(r) => r.zip} minW="900px"
+        initialSort={{ key: "impressions", dir: "desc" }} />
+    </Panel>
+  );
+}
+
 export default function Delivery({ v, data, days }: { v: View; data: Data; days: number }) {
   return (
     <>
@@ -223,6 +273,7 @@ export default function Delivery({ v, data, days }: { v: View; data: Data; days:
       <Box mt={5}>
         <Question>How well did your ads do across geographic locations?</Question>
         <Geo v={v} data={data} />
+        <Box mt={3}><ZipTable v={v} data={data} /></Box>
       </Box>
     </>
   );
