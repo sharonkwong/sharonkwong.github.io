@@ -55,7 +55,6 @@ export default function Dashboard({
   const ctr = rate(T.clicks, T.impressions);
   const cpa = rate(T.spend, T.conversions);
   const cpc = rate(T.spend, T.clicks);
-  const causedConv = channels.reduce((s, c) => s + c.lift.incremental, 0);
   const cpm = { current: (T.spend.current / T.impressions.current) * 1000,
                 prior: (T.spend.prior / T.impressions.prior) * 1000 };
 
@@ -141,9 +140,8 @@ export default function Dashboard({
           delta={d(T.conversions.current, T.conversions.prior)}
           sub={`${((T.offlineConversions.current / T.conversions.current) * 100).toFixed(0)}% of them in-store`}
           tip="Online plus offline. Derived. This is the number the cost figures and the budget model both run on — a pizza shop that only counted online orders would be measuring the smaller half of its own business." />
-        <Kpi label="Conversions the ads caused" value={nf(causedConv)}
-          sub={`${((causedConv / T.conversions.current) * 100).toFixed(0)}% of the ${nf(T.conversions.current)} credited`}
-          tip="Adds up each channel's control-group test: conversions among people who saw the ads, minus what the matched control did anyway. Derived, and the only number here that says the advertising was responsible. It has no period-on-period change because a lift test is a study with a fixed window, not a daily metric." />
+        {/* Seven cards in a four-wide grid; the filler keeps the block rectangular. */}
+        <Box bg="white" />
       </KpiRow>
       <Text fontSize="11.5px" color={MUTED} mt={2} fontFamily="mono">
         Change is against the previous {data.meta.window} days.
