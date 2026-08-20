@@ -5,10 +5,11 @@ import Converts from "./Converts";
 import Creatives from "./Creatives";
 import Delivery from "./Delivery";
 import FilterBar from "./Filters";
+import SankeyFlow from "./Sankey";
 import Summary from "./Summary";
 import TopLine from "./TopLine";
 import { compact, daysBetween, money, nf, useData, useFilters, useView } from "./data";
-import { Label, MONO, SectionTitle, T } from "./ui";
+import { Label, MONO, Question, SectionTitle, T } from "./ui";
 
 const theme = extendTheme({
   config: { initialColorMode: "dark", useSystemColorMode: false },
@@ -94,6 +95,12 @@ function Page() {
         <Delivery v={v} data={data} days={days} />
 
         <Box mt={9}><Creatives v={v} data={data} /></Box>
+
+        {/* Sankey: remove this block plus the ./Sankey import to drop it. */}
+        <Box mt={5}>
+          <Question>Which creative and placement combinations carry the conversions?</Question>
+          <SankeyFlow v={v} data={data} />
+        </Box>
 
         <Box mt={14} pt={5} borderTop="1px solid" borderColor={T.line}>
           <Text fontFamily={MONO} fontSize="11px" color={T.dim} lineHeight={1.7}>
