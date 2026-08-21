@@ -1,7 +1,7 @@
 import { Box, Flex, Grid, Text } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import {
-  CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ReferenceDot, ReferenceLine,
+  Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, ReferenceDot, ReferenceLine,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { compact, defaultGrain, flightEvents, GRAIN_OPTIONS, deviceTotals, geoAll, geoTotals, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
@@ -115,15 +115,15 @@ const STAGES = [
   { key: "conversions" as const, label: "Conversions" },
 ];
 
-const RAD = Math.PI / 180;
-
 /**
- * One pie per funnel stage, split by device.
+ * Device split at each funnel stage, as grouped bars.
  *
- * Three separate wholes rather than one: impressions run to millions and
- * conversions to thousands, so the interesting comparison is between the
- * compositions, not between the totals. Each pie is 100% of its own stage and
- * says so underneath.
+ * Plotted as share within a stage rather than as counts. Impressions run to
+ * millions and conversions to thousands, so a chart of counts would draw
+ * conversions as a flat line against the axis and say nothing. Each stage sums
+ * to 100% of itself and carries its own total under the label, which keeps the
+ * comparison on composition -- whether the mix that sees an ad is the mix that
+ * buys -- rather than on magnitude.
  */
 function Devices({ v, data }: { v: View; data: Data }) {
   const stages = STAGES.map((s) => {
@@ -133,21 +133,29 @@ function Devices({ v, data }: { v: View; data: Data }) {
   });
   const devices = stages[0].rows.map((r) => r.device);
 
-  const label = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: {
-    cx: number; cy: number; midAngle: number;
-    innerRadius: number; outerRadius: number; percent: number;
-  }) => {
-    // Small slices cannot hold their own label, so those sit just outside.
-    const inside = percent >= 0.12;
-    const r = inside ? innerRadius + (outerRadius - innerRadius) * 0.55 : outerRadius + 15;
-    const x = cx + r * Math.cos(-midAngle * RAD);
-    const y = cy + r * Math.sin(-midAngle * RAD);
+  const rows = stages.map((s) => {
+    const r: Record<string, number | string> = { stage: s.label, total: s.total };
+    for (const d of s.rows) {
+      r[d.device] = s.total ? d.value / s.total : 0;
+      r[`${d.device}__n`] = d.value;
+    }
+    return r;
+  });
+  const peak = Math.max(...rows.flatMap((r) => devices.map((d) => Number(r[d]) || 0)));
+  // Headroom for the label sitting on top of the tallest bar.
+  const top = Math.min(1, Math.ceil(peak * 11) / 10);
+
+  const tick = ({ x, y, payload }: { x: number; y: number; payload: { value: string } }) => {
+    const s = stages.find((st) => st.label === payload.value);
     return (
-      <text x={x} y={y} fill={inside ? T.bg : T.muted}
-        textAnchor={inside ? "middle" : x > cx ? "start" : "end"} dominantBaseline="central"
-        fontFamily={MONO} fontSize={inside ? 12.5 : 11} fontWeight={inside ? 700 : 500}>
-        {`${(percent * 100).toFixed(percent < 0.1 ? 1 : 0)}%`}
-      </text>
+      <g transform={`translate(${x},${y})`}>
+        <text y={14} textAnchor="middle" fontSize={12.5} fontWeight={600} fill={T.ink}>
+          {payload.value}
+        </text>
+        <text y={30} textAnchor="middle" fontFamily={MONO} fontSize={11} fill={T.dim}>
+          {compact(s?.total ?? 0)}
+        </text>
+      </g>
     );
   };
 
@@ -155,35 +163,38 @@ function Devices({ v, data }: { v: View; data: Data }) {
     <Panel right={
       <Legend items={devices.map((d) => ({ label: d, color: T.device[d] ?? T.dim }))} />
     }>
-      <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={4}>
-        {stages.map((s) => (
-          <Box key={s.key}>
-            <Flex justify="center" align="baseline" gap={2} mb={1}>
-              <Text fontSize="12.5px" fontWeight={600} color={T.ink}>{s.label}</Text>
-              <Text fontFamily={MONO} fontSize="11px" color={T.dim}>{compact(s.total)}</Text>
-            </Flex>
-            <Box h="212px">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 6, right: 6, bottom: 6, left: 6 }}>
-                  <Pie data={s.rows} dataKey="value" nameKey="device" cx="50%" cy="50%"
-                    outerRadius="76%" stroke={T.surface} strokeWidth={2}
-                    labelLine={false} label={label as never} isAnimationActive={false}>
-                    {s.rows.map((r) => (
-                      <Cell key={r.device} fill={T.device[r.device] ?? T.dim} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={({ active, payload }) =>
-                    active && payload?.length ? (
-                      <Tip title={`${s.label} — ${String(payload[0].name)}`} rows={[
-                        { label: "count", value: nf(Number(payload[0].value)) },
-                        { label: "share", value: pct(Number(payload[0].value) / s.total, 1) },
-                      ]} />) : null} />
-                </PieChart>
-              </ResponsiveContainer>
-            </Box>
-          </Box>
-        ))}
-      </Grid>
+      <Box h="300px">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={rows} margin={{ top: 18, right: 8, bottom: 26, left: 4 }}
+            barGap={2} barCategoryGap="26%">
+            <CartesianGrid stroke={T.lineSoft} vertical={false} />
+            <XAxis dataKey="stage" tickLine={false} axisLine={{ stroke: T.line }}
+              tick={tick as never} height={44} interval={0} />
+            <YAxis domain={[0, top]} tickFormatter={(n: number) => pct(n, 0)}
+              tickLine={false} axisLine={false} width={44}
+              tick={{ fill: T.dim, fontSize: 11, fontFamily: MONO }} />
+            <Tooltip cursor={{ fill: T.raised, opacity: 0.4 }}
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                const s = stages.find((st) => st.label === label);
+                return (
+                  <Tip title={`${label} — ${compact(s?.total ?? 0)}`} rows={payload.map((p) => ({
+                    label: String(p.dataKey),
+                    value: `${pct(Number(p.value), 1)}  ${nf(Number(p.payload[`${String(p.dataKey)}__n`]))}`,
+                  }))} />
+                );
+              }} />
+            {devices.map((d) => (
+              <Bar key={d} dataKey={d} fill={T.device[d] ?? T.dim} radius={[4, 4, 0, 0]}
+                maxBarSize={54} isAnimationActive={false}>
+                <LabelList dataKey={d} position="top" offset={6}
+                  formatter={((n: unknown) => (Number(n) >= 0.02 ? pct(Number(n), 0) : "")) as never}
+                  fill={T.muted} fontSize={11} fontFamily={MONO} />
+              </Bar>
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </Box>
     </Panel>
   );
 }
