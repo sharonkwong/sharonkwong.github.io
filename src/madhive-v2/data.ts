@@ -432,16 +432,12 @@ export const shortDate = (iso: string) =>
  * that were on screen, and the daily block is the full grain the dashboard
  * itself reads -- nothing is pre-aggregated away.
  */
-export function toCsv(v: View, data: Data, f: Filters) {
-  const q = (s: unknown) => {
-    const t = String(s ?? "");
-    return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
-  };
-  const out: string[] = [];
-  const block = (name: string, cols: string[], rows: unknown[][]) => {
-    out.push(`## table: ${name}`, cols.join(","),
-             ...rows.map((r) => r.map(q).join(",")), "");
-  };
+export interface ExportTable { name: string; cols: string[]; rows: (string | number)[][] }
+
+export function exportTables(v: View, data: Data, f: Filters): ExportTable[] {
+  const out: ExportTable[] = [];
+  const block = (name: string, cols: string[], rows: (string | number)[][]) =>
+    out.push({ name, cols, rows });
 
   const camp = Object.fromEntries(data.campaigns.map((c) => [c.id, c]));
   const mediaLabel = Object.fromEntries(data.mediaTypes.map((m) => [m.key, m.label]));
@@ -450,11 +446,14 @@ export function toCsv(v: View, data: Data, f: Filters) {
   const r2 = (n: number) => Math.round(n * 100) / 100;
   const r4 = (n: number) => Math.round(n * 10000) / 10000;
 
-  out.push(`# ${data.meta.advertiser} — ad performance export`,
-           `# dates,${f.start},${f.end}`,
-           `# media,${f.media.length ? f.media.map((m) => mediaLabel[m]).join(" | ") : "all"}`,
-           `# campaigns,${v.campaigns.length} of ${data.campaigns.length}`,
-           `# note,every block below is filtered to the selection above`, "");
+  block("about", ["field", "value"], [
+    ["advertiser", data.meta.advertiser],
+    ["exported for", `${f.start} to ${f.end}`],
+    ["media types", f.media.length ? f.media.map((m) => mediaLabel[m]).join(" | ") : "all"],
+    ["campaigns", `${v.campaigns.length} of ${data.campaigns.length}`],
+    ["note", "every sheet is filtered to the selection above"],
+    ["daily grain", "daily_by_campaign is the full grain the dashboard reads"],
+  ]);
 
   block("daily_by_campaign",
     ["date", "campaign_id", "campaign", "media_type", "impressions", "clicks", "conversions",
@@ -561,5 +560,16 @@ export function toCsv(v: View, data: Data, f: Filters) {
        ["unsubscribes", r2(e.unsubs), r4(e.delivered ? e.unsubs / e.delivered : 0)]]);
   }
 
-  return out.join("\n");
+  return out;
+}
+
+/** One file, one table per block. Excel and Sheets both import this cleanly. */
+export function toCsv(v: View, data: Data, f: Filters) {
+  const q = (s: unknown) => {
+    const t = String(s ?? "");
+    return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+  };
+  return exportTables(v, data, f).flatMap((t) => [
+    `## table: ${t.name}`, t.cols.join(","), ...t.rows.map((r) => r.map(q).join(",")), "",
+  ]).join("\n");
 }

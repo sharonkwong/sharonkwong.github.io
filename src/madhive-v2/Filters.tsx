@@ -1,10 +1,11 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import DateRange from "./DateRange";
-import { toCsv } from "./data";
+import { exportTables, toCsv } from "./data";
+import { buildXlsx } from "./xlsx";
 import type { Filters as F, View } from "./data";
 import type { Data, MediaKey } from "./types";
-import { Button, Label, T } from "./ui";
+import { Button, Label, MONO, T } from "./ui";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -126,6 +127,43 @@ function CopyLink() {
   );
 }
 
+function ExportMenu({ onXlsx, onCsv }: { onXlsx: () => void; onCsv: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const away = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", away);
+    return () => document.removeEventListener("mousedown", away);
+  }, []);
+  const items: [string, string, () => void][] = [
+    ["Excel workbook", "one sheet per table", onXlsx],
+    ["CSV", "all tables in one file", onCsv],
+  ];
+  return (
+    <Box position="relative" ref={ref}>
+      <Button onClick={() => setOpen((o) => !o)} aria-haspopup="menu" aria-expanded={open}>
+        Export data
+      </Button>
+      {open && (
+        <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={20} w="216px"
+          bg={T.raised} border="1px solid" borderColor={T.line} borderRadius="8px" py={1}
+          boxShadow="0 12px 32px -8px rgba(0,0,0,.8)" role="menu">
+          {items.map(([label, sub, fn]) => (
+            <Box key={label} as="button" type="button" role="menuitem" w="100%" px={3} py={2}
+              textAlign="left" _hover={{ bg: T.surface }}
+              onClick={() => { fn(); setOpen(false); }}>
+              <Text fontSize="12.5px" color={T.ink}>{label}</Text>
+              <Text fontFamily={MONO} fontSize="10.5px" color={T.dim}>{sub}</Text>
+            </Box>
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
 function Schedule() {
   const [open, setOpen] = useState(false);
   const [freq, setFreq] = useState("Weekly");
@@ -183,14 +221,19 @@ export default function FilterBar({ data, f, set, v }: {
       color: data.mediaTypes.find((m) => m.key === c.mediaType)!.color,
     }));
 
-  const exportCsv = () => {
-    const blob = new Blob([toCsv(v, data, f)], { type: "text/csv;charset=utf-8" });
+  const save = (blob: Blob, ext: string) => {
     const a = document.createElement("a");
     a.href = window.URL.createObjectURL(blob);
-    a.download = `elite-pizza_${f.start}_${f.end}.csv`;
+    a.download = `elite-pizza_${f.start}_${f.end}.${ext}`;
     a.click();
     window.URL.revokeObjectURL(a.href);
   };
+  const exportXlsx = () =>
+    save(buildXlsx(exportTables(v, data, f).map((t) => ({
+      name: t.name, cols: t.cols, rows: t.rows,
+    }))), "xlsx");
+  const exportCsv = () =>
+    save(new Blob([toCsv(v, data, f)], { type: "text/csv;charset=utf-8" }), "csv");
 
   return (
     <Flex align="flex-end" gap={3} wrap="wrap" mb={7}>
@@ -213,7 +256,7 @@ export default function FilterBar({ data, f, set, v }: {
         min={data.meta.firstDate} max={data.meta.lastDate}
         onChange={({ start, end }) => set({ start, end })} />
       <Flex gap={2} ml="auto" pb="1px">
-        <Button onClick={exportCsv}>Export data</Button>
+        <ExportMenu onXlsx={exportXlsx} onCsv={exportCsv} />
         <Schedule />
         <CopyLink />
       </Flex>
