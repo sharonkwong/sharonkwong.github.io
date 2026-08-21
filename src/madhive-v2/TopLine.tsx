@@ -204,7 +204,7 @@ function MediaNote() {
   return (
     <Box bg={T.surface} border="1px solid" borderColor={T.line} borderRadius="6px"
       px={4} py={3} mb={3}>
-      <Text fontSize="12.5px" color={T.muted} lineHeight={1.65} maxW="104ch">
+      <Text fontSize="12.5px" color={T.muted} lineHeight={1.65}>
         <Text as="span" color={T.ink} fontWeight={600}>Note:</Text> click on the cards below to
         view media type distributions. Email has no impression, so its delivered count sits in
         the impressions column. Clicks do not compare across media either — email goes to people

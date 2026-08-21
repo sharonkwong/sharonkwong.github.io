@@ -1,5 +1,6 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { daysBetween } from "./data";
 import { Label, MONO, T } from "./ui";
 
 const iso = (d: Date) =>
@@ -10,6 +11,12 @@ const pretty = (s: string) =>
   parse(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
+
+/** Anchored to the newest day on record, so a preset always lands on data. */
+const PRESETS: [string, number][] = [
+  ["Past 3 days", 3], ["Past week", 7], ["Past month", 30],
+  ["Past quarter", 90], ["Past year", 365],
+];
 
 /** The days of one calendar month, padded to whole weeks with nulls. */
 function monthGrid(anchor: Date) {
@@ -76,6 +83,17 @@ export default function DateRange({ start, end, min, max, onChange }: {
     setOpen(null);
   };
 
+  const applyPreset = (days: number) => {
+    const last = parse(max);
+    const from = new Date(last);
+    from.setDate(from.getDate() - (days - 1));
+    onChange({ start: iso(from) < min ? min : iso(from), end: max });
+    setPending(null);
+    setOpen(null);
+  };
+  const presetDays = daysBetween(start, end);
+  const activePreset = end === max ? PRESETS.find(([, d]) => d === presetDays)?.[0] : undefined;
+
   const canBack = iso(addMonths(anchor, -1)) >= `${min.slice(0, 7)}-01`;
   const canFwd = iso(addMonths(anchor, 2)) <= `${max.slice(0, 7)}-01`;
 
@@ -104,10 +122,28 @@ export default function DateRange({ start, end, min, max, onChange }: {
       </Flex>
 
       {open && (
-        <Box position="absolute" top="calc(100% + 6px)" left={0} zIndex={30} role="dialog"
+        <Flex position="absolute" top="calc(100% + 6px)" left={0} zIndex={30} role="dialog"
           aria-label="Choose a date range"
           bg={T.raised} border="1px solid" borderColor={T.line} borderRadius="8px" p={3}
-          boxShadow="0 16px 40px -10px rgba(0,0,0,.85)">
+          boxShadow="0 16px 40px -10px rgba(0,0,0,.85)" gap={3}>
+        <Flex direction="column" gap="2px" pr={3} borderRight="1px solid" borderColor={T.line}
+          minW="118px">
+          <Label as="div" mb={1.5}>Quick ranges</Label>
+          {PRESETS.map(([label, days]) => {
+            const on = activePreset === label;
+            return (
+              <Box key={label} as="button" type="button" onClick={() => applyPreset(days)}
+                textAlign="left" px={2} py="5px" borderRadius="5px" fontSize="12px"
+                bg={on ? T.surface : "transparent"} color={on ? T.ink : T.muted}
+                fontWeight={on ? 600 : 400}
+                _hover={{ bg: T.surface, color: T.ink }}
+                _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}>
+                {label}
+              </Box>
+            );
+          })}
+        </Flex>
+        <Box>
           <Flex align="center" mb={2.5} px={1}>
             <Box as="button" type="button" aria-label="Previous month" onClick={() => canBack && setAnchor(addMonths(anchor, -1))}
               color={canBack ? T.muted : T.lineSoft} fontSize="13px" px={1.5} py="2px" borderRadius="4px"
@@ -175,6 +211,7 @@ export default function DateRange({ start, end, min, max, onChange }: {
               : "Pick a start date, then an end date"}
           </Text>
         </Box>
+        </Flex>
       )}
     </Box>
   );

@@ -122,11 +122,11 @@ export function LifetimeTable({ data, selected, onToggle, onClear }: {
      is printed on top either way. */
   const costs = rows.map((r) => r.cpa).filter((n) => n > 0);
   const lo = Math.min(...costs), hi = Math.max(...costs);
-  const fill = (v: number) => {
-    if (!v) return "transparent";
-    const t = hi > lo ? (hi - v) / (hi - lo) : 1;      // 1 = cheapest
-    return `rgba(63, 185, 80, ${(0.10 + t * 0.42).toFixed(3)})`;
-  };
+  const rank = (v: number) => (hi > lo ? (hi - v) / (hi - lo) : 1);   // 1 = cheapest
+  const fill = (v: number) => (v ? `rgba(63, 185, 80, ${(0.22 + rank(v) * 0.7).toFixed(3)})` : "transparent");
+  // Past roughly two-thirds strength the green carries enough light that dark
+  // ink reads better on it than the page's own foreground.
+  const inkOn = (v: number) => (v && rank(v) > 0.62 ? T.bg : T.ink);
 
   const cols: Column<Row>[] = [
     { key: "name", label: "Campaign name", sort: (r) => r.name, width: "252px",
@@ -173,8 +173,8 @@ export function LifetimeTable({ data, selected, onToggle, onClear }: {
     { key: "cpa", label: "CP conversion", align: "right", numeric: true,
       sort: (r) => r.cpa, width: "132px",
       render: (r) => (
-        <Box as="span" display="inline-block" bg={fill(r.cpa)} borderRadius="3px"
-          px={2} py="2px" minW="76px" textAlign="right">
+        <Box as="span" display="inline-block" bg={fill(r.cpa)} color={inkOn(r.cpa)}
+          borderRadius="3px" px={2} py="2px" minW="76px" textAlign="right" fontWeight={600}>
           {r.cpa > 0 ? money(r.cpa, 2) : "—"}
         </Box>
       ) },

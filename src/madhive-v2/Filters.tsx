@@ -1,7 +1,7 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import DateRange from "./DateRange";
-import { exportTables, toCsv } from "./data";
+import { exportTables } from "./data";
 import { buildReport } from "./report";
 import { buildPdf } from "./pdf";
 import { buildPptx } from "./pptx";
@@ -130,8 +130,8 @@ function CopyLink() {
   );
 }
 
-function ExportMenu({ onPptx, onPdf, onXlsx, onCsv }: {
-  onPptx: () => void; onPdf: () => void; onXlsx: () => void; onCsv: () => void;
+function ExportMenu({ onPptx, onPdf, onXlsx }: {
+  onPptx: () => void; onPdf: () => void; onXlsx: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -146,7 +146,6 @@ function ExportMenu({ onPptx, onPdf, onXlsx, onCsv }: {
     ["PowerPoint deck", "the review, one point per slide", onPptx],
     ["PDF report", "the review, printable", onPdf],
     ["Excel workbook", "every table, one sheet each", onXlsx],
-    ["CSV", "every table, one file", onCsv],
   ];
   return (
     <Box position="relative" ref={ref}>
@@ -239,8 +238,6 @@ export default function FilterBar({ data, f, set, v }: {
     save(buildXlsx(exportTables(v, data, f).map((t) => ({
       name: t.name, cols: t.cols, rows: t.rows,
     }))), "xlsx");
-  const exportCsv = () =>
-    save(new Blob([toCsv(v, data, f)], { type: "text/csv;charset=utf-8" }), "csv");
   const exportPptx = () => save(buildPptx(buildReport(v, data, f)), "pptx");
   const exportPdf = () => save(buildPdf(buildReport(v, data, f)), "pdf");
 
@@ -265,7 +262,7 @@ export default function FilterBar({ data, f, set, v }: {
         min={data.meta.firstDate} max={data.meta.lastDate}
         onChange={({ start, end }) => set({ start, end })} />
       <Flex gap={2} ml="auto" pb="1px">
-        <ExportMenu onPptx={exportPptx} onPdf={exportPdf} onXlsx={exportXlsx} onCsv={exportCsv} />
+        <ExportMenu onPptx={exportPptx} onPdf={exportPdf} onXlsx={exportXlsx} />
         <Schedule />
         <CopyLink />
       </Flex>

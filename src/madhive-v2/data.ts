@@ -562,14 +562,3 @@ export function exportTables(v: View, data: Data, f: Filters): ExportTable[] {
 
   return out;
 }
-
-/** One file, one table per block. Excel and Sheets both import this cleanly. */
-export function toCsv(v: View, data: Data, f: Filters) {
-  const q = (s: unknown) => {
-    const t = String(s ?? "");
-    return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
-  };
-  return exportTables(v, data, f).flatMap((t) => [
-    `## table: ${t.name}`, t.cols.join(","), ...t.rows.map((r) => r.map(q).join(",")), "",
-  ]).join("\n");
-}
