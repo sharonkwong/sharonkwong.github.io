@@ -225,6 +225,23 @@ export function useView(data: Data | null, f: Filters | null): View | null {
 
 export type MediaSeriesRow = { date: string } & Record<MediaKey, number>;
 
+/**
+ * Unique identifiers reached, for whatever is filtered.
+ *
+ * Reach cannot be summed, so it is derived rather than stored: each campaign's
+ * filtered impressions divided by its frequency, then discounted for the people
+ * two campaigns share. The discount grows with the number of media types in
+ * scope, because a device id and a hashed email are matched probabilistically
+ * rather than joined.
+ */
+export function reachOf(v: View, data: Data) {
+  const freq = Object.fromEntries(data.campaigns.map((c) => [c.id, c.frequency]));
+  const raw = v.campaigns.reduce(
+    (s, c) => s + (freq[c.id] > 0 ? (v.byCampaign[c.id]?.impressions ?? 0) / freq[c.id] : 0), 0);
+  const overlap = data.reach.overlapByMediaCount[String(v.media.length)] ?? 0;
+  return { unique: raw * (1 - overlap), raw, overlap };
+}
+
 /** Daily series, one key per media type, for the selected window. */
 export function seriesByMedia(v: View, data: Data, metric: Metric): MediaSeriesRow[] {
   const media = Object.fromEntries(data.campaigns.map((c) => [c.id, c.mediaType]));

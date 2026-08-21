@@ -5,6 +5,8 @@ export interface Campaign {
   id: string; name: string; mediaType: MediaKey;
   /** Lifetime flight window, independent of the date filter. */
   flightStart: string; flightEnd: string;
+  /** Impressions per unique identifier. Reach = impressions / frequency. */
+  frequency: number;
 }
 
 export interface DailyRow {
@@ -87,6 +89,11 @@ export interface Data {
   demographics: Demographics;
   geo: GeoZip[];
   creatives: Creative[];
+  reach: {
+    /** How much the campaigns in scope share people, by media types selected. */
+    overlapByMediaCount: Record<string, number>;
+    identifiers: Record<string, string>;
+  };
   emailFunnel: Record<string, {
     deliveryRate: number; openReported: number; openModelled: number; unsubRate: number;
   }>;

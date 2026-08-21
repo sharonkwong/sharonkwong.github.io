@@ -63,6 +63,38 @@ EMAIL_FUNNEL = {
     "c-em-2": dict(deliveryRate=0.971, openReported=0.414, openModelled=0.267, unsubRate=0.0062),
 }
 
+# ------------------------------------------------------------------ reach
+# Reach does not add up, which is the whole difficulty. Two things are stored
+# instead of a number:
+#
+#   frequency  impressions per unique identifier over the campaign's flight.
+#              Reach for any filtered window is impressions / frequency, which
+#              holds because frequency is close to flat once a campaign is past
+#              its first fortnight.
+#   overlap    how much the campaigns in scope share people. It grows with the
+#              number of media types selected, because a person reached on
+#              display and on video is one person, and the join that says so is
+#              probabilistic.
+#
+# Identifiers differ by channel: display and video dedupe on a device id,
+# email on a hashed address. Resolving one to the other is a match, not a
+# lookup, which is why the card is a modelled figure and says so.
+FREQUENCY = {
+    "c-dp-1": 22.0,   # broad prospecting, large pool
+    "c-dp-2": 34.0,   # retargeting: small pool, hit often
+    "c-em-1": 14.2,   # the active list, mailed twice a week
+    "c-em-2": 9.6,
+    "c-vd-1": 12.0,
+    "c-vd-2": 9.0,
+}
+# Keyed by how many media types are in scope.
+OVERLAP = {1: 0.06, 2: 0.19, 3: 0.28}
+IDENTIFIERS = {
+    "display": "Device id (IDFA / AAID, or a first-party cookie on web)",
+    "video": "Device id from the streaming app or CTV device",
+    "email": "Hashed email address",
+}
+
 # ------------------------------------------------------------------- daily
 def shape(seed, i, media):
     weekly = [1.02, 0.96, 0.94, 0.98, 1.05, 1.16, 1.19][i % 7]
@@ -311,11 +343,13 @@ data = dict(
     ),
     mediaTypes=MEDIA,
     campaigns=[dict(id=c["id"], name=c["name"], mediaType=c["mediaType"],
+                    frequency=FREQUENCY[c["id"]],
                     flightStart=(START + timedelta(days=c["flight"][0])).isoformat(),
                     flightEnd=(START + timedelta(days=c["flight"][1] - 1)).isoformat())
                for c in CAMPAIGNS],
     daily=daily,
     emailFunnel=EMAIL_FUNNEL,
+    reach=dict(overlapByMediaCount=OVERLAP, identifiers=IDENTIFIERS),
     devices=devices,
     demographics=demographics,
     geo=geo,

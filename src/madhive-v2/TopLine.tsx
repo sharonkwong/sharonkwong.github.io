@@ -5,51 +5,52 @@ import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer,
   Tooltip, XAxis, YAxis,
 } from "recharts";
-import { compact, delta, money, nf, pct, seriesByMedia, shortDate } from "./data";
+import { compact, delta, money, nf, pct, reachOf, seriesByMedia, shortDate } from "./data";
 import type { View } from "./data";
 import type { Data, MediaKey, Metric } from "./types";
 import { Delta, InfoTip, Label, MONO, Panel, T, Tip } from "./ui";
 
-type CardId = "impressions" | "clicks" | "conversions" | "spend" | "cpm" | "cpc" | "cpa";
+type CardId = "impressions" | "clicks" | "conversions" | "reach" | "spend" | "cpm" | "cpc" | "cpa";
 
 const VOLUME: Record<string, Metric> = {
   impressions: "impressions", clicks: "clicks", conversions: "conversions", spend: "spend",
 };
 
-function Card({ label, value, second, delta: d, lowerIsBetter, note, tip, open, onClick }: {
+function Card({ label, value, second, delta: d, lowerIsBetter, tip, open, onClick }: {
   label: string; value: string; second?: string; delta: number;
-  lowerIsBetter?: boolean; note?: string; tip?: string; open: boolean; onClick: () => void;
+  lowerIsBetter?: boolean; tip?: string; open: boolean; onClick: () => void;
 }) {
   return (
-    // The tip is a sibling of the card button, not a child: the card is itself a
-    // button and nesting one inside another is invalid.
-    <Box position="relative" minW={0}>
-    {tip && (
-      <Box position="absolute" top="10px" right="10px" zIndex={1}>
-        <InfoTip label={label}>{tip}</InfoTip>
+    // The click target is an absolutely positioned button underneath the
+    // content, so the info tip can be a sibling beside the label rather than a
+    // button nested inside another button.
+    <Box position="relative" minW={0} bg={open ? T.raised : T.surface}
+      border="1px solid" borderColor={open ? T.focus : T.line} borderRadius="8px"
+      px={3.5} py={3} _hover={{ borderColor: open ? T.focus : T.dim }}
+      transition="border-color .12s, background .12s">
+      <Box as="button" type="button" onClick={onClick} aria-expanded={open} aria-label={label}
+        position="absolute" inset={0} borderRadius="8px" zIndex={0}
+        _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }} />
+      <Box position="relative" zIndex={1} pointerEvents="none">
+        <Flex align="center" gap="6px" mb={2} minH="15px">
+          <Label as="div" noOfLines={1}>{label}</Label>
+          {tip && (
+            <Box pointerEvents="auto" flex="0 0 auto">
+              <InfoTip label={label}>{tip}</InfoTip>
+            </Box>
+          )}
+        </Flex>
+        <Flex align="baseline" gap={2} wrap="wrap">
+          <Text fontSize="21px" fontWeight={650} color={T.ink} letterSpacing="-0.02em"
+            sx={{ fontVariantNumeric: "tabular-nums" }} lineHeight={1.1}>{value}</Text>
+          {second && (
+            <Text fontSize="13px" color={T.muted} fontFamily={MONO} lineHeight={1.1}>
+              <Text as="span" color={T.dim}>| </Text>{second}
+            </Text>
+          )}
+        </Flex>
+        <Box mt={1.5}><Delta value={d} lowerIsBetter={lowerIsBetter} /></Box>
       </Box>
-    )}
-    <Box as="button" type="button" onClick={onClick} aria-expanded={open} textAlign="left" w="100%"
-      bg={open ? T.raised : T.surface} border="1px solid"
-      borderColor={open ? T.focus : T.line} borderRadius="8px" px={3.5} py={3}
-      _hover={{ borderColor: open ? T.focus : T.dim }}
-      _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}
-      transition="border-color .12s, background .12s" minW={0}>
-      <Label as="div" mb={2} noOfLines={1} pr={tip ? 5 : 0}>{label}</Label>
-      <Flex align="baseline" gap={2} wrap="wrap">
-        <Text fontSize="21px" fontWeight={650} color={T.ink} letterSpacing="-0.02em"
-          sx={{ fontVariantNumeric: "tabular-nums" }} lineHeight={1.1}>{value}</Text>
-        {second && (
-          <Text fontSize="13px" color={T.muted} fontFamily={MONO} lineHeight={1.1}>
-            <Text as="span" color={T.dim}>| </Text>{second}
-          </Text>
-        )}
-      </Flex>
-      <Box mt={1.5}><Delta value={d} lowerIsBetter={lowerIsBetter} /></Box>
-      {note && (
-        <Text fontFamily={MONO} fontSize="10px" color={T.dim} mt="3px" noOfLines={1}>{note}</Text>
-      )}
-    </Box>
     </Box>
   );
 }
@@ -110,6 +111,59 @@ function VolumeDrill({ v, data, metric }: { v: View; data: Data; metric: Metric 
   );
 }
 
+/** Reach: unique identifiers, and how hard each media type worked them. */
+function ReachDrill({ v, data }: { v: View; data: Data }) {
+  const freq = Object.fromEntries(data.campaigns.map((c) => [c.id, c.frequency]));
+  const rows = v.media.map((m) => {
+    const ids = v.campaigns.filter((c) => c.mediaType === m.key);
+    const reach = ids.reduce((s, c) => s + (v.byCampaign[c.id]?.impressions ?? 0) / freq[c.id], 0);
+    const imp = ids.reduce((s, c) => s + (v.byCampaign[c.id]?.impressions ?? 0), 0);
+    return { ...m, reach, imp, freq: reach > 0 ? imp / reach : 0,
+             ident: data.reach.identifiers[m.key] };
+  }).filter((r) => r.imp > 0);
+  const max = Math.max(...rows.map((r) => r.reach), 1);
+  const { unique, raw, overlap } = reachOf(v, data);
+
+  return (
+    <Box>
+      <Flex direction="column" gap={4}>
+        {rows.map((r) => (
+          <Box key={r.key}>
+            <Flex align="baseline" gap={2.5} mb={1.5} wrap="wrap">
+              <Box w="9px" h="9px" borderRadius="2px" bg={r.color} />
+              <Text fontSize="12.5px" color={T.ink}>{r.label}</Text>
+              <Text fontFamily={MONO} fontSize="11px" color={T.dim}>{r.ident}</Text>
+              <Text ml="auto" fontFamily={MONO} fontSize="12.5px" fontWeight={600} color={T.ink}
+                sx={{ fontVariantNumeric: "tabular-nums" }}>
+                {nf(r.reach)}
+                <Text as="span" color={T.dim} fontWeight={400}> reached · {r.freq.toFixed(1)}x each</Text>
+              </Text>
+            </Flex>
+            <Box bg={T.bg} borderRadius="3px" h="12px" overflow="hidden">
+              <Box h="100%" bg={r.color} borderRadius="0 3px 3px 0" opacity={0.85}
+                w={`${(r.reach / max) * 100}%`} />
+            </Box>
+          </Box>
+        ))}
+      </Flex>
+      <Box mt={5} pt={4} borderTop="1px solid" borderColor={T.lineSoft}>
+        <Flex gap={7} wrap="wrap">
+          {[["Sum of each media", nf(raw)],
+            [`Less ${pct(overlap, 0)} shared between them`, `− ${nf(raw - unique)}`],
+            ["Unique identifiers", nf(unique)]].map(([k, val], i) => (
+            <Box key={k}>
+              <Label as="div" mb="3px">{k}</Label>
+              <Text fontFamily={MONO} fontSize="15px" fontWeight={600}
+                color={i === 2 ? T.ink : T.muted}
+                sx={{ fontVariantNumeric: "tabular-nums" }}>{val}</Text>
+            </Box>
+          ))}
+        </Flex>
+      </Box>
+    </Box>
+  );
+}
+
 /** Cost metric: the same cost compared across media types. */
 function CostDrill({ v, kind }: { v: View; kind: "cpm" | "cpc" | "cpa" }) {
   const rows = v.media.map((m) => {
@@ -146,37 +200,37 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
   const [open, setOpen] = useState<CardId | null>(null);
   const t = v.totals, p = v.priorTotals;
   const rate = (a: number, b: number) => (b > 0 ? a / b : 0);
+  const reach = reachOf(v, data);
   const cost = (a: number, b: number) => (b > 0 ? a / b : 0);
   const toggle = (id: CardId) => setOpen((o) => (o === id ? null : id));
 
   // Email has no impressions; the same field carries delivered. Label it for
   // whatever is actually in scope rather than averaging two different events
   // under one word.
-  const mixedEmail = v.email.present && !v.email.only;
-  const cards: { id: CardId; label: string; value: string; second?: string; delta: number; lower?: boolean; note?: string; tip?: string }[] = [
+  const cards: { id: CardId; label: string; value: string; second?: string; delta: number; lower?: boolean; tip?: string }[] = [
     { id: "impressions",
       label: v.email.only ? "Total Delivered" : "Total Impressions",
       value: compact(t.impressions),
-      note: mixedEmail ? "email counted as delivered" : undefined,
       tip: "Times an ad was served. Email has no impression, so a delivered email sits in this column instead — when email is the only thing in scope the card says Delivered. Measured, not derived.",
       delta: delta(t.impressions, p.impressions) },
     { id: "clicks", label: "Total Clicks / Click Rate", value: nf(t.clicks),
       second: pct(rate(t.clicks, t.impressions), 2),
       // On delivered for email, never on opens: Apple MPP inflates opens, and
       // click-to-open inherits the problem through its denominator.
-      note: v.email.only ? "of delivered" : undefined,
       tip: "Clicks on an ad, or on a link inside an email, with clicks ÷ impressions beside it. Not comparable across media: email reaches people who asked to hear from you, display does not, and video mostly converts people who never click at all.",
       delta: delta(t.clicks, p.clicks) },
     { id: "conversions", label: "Total Conversions / Conversion Rate", value: nf(t.conversions),
       second: pct(rate(t.conversions, t.clicks), 1),
       tip: "Conversions credited to the last ad seen, inside a 30-day window, with conversions ÷ clicks beside it. That rate only counts people who clicked, so it flatters email and undersells video.",
       delta: delta(t.conversions, p.conversions) },
+    { id: "reach", label: "Unique Reach", value: compact(reach.unique),
+      delta: NaN,
+      tip: `Unique identifiers reached, not impressions. Display and video dedupe on a device id, email on a hashed address, and the two are matched to each other probabilistically rather than joined — so this is a modelled figure, not a count. Each campaign's impressions are divided by its frequency, then ${pct(reach.overlap, 0)} is taken off for the people the selected media share. No period comparison, because the overlap is a property of the selection rather than of the window.` },
+  ];
+  const costs: { id: CardId; label: string; value: string; delta: number; lower?: boolean; tip?: string }[] = [
     { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true,
       tip: "Media cost across everything in scope. Measured — this comes off the invoices, not from a model." },
-  ];
-  const costs: { id: CardId; label: string; value: string; delta: number; note?: string; tip?: string }[] = [
     { id: "cpm", label: v.email.only ? "Cost per Mille Delivered" : "Cost per Mille",
-      note: mixedEmail ? "email per 1,000 delivered" : undefined,
       tip: "Spend ÷ impressions × 1,000. Derived. This is the price of the media itself, before any question of whether it worked. For email it is per thousand delivered.",
       value: money(cost(t.spend, t.impressions) * 1000, 2),
       delta: delta(cost(t.spend, t.impressions), cost(p.spend, p.impressions)) },
@@ -198,7 +252,7 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
         ))}
       </Grid>
       <Box borderTop="1px solid" borderColor={T.line} my={4} />
-      <Grid templateColumns={{ base: "1fr", sm: "repeat(3, 1fr)" }} gap={3} maxW={{ lg: "76%" }}>
+      <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={3}>
         {costs.map((c) => (
           <Card key={c.id} {...c} lowerIsBetter open={open === c.id} onClick={() => toggle(c.id)} />
         ))}
@@ -206,7 +260,9 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
       {open && openCard && (
         <Box mt={3}>
           <Panel title={openCard.label}>
-            {open in VOLUME
+            {open === "reach"
+              ? <ReachDrill v={v} data={data} />
+              : open in VOLUME
               ? <VolumeDrill v={v} data={data} metric={VOLUME[open]} />
               : <CostDrill v={v} kind={open as "cpm" | "cpc" | "cpa"} />}
           </Panel>
