@@ -5,48 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0d1117" />
-    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon.png" />
-    <title>Ad Performance — Elite Pizza</title>
-    <meta name="description" content="Ad performance dashboard for a pizza chain: display, email and online video across impressions, clicks, conversions, device, geography and creative." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>Moved — Elite Pizza ad performance</title>
+    <meta http-equiv="refresh" content="0; url=/madhive/" />
     <style>
-      html, body { background: #0d1117; }
+      html, body { background: #0d1117; color: #8b949e; margin: 0; height: 100%; }
+      body { display: grid; place-items: center;
+             font: 14px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      a { color: #58a6ff; }
     </style>
-    <script type="module" crossorigin src="../../assets/madhiveV2-Cnvmi6ox.js"></script>
-    <link rel="modulepreload" crossorigin href="../../assets/text-BrxbWjfQ.js">
-    <link rel="modulepreload" crossorigin href="../../assets/tooltip-BPR6fD1o.js">
-    <link rel="modulepreload" crossorigin href="../../assets/ui-snj9PZ1S.js">
-    <link rel="modulepreload" crossorigin href="../../assets/grid-Cka-kemg.js">
-    <link rel="modulepreload" crossorigin href="../../assets/AreaChart-3g9M8EkM.js">
   </head>
   <body>
-    <div id="root"></div>
+    <p>This dashboard now lives at <a href="/madhive/">/madhive/</a>.</p>
     <script>
-      // Assets are content-hashed, so a browser holding a cached copy of this
-      // page after a deploy can request a bundle that no longer exists — which
-      // renders a blank page. Catch the failed load and reload once past cache.
-      (function () {
-        var KEY = "mhv2-stale-reload";
-        window.addEventListener(
-          "error",
-          function (e) {
-            var t = e.target;
-            if (t && t.tagName === "SCRIPT" && !sessionStorage.getItem(KEY)) {
-              sessionStorage.setItem(KEY, "1");
-              location.replace(location.pathname + "?r=" + Date.now());
-            }
-          },
-          true
-        );
-        window.addEventListener("load", function () {
-          if (document.getElementById("root").childElementCount > 0) {
-            sessionStorage.removeItem(KEY);
-          }
-        });
-      })();
+      // Carry the query string across, so a shared link keeps its filters.
+      location.replace("/madhive/" + location.search + location.hash);
     </script>
   </body>
 </html>
