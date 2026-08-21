@@ -351,7 +351,7 @@ export default function Creatives({ v, data }: { v: View; data: Data }) {
 
   return (
     <>
-      <Question>Which creative performed the best?</Question>
+      <Question>Which creative performed the best? (Click to dive deeper)</Question>
       <Panel right={
         <Text fontFamily={MONO} fontSize="10.5px" color={full ? T.muted : T.dim}>
           {open.length} / {MAX_OPEN} selected
