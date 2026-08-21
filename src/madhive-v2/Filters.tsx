@@ -2,6 +2,9 @@ import { Box, Flex, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import DateRange from "./DateRange";
 import { exportTables, toCsv } from "./data";
+import { buildReport } from "./report";
+import { buildPdf } from "./pdf";
+import { buildPptx } from "./pptx";
 import { buildXlsx } from "./xlsx";
 import type { Filters as F, View } from "./data";
 import type { Data, MediaKey } from "./types";
@@ -127,7 +130,9 @@ function CopyLink() {
   );
 }
 
-function ExportMenu({ onXlsx, onCsv }: { onXlsx: () => void; onCsv: () => void }) {
+function ExportMenu({ onPptx, onPdf, onXlsx, onCsv }: {
+  onPptx: () => void; onPdf: () => void; onXlsx: () => void; onCsv: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -138,8 +143,10 @@ function ExportMenu({ onXlsx, onCsv }: { onXlsx: () => void; onCsv: () => void }
     return () => document.removeEventListener("mousedown", away);
   }, []);
   const items: [string, string, () => void][] = [
-    ["Excel workbook", "one sheet per table", onXlsx],
-    ["CSV", "all tables in one file", onCsv],
+    ["PowerPoint deck", "the review, one point per slide", onPptx],
+    ["PDF report", "the review, printable", onPdf],
+    ["Excel workbook", "every table, one sheet each", onXlsx],
+    ["CSV", "every table, one file", onCsv],
   ];
   return (
     <Box position="relative" ref={ref}>
@@ -147,7 +154,7 @@ function ExportMenu({ onXlsx, onCsv }: { onXlsx: () => void; onCsv: () => void }
         Export data
       </Button>
       {open && (
-        <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={20} w="216px"
+        <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={20} w="248px"
           bg={T.raised} border="1px solid" borderColor={T.line} borderRadius="8px" py={1}
           boxShadow="0 12px 32px -8px rgba(0,0,0,.8)" role="menu">
           {items.map(([label, sub, fn]) => (
@@ -234,6 +241,8 @@ export default function FilterBar({ data, f, set, v }: {
     }))), "xlsx");
   const exportCsv = () =>
     save(new Blob([toCsv(v, data, f)], { type: "text/csv;charset=utf-8" }), "csv");
+  const exportPptx = () => save(buildPptx(buildReport(v, data, f)), "pptx");
+  const exportPdf = () => save(buildPdf(buildReport(v, data, f)), "pdf");
 
   return (
     <Flex align="flex-end" gap={3} wrap="wrap" mb={7}>
@@ -256,7 +265,7 @@ export default function FilterBar({ data, f, set, v }: {
         min={data.meta.firstDate} max={data.meta.lastDate}
         onChange={({ start, end }) => set({ start, end })} />
       <Flex gap={2} ml="auto" pb="1px">
-        <ExportMenu onXlsx={exportXlsx} onCsv={exportCsv} />
+        <ExportMenu onPptx={exportPptx} onPdf={exportPdf} onXlsx={exportXlsx} onCsv={exportCsv} />
         <Schedule />
         <CopyLink />
       </Flex>
