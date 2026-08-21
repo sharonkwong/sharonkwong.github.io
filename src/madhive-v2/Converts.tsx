@@ -27,10 +27,10 @@ function DemoBars({ title, rows, color }: {
                 w="94px" flex="0 0 auto" noOfLines={1}>{r.label}</Text>
               <Box flex="1" bg={T.bg} borderRadius="3px" h="14px" overflow="hidden" minW={0}>
                 <Box h="100%" bg={lead ? T.highlight : color} borderRadius="0 3px 3px 0"
-                  w={`${(r.share / max) * 100}%`} opacity={lead ? 1 : 0.55}
+                  w={`${(r.share / max) * 100}%`} opacity={lead ? 1 : 0.85}
                   transition="width .25s" />
               </Box>
-              <Text fontFamily={MONO} fontSize="11.5px" color={lead ? T.ink : T.muted}
+              <Text fontFamily={MONO} fontSize="11.5px" color={T.ink}
                 fontWeight={lead ? 700 : 400} w="38px" textAlign="right" flex="0 0 auto"
                 sx={{ fontVariantNumeric: "tabular-nums" }}>{pct(r.share, 0)}</Text>
             </Flex>
