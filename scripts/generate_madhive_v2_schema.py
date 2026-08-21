@@ -398,6 +398,19 @@ TABLES = [
                   ("nation", "array", "National outline for the locator inset.")]),
 ]
 
+# How the gold tables hang together. The columns are not repeated here -- the
+# diagram reads them off TABLES, so it cannot show a column the table card on
+# the same page does not.
+GOLD_SPINE = "agg_campaign_daily"
+GOLD_EDGES = {
+    "agg_campaign_reach":     dict(via="campaign_id", note="impressions / frequency"),
+    "agg_device_campaign":    dict(via="campaign_id", note="x impression, click, conversion"),
+    "agg_geo_zip":            dict(via="campaign_id", note="x impression, click, conversion"),
+    "agg_creative_placement": dict(via="creative_id -> campaign_id", note="share of a share"),
+    "agg_creative_section":   dict(via="creative_id -> campaign_id", note="x clicks"),
+    "agg_converter_profile":  dict(via="media_type", note="profile only, no counts"),
+}
+
 LINEAGE = [
     ("Top Line Metrics", "Seven cards and their drill-downs", ["daily", "campaigns", "mediaTypes"]),
     ("Top Line Metrics", "Impressions / Delivered labelling", ["daily.sends", "campaigns.mediaType"]),
@@ -578,6 +591,7 @@ def main():
         window=dict(first=data["meta"]["firstDate"], last=data["meta"]["lastDate"]),
         files=files, layers=LAYERS, collections=collections, rules=RULES,
         transforms=TRANSFORMS,
+        goldErd=dict(spine=GOLD_SPINE, edges=GOLD_EDGES),
         worked=worked_examples(data),
         tables=[dict(layer=t["layer"], name=t["name"], grain=t["grain"],
                      description=t.get("description", ""),
