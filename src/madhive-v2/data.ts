@@ -366,6 +366,49 @@ export function placementTotals(c: ReturnType<typeof creativeTotals>[number], me
     .sort((a, b) => b.value - a.value);
 }
 
+export interface FlightEvent {
+  key: string; date: string; y: number; color: string; label: string;
+  mediaKey: MediaKey; anchor: "start" | "middle" | "end";
+}
+
+/**
+ * Campaign launches and endings, placed on the series they belong to.
+ *
+ * The marker sits at that media type's own value on the date, so an event reads
+ * against the line it changed rather than floating on the axis. Dates snap to
+ * the bucket containing them, because a weekly or monthly view has no 14th of
+ * June. Lives here rather than in either chart, so the two cannot drift.
+ */
+export function flightEvents(v: View, data: Data, series: MediaSeriesRow[]): FlightEvent[] {
+  const buckets = series.map((r) => r.date);
+  if (!buckets.length) return [];
+  const last = v.dates[v.dates.length - 1];
+  const out: FlightEvent[] = [];
+
+  for (const c of v.campaigns) {
+    const m = v.media.find((x) => x.key === c.mediaType);
+    if (!m) continue;
+    for (const [when, verb] of [[c.flightStart, "launched"], [c.flightEnd, "ended"]] as const) {
+      // An end on the last day on record is a flight still running, not an end.
+      if (verb === "ended" && when >= data.meta.lastDate) continue;
+      if (when < buckets[0] || when > last) continue;
+      let bucket: string | null = null;
+      for (const b of buckets) if (b <= when) bucket = b; else break;
+      const row = bucket ? series.find((r) => r.date === bucket) : undefined;
+      if (!bucket || !row) continue;
+      // A centred label runs off the plot when its dot is near an edge, so the
+      // anchor follows where the dot sits along the axis.
+      const at = buckets.indexOf(bucket) / Math.max(1, buckets.length - 1);
+      out.push({
+        key: `${c.id}-${verb}`, date: bucket, y: row[m.key], color: m.color,
+        label: `${c.name} ${verb}`, mediaKey: m.key,
+        anchor: at < 0.2 ? "start" : at > 0.8 ? "end" : "middle",
+      });
+    }
+  }
+  return out;
+}
+
 /** Roll a daily series up to week starts. 90 daily points is a picket fence. */
 export type Grain = "day" | "week" | "month";
 

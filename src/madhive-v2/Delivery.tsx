@@ -1,10 +1,10 @@
 import { Box, Flex, Grid, Text } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import {
-  CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ReferenceLine, ResponsiveContainer,
-  Tooltip, XAxis, YAxis,
+  CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ReferenceDot, ReferenceLine,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { compact, defaultGrain, GRAIN_OPTIONS, deviceTotals, geoAll, geoTotals, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
+import { compact, defaultGrain, flightEvents, GRAIN_OPTIONS, deviceTotals, geoAll, geoTotals, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
 import type { Grain, View } from "./data";
 import type { Data, ShareMetric } from "./types";
 import GeoMap from "./GeoMap";
@@ -21,6 +21,8 @@ const METRIC_OPTS = [
 function Pacing({ v, data, days }: { v: View; data: Data; days: number }) {
   const [grain, setGrain] = useState<Grain>(defaultGrain(days));
   const series = rollup(seriesByMedia(v, data, "impressions"), grain);
+  // Each panel gets only its own media type's events, since each has its own scale.
+  const events = flightEvents(v, data, series);
   // Display runs ~5x video and ~12x email. On one shared axis the two smaller
   // series flatten into the floor, so each gets its own panel and its own scale.
   return (
@@ -56,6 +58,22 @@ function Pacing({ v, data, days }: { v: View; data: Data; days: number }) {
                     <ReferenceLine y={mean} stroke={T.dim} strokeDasharray="3 3" />
                     <Line dataKey={m.key} type="monotone" stroke={m.color} strokeWidth={2}
                       dot={false} activeDot={{ r: 3.5 }} isAnimationActive={false} />
+                    {events.filter((e) => e.mediaKey === m.key).map((e, i) => (
+                      <ReferenceDot key={e.key} {...({
+                        x: e.date, y: e.y, r: 4,
+                        fill: e.color, stroke: T.bg, strokeWidth: 2,
+                        label: {
+                          content: ({ viewBox }: { viewBox?: { x?: number; y?: number } }) => (
+                            <text
+                              x={(viewBox?.x ?? 0)
+                                + (e.anchor === "start" ? 7 : e.anchor === "end" ? -7 : 0)}
+                              y={(viewBox?.y ?? 0) - 9 - (i % 2) * 12}
+                              textAnchor={e.anchor} fontSize={9} fill={T.muted}
+                              fontFamily={MONO}>{e.label}</text>
+                          ),
+                        },
+                      } as Record<string, unknown>)} />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
               </Box>

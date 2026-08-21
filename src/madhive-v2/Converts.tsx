@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import {
   CartesianGrid, Line, LineChart, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { compact, defaultGrain, GRAIN_OPTIONS, money, nf, pct, rollup, seriesByMedia, shortDate } from "./data";
+import { compact, defaultGrain, flightEvents, GRAIN_OPTIONS, money, nf, pct, rollup, seriesByMedia, shortDate } from "./data";
 import type { Grain, View } from "./data";
 import type { Data, MediaKey, Metric } from "./types";
 import Funnel from "./Funnel";
@@ -58,39 +58,7 @@ export default function Converts({ v, data, days }: { v: View; data: Data; days:
 
   const series = rollup(seriesByMedia(v, data, metric), grain);
 
-  /* Launches and endings, pinned to the line they belong to. The marker sits at
-     the media type's own value on that date, so an event reads against the
-     series it changed rather than floating on the axis. Snapped to the bucket
-     containing the date, since a weekly or monthly view has no 14th of June. */
-  const events = useMemo(() => {
-    const buckets = series.map((r) => r.date);
-    const snap = (iso: string) => {
-      let hit: string | null = null;
-      for (const b of buckets) if (b <= iso) hit = b; else break;
-      return hit;
-    };
-    const out: { key: string; date: string; y: number; color: string; label: string;
-                 anchor: "start" | "middle" | "end" }[] = [];
-    for (const c of v.campaigns) {
-      const m = v.media.find((x) => x.key === c.mediaType);
-      if (!m) continue;
-      for (const [when, verb] of [[c.flightStart, "launched"], [c.flightEnd, "ended"]] as const) {
-        // An end on the last day on record is the flight still running, not an end.
-        if (verb === "ended" && when >= data.meta.lastDate) continue;
-        const b = snap(when);
-        if (!b || when < buckets[0] || when > v.dates[v.dates.length - 1]) continue;
-        const row = series.find((r) => r.date === b);
-        if (!row) continue;
-        // A centred label runs off the plot when its dot is near an edge, so
-        // the anchor follows where the dot sits along the axis.
-        const at = buckets.indexOf(b) / Math.max(1, buckets.length - 1);
-        out.push({ key: `${c.id}-${verb}`, date: b, y: row[m.key], color: m.color,
-                   label: `${c.name} ${verb}`,
-                   anchor: at < 0.2 ? "start" : at > 0.8 ? "end" : "middle" });
-      }
-    }
-    return out;
-  }, [series, v, data.meta.lastDate]);
+  const events = useMemo(() => flightEvents(v, data, series), [v, data, series]);
   const fmt = metric === "spend" ? (n: number) => money(n) : compact;
 
   return (

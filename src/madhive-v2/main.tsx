@@ -82,7 +82,7 @@ function Page() {
         <Box mt={9}><SectionTitle>What, When &amp; Who Converts</SectionTitle></Box>
         <Converts v={v} data={data} days={days} />
 
-        <Box mt={9}><SectionTitle>Delivery</SectionTitle></Box>
+        <Box mt={9}><SectionTitle>Ad Delivery</SectionTitle></Box>
         <Delivery v={v} data={data} days={days} />
 
         <Box mt={9}><Creatives v={v} data={data} /></Box>
