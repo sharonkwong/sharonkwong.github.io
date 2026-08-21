@@ -20,9 +20,22 @@ export function useData() {
   return { data, error };
 }
 
+/** An untargeted ZCTA. It has an area profile but no campaign numbers, because
+ *  nothing was bought there — which is the point of drawing it. */
+export interface ContextZip {
+  zip: string;
+  rings: number[][][];
+  population: number;
+  medianIncome: number;
+  medianAge: number;
+  degreeShare: number;
+}
+
 export interface Shapes {
-  source: { zcta: string; nation: string; url: string; note: string };
+  source: { zcta: string; state?: string; nation: string; url: string; note: string };
   zips: { zip: string; rings: number[][][] }[];
+  context: ContextZip[];
+  state: number[][][];
   nation: number[][][];
 }
 

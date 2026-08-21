@@ -7,9 +7,32 @@ import {
 import { compact, defaultGrain, flightEvents, GRAIN_OPTIONS, deviceTotals, geoAll, geoTotals, nf, pct, rollup, seriesByMedia, shortDate, useShapes } from "./data";
 import type { Grain, View } from "./data";
 import type { Data, ShareMetric } from "./types";
-import GeoMap from "./GeoMap";
+import GeoMap, { type GeoView } from "./GeoMap";
 import { DataTable, Label, Legend, MONO, Panel, Question, T, TABLE_ROWS, Tip, Toggle } from "./ui";
 import type { Column } from "./ui";
+
+const VIEW_OPTS: { value: GeoView; label: string }[] = [
+  { value: "metro", label: "Portland metro" },
+  { value: "state", label: "Oregon" },
+];
+
+/** The four area-profile rows, shared so a targeted ZIP and an untargeted one
+ *  cannot drift into showing them differently. */
+function AreaProfile({ p }: { p: { population: number; medianIncome: number; medianAge: number; degreeShare: number } }) {
+  return (
+    <Flex direction="column" gap={2}>
+      {[["Population", p.population.toLocaleString("en-US")],
+        ["Median income", `$${p.medianIncome.toLocaleString("en-US")}`],
+        ["Median age", p.medianAge.toFixed(1)],
+        ["Bachelor's or higher", pct(p.degreeShare, 0)]].map(([k, val]) => (
+        <Flex key={k} justify="space-between" align="baseline">
+          <Text fontSize="12px" color={T.muted}>{k}</Text>
+          <Text fontFamily={MONO} fontSize="12.5px" color={T.ink}>{val}</Text>
+        </Flex>
+      ))}
+    </Flex>
+  );
+}
 
 const METRIC_OPTS = [
   { value: "impressions" as ShareMetric, label: "Impressions" },
@@ -190,6 +213,7 @@ function Geo({ v, data }: { v: View; data: Data }) {
   const [metric, setMetric] = useState<ShareMetric>("impressions");
   const [pinned, setPinned] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
+  const [view, setView] = useState<GeoView>("metro");
 
   const shapes = useShapes();
   const zips = useMemo(() => geoTotals(v, data.geo, metric), [v, data.geo, metric]);
@@ -199,6 +223,8 @@ function Geo({ v, data }: { v: View; data: Data }) {
   const min = Math.min(...zips.map((z) => z.value));
   const shown = pinned ?? hover;
   const detail = zips.find((z) => z.zip === shown);
+  // Nothing ran here, so there is a profile to show and no numbers to show it with.
+  const untargeted = !detail && shown ? shapes?.context.find((c) => c.zip === shown) : undefined;
   const rank = [...zips].sort((a, b) => b.value - a.value);
 
   const step = (val: number) => {
@@ -214,12 +240,13 @@ function Geo({ v, data }: { v: View; data: Data }) {
           of the panel and the control lines up with the map's right edge. */}
       <Grid templateColumns={{ base: "1fr", lg: "1fr 268px" }} gap={5} alignItems="stretch">
         <Box>
-          <Flex justify="flex-end" mb={3}>
+          <Flex justify="flex-end" gap={2} mb={3}>
+            <Toggle ariaLabel="Map extent" options={VIEW_OPTS} value={view} onChange={setView} />
             <Toggle ariaLabel="Geo measure" options={METRIC_OPTS} value={metric} onChange={setMetric} />
           </Flex>
           {shapes && (
             <Box>
-              <GeoMap shapes={shapes}
+              <GeoMap shapes={shapes} view={view}
                 colorFor={(z) => step(byZip.get(z) ?? 0)}
                 isBright={(z) => bright(byZip.get(z) ?? 0)}
                 labelFor={(z) => {
@@ -237,10 +264,21 @@ function Geo({ v, data }: { v: View; data: Data }) {
               {T.ramp.slice(1).map((c) => <Box key={c} w="26px" h="9px" bg={c} borderRadius="1px" />)}
             </Flex>
             <Label>High</Label>
+            <Box w="1px" h="12px" bg={T.line} mx={1} />
+            <Box w="26px" h="9px" bg={T.off.fill} border="1px solid" borderColor={T.off.line}
+              borderRadius="1px" />
+            <Label>Not targeted</Label>
             <Text fontFamily={MONO} fontSize="10.5px" color={T.dim} ml="auto">
-              {compact(total)} {metric} · {zips.length} ZIPs
+              {compact(total)} {metric} · {zips.length} targeted
+              {shapes ? ` · ${shapes.context.length} not` : ""}
             </Text>
           </Flex>
+          {view === "state" && (
+            <Text fontSize="11px" color={T.dim} mt={2}>
+              Unshaded land inside the state line has no ZIP code — ZCTAs are built from
+              census blocks that contain addresses, and about a third of Oregon has none.
+            </Text>
+          )}
         </Box>
 
         <Box borderLeft={{ lg: "1px solid" }} borderColor={{ lg: T.line }} pl={{ lg: 5 }}>
@@ -274,17 +312,21 @@ function Geo({ v, data }: { v: View; data: Data }) {
               <Label as="div" mt={4} mb={2}>Mobile OS</Label>
               <SplitBars rows={Object.entries(detail.os)} color={T.device.Mobile} />
               <Label as="div" mt={4} mb={2}>Area profile</Label>
-              <Flex direction="column" gap={2}>
-                {[["Population", detail.population.toLocaleString("en-US")],
-                  ["Median income", `$${detail.medianIncome.toLocaleString("en-US")}`],
-                  ["Median age", detail.medianAge.toFixed(1)],
-                  ["Bachelor's or higher", pct(detail.degreeShare, 0)]].map(([k, val]) => (
-                  <Flex key={k} justify="space-between" align="baseline">
-                    <Text fontSize="12px" color={T.muted}>{k}</Text>
-                    <Text fontFamily={MONO} fontSize="12.5px" color={T.ink}>{val}</Text>
-                  </Flex>
-                ))}
+              <AreaProfile p={detail} />
+            </>
+          ) : untargeted ? (
+            <>
+              <Flex align="baseline" gap={2} mb={0.5}>
+                <Text fontFamily={MONO} fontSize="15px" fontWeight={650} color={T.ink}>
+                  {untargeted.zip}
+                </Text>
+                <Text fontSize="12px" color={T.muted}>Not targeted</Text>
               </Flex>
+              <Text fontSize="11px" color={T.dim} mb={3}>
+                No campaign delivered here
+              </Text>
+              <Label as="div" mb={2}>Area profile</Label>
+              <AreaProfile p={untargeted} />
             </>
           ) : (
             <Flex h="100%" minH="200px" align="center" justify="center">

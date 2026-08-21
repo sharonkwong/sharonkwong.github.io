@@ -15,6 +15,10 @@ export const T = {
   up: "#3fb950",
   down: "#f85149",
   focus: "#58a6ff",
+  /* Untargeted ZCTAs on the geo map. Neutral rather than the ramp's darkest
+     step, so "no campaign ran here" never reads as "a little ran here". */
+  off: { fill: "#181d24", line: "#252b33", hover: "#2c343d", land: "#11161c" },
+
   /* Sequential ramp for the geo map: one hue, monotonic lightness. */
   ramp: ["#141b26", "#173355", "#1f4d7a", "#2b6cb0", "#4a91d8", "#79c0ff"],
   /* Highlight for "biggest bucket in this group". No hue was available: the

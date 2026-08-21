@@ -166,6 +166,14 @@ NOTES = {
         "zip": "ZCTA code. Joins to geo.zip.",
         "rings": "Polygon rings as [lon, lat] pairs. Multiple rings where a ZCTA is split.",
     },
+    "shapes.context": {
+        "zip": "ZCTA code. Joins to nothing -- no campaign ran here.",
+        "rings": "Polygon rings as [lon, lat] pairs.",
+        "population": "Modelled from the Census land area, not measured.",
+        "medianIncome": "Modelled.",
+        "medianAge": "Modelled.",
+        "degreeShare": "Modelled.",
+    },
 }
 
 LAYERS = [
@@ -404,7 +412,9 @@ TABLES = [
     dict(layer="Served", name="madhive-v2-shapes.json", grain="One document",
          description="Boundary geometry, split out so the dashboard paints before the map arrives.",
          columns=[("source", "object", "Citation and simplification note."),
-                  ("zips", "array", "Simplified ZCTA rings."),
+                  ("zips", "array", "Simplified ZCTA rings for the ZIPs that were bought."),
+                  ("context", "array", "Every other ZCTA in and around the state, with a modelled area profile. Drawn grey: where a buy stopped is part of reading it."),
+                  ("state", "array", "State outline. About a third of it has no ZCTA, so it is painted underneath to keep unassigned land from reading as missing data."),
                   ("nation", "array", "National outline for the locator inset.")]),
 ]
 
@@ -452,7 +462,8 @@ LINEAGE = [
     ("What, When & Who Converts", "Daily engagement", ["daily"]),
     ("Delivery", "Are your ads delivering", ["daily"]),
     ("Delivery", "Device distribution pies", ["devices", "daily"]),
-    ("Delivery", "Geographic map", ["geo", "shapes.zips", "shapes.nation", "daily"]),
+    ("Delivery", "Geographic map", ["geo", "shapes.zips", "shapes.context", "shapes.state", "shapes.nation", "daily"]),
+    ("Delivery", "ZIP detail: untargeted area", ["shapes.context"]),
     ("Delivery", "ZIP detail: device and OS", ["geo.devices", "geo.os"]),
     ("Delivery", "ZIP table", ["geo", "daily"]),
     ("Creative", "Creative table", ["creatives", "daily", "campaigns"]),
@@ -607,7 +618,10 @@ def main():
     add("demographics.<media>.<dimension>",
         [b for m in data["demographics"].values() for dim in m.values() for b in dim],
         "Who converted, by media type. Profile only, never a count.", "agg_converter_profile")
-    add("shapes.zips", shapes["zips"], "Simplified ZCTA boundary rings.", "raw_zcta_boundary")
+    add("shapes.zips", shapes["zips"], "Simplified ZCTA boundary rings for the targeted ZIPs.", "raw_zcta_boundary")
+    add("shapes.context", shapes["context"],
+        "Untargeted ZCTAs. Real geometry, modelled area profile -- the Census API now needs a key for ACS.",
+        "raw_zcta_boundary")
 
     files = []
     for path, desc in [("madhive-v2.json", "Everything except geometry."),
