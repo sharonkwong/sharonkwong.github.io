@@ -136,6 +136,8 @@ export interface View {
   priorTotals: Totals;
   /** Filtered totals per campaign — every breakdown scales off these. */
   byCampaign: Record<string, Totals>;
+  /** Days of each campaign inside the window. Reach needs this, sums do not. */
+  daysByCampaign: Record<string, number>;
   byMedia: Record<MediaKey, Totals>;
   dates: string[];
   media: { key: MediaKey; label: string; color: string }[];
@@ -175,12 +177,16 @@ export function useView(data: Data | null, f: Filters | null): View | null {
     }
 
     const byCampaign: Record<string, Totals> = {};
-    for (const c of campaigns) byCampaign[c.id] = { ...ZERO };
+    const seen: Record<string, Set<string>> = {};
+    for (const c of campaigns) { byCampaign[c.id] = { ...ZERO }; seen[c.id] = new Set(); }
     for (const r of rows) {
       const t = byCampaign[r.campaign];
       t.impressions += r.impressions; t.clicks += r.clicks;
       t.conversions += r.conversions; t.spend += r.spend;
+      seen[r.campaign].add(r.date);
     }
+    const daysByCampaign = Object.fromEntries(
+      Object.entries(seen).map(([k, s]) => [k, s.size]));
 
     const byMedia = { display: { ...ZERO }, email: { ...ZERO }, video: { ...ZERO } } as Record<MediaKey, Totals>;
     for (const c of campaigns) {
@@ -212,7 +218,7 @@ export function useView(data: Data | null, f: Filters | null): View | null {
     return {
       campaigns, ids, rows, priorRows,
       totals: sumRows(rows), priorTotals: sumRows(priorRows),
-      byCampaign, byMedia, dates, media,
+      byCampaign, daysByCampaign, byMedia, dates, media,
       email: {
         present: emailIds.size > 0,
         only: emailIds.size > 0 && emailIds.size === campaigns.length,
@@ -228,18 +234,41 @@ export type MediaSeriesRow = { date: string } & Record<MediaKey, number>;
 /**
  * Unique identifiers reached, for whatever is filtered.
  *
- * Reach cannot be summed, so it is derived rather than stored: each campaign's
- * filtered impressions divided by its frequency, then discounted for the people
- * two campaigns share. The discount grows with the number of media types in
- * scope, because a device id and a hashed email are matched probabilistically
- * rather than joined.
+ * Reach cannot be summed, so it is derived rather than stored: filtered
+ * impressions divided by frequency, then discounted for the people two
+ * campaigns share.
+ *
+ * Frequency is the part that has to move with the date filter. The stored
+ * figure is the whole flight's, and a shorter window reaches nearly the same
+ * people fewer times each -- so dividing a month of impressions by a six-month
+ * frequency would understate reach badly. Frequency is therefore scaled by how
+ * much of the flight is in view, sub-linearly, because repeat exposure
+ * accumulates fastest early and then flattens:
+ *
+ *     f(w) = 1 + (f_flight - 1) * (w / flight) ^ 0.5
+ *
+ * At the full flight it returns the stored frequency; at a single day it tends
+ * to 1, where every impression is a different person.
  */
+const FREQ_EXPONENT = 0.5;
+
 export function reachOf(v: View, data: Data) {
-  const freq = Object.fromEntries(data.campaigns.map((c) => [c.id, c.frequency]));
-  const raw = v.campaigns.reduce(
-    (s, c) => s + (freq[c.id] > 0 ? (v.byCampaign[c.id]?.impressions ?? 0) / freq[c.id] : 0), 0);
+  const byId = Object.fromEntries(data.campaigns.map((c) => [c.id, c]));
+  let raw = 0;
+  const perCampaign: Record<string, { reach: number; freq: number; days: number }> = {};
+  for (const c of v.campaigns) {
+    const meta = byId[c.id];
+    const imps = v.byCampaign[c.id]?.impressions ?? 0;
+    const flight = daysBetween(meta.flightStart, meta.flightEnd);
+    const win = Math.min(v.daysByCampaign[c.id] ?? 0, flight);
+    if (imps <= 0 || win <= 0) { perCampaign[c.id] = { reach: 0, freq: 0, days: 0 }; continue; }
+    const freq = Math.max(1, 1 + (meta.frequency - 1) * (win / flight) ** FREQ_EXPONENT);
+    const reach = imps / freq;
+    perCampaign[c.id] = { reach, freq, days: win };
+    raw += reach;
+  }
   const overlap = data.reach.overlapByMediaCount[String(v.media.length)] ?? 0;
-  return { unique: raw * (1 - overlap), raw, overlap };
+  return { unique: raw * (1 - overlap), raw, overlap, perCampaign };
 }
 
 /** Daily series, one key per media type, for the selected window. */

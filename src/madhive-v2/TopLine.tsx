@@ -113,16 +113,15 @@ function VolumeDrill({ v, data, metric }: { v: View; data: Data; metric: Metric 
 
 /** Reach: unique identifiers, and how hard each media type worked them. */
 function ReachDrill({ v, data }: { v: View; data: Data }) {
-  const freq = Object.fromEntries(data.campaigns.map((c) => [c.id, c.frequency]));
+  const { unique, raw, overlap, perCampaign } = reachOf(v, data);
   const rows = v.media.map((m) => {
     const ids = v.campaigns.filter((c) => c.mediaType === m.key);
-    const reach = ids.reduce((s, c) => s + (v.byCampaign[c.id]?.impressions ?? 0) / freq[c.id], 0);
+    const reach = ids.reduce((s, c) => s + (perCampaign[c.id]?.reach ?? 0), 0);
     const imp = ids.reduce((s, c) => s + (v.byCampaign[c.id]?.impressions ?? 0), 0);
     return { ...m, reach, imp, freq: reach > 0 ? imp / reach : 0,
              ident: data.reach.identifiers[m.key] };
   }).filter((r) => r.imp > 0);
   const max = Math.max(...rows.map((r) => r.reach), 1);
-  const { unique, raw, overlap } = reachOf(v, data);
 
   return (
     <Box>
@@ -225,7 +224,7 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
       delta: delta(t.conversions, p.conversions) },
     { id: "reach", label: "Unique Reach", value: compact(reach.unique),
       delta: NaN,
-      tip: `Unique identifiers reached, not impressions. Display and video dedupe on a device id, email on a hashed address, and the two are matched to each other probabilistically rather than joined — so this is a modelled figure, not a count. Each campaign's impressions are divided by its frequency, then ${pct(reach.overlap, 0)} is taken off for the people the selected media share. No period comparison, because the overlap is a property of the selection rather than of the window.` },
+      tip: `Unique identifiers reached inside the selected dates, not impressions. Each campaign's impressions in the window are divided by its frequency for a window that length — a shorter range reaches nearly the same people fewer times each — and then ${pct(reach.overlap, 0)} comes off for the people the selected media share. Display and video dedupe on a device id, email on a hashed address, and the two are matched probabilistically rather than joined, so this is a modelled figure and not a count. No period comparison, because the overlap is a property of the selection rather than of the window.` },
   ];
   const costs: { id: CardId; label: string; value: string; delta: number; lower?: boolean; tip?: string }[] = [
     { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true,
