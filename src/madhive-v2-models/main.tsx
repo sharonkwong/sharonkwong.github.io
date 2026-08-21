@@ -18,11 +18,14 @@ const theme = extendTheme({
 interface Field { name: string; type: string; example: string | null; range: string | null; optional: boolean; note: string }
 interface Collection { name: string; rows: number; description: string; source: string; fields: Field[] }
 interface Table { layer: string; name: string; grain: string; description: string; columns: { name: string; type: string; note: string }[] }
+interface Step { title: string; detail: string; tables: string }
+interface Transform { frm: string; to: string; steps: Step[] }
 interface Schema {
   generatedAt: string; dashboard: string; advertiser: string;
   window: { first: string; last: string };
   files: { path: string; bytes: number; description: string }[];
-  layers: { name: string; purpose: string }[];
+  layers: { name: string; short: string; purpose: string }[];
+  transforms: Transform[];
   tables: Table[];
   collections: Collection[];
   lineage: { section: string; widget: string; reads: string[] }[];
@@ -31,7 +34,7 @@ interface Schema {
 }
 
 const LAYER_COLOR: Record<string, string> = {
-  Raw: T.dim, Conformed: T.ramp[3], Marts: T.ramp[4], Served: T.up,
+  Bronze: "#c98a52", Silver: "#9aa5b1", Gold: "#e3b341", Served: T.up,
 };
 
 const C = ({ children }: { children: React.ReactNode }) => (
@@ -60,9 +63,7 @@ function Pipeline({ layers }: { layers: Schema["layers"] }) {
               <rect x={x} y={16} width={BW} height={64} rx={6} fill={T.surface}
                 stroke={LAYER_COLOR[l.name] ?? T.line} strokeWidth={1.2} />
               <text x={x + 14} y={40} fontSize={13} fontWeight={600} fill={T.ink}>{l.name}</text>
-              <text x={x + 14} y={60} fontFamily={MONO} fontSize={10} fill={T.dim}>
-                {["vendor files", "one row per event", "one row per question", "one document"][i]}
-              </text>
+              <text x={x + 14} y={60} fontFamily={MONO} fontSize={10} fill={T.dim}>{l.short}</text>
               {i < layers.length - 1 && (
                 <line x1={x + BW + 6} y1={48} x2={x + BW + GAP - 6} y2={48}
                   stroke={T.dim} strokeWidth={1.2} markerEnd="url(#pa)" />
@@ -278,6 +279,7 @@ function Page() {
           </Box>
           <Flex gap={{ base: 5, md: 7 }} wrap="wrap" pt={1}>
             {[["Tables", String(s.tables.length)],
+              ["Transformations", String(s.transforms.reduce((a, t) => a + t.steps.length, 0))],
               ["Served collections", String(s.collections.length)],
               ["Rows on record", s.collections.reduce((a, c) => a + c.rows, 0).toLocaleString("en-US")],
               ["Payload", `${Math.round(s.files.reduce((a, f) => a + f.bytes, 0) / 1024)} KB`]].map(([k, v]) => (
@@ -310,6 +312,7 @@ function Page() {
                 <Box w="9px" h="9px" borderRadius="2px" bg={LAYER_COLOR[l.name] ?? T.dim} />
                 <Text fontSize="13px" fontWeight={600} color={T.ink}>{l.name}</Text>
               </Flex>
+              <Text fontFamily={MONO} fontSize="10.5px" color={T.dim} mb={1.5}>{l.short}</Text>
               <Text fontSize="12.5px" color={T.muted} lineHeight={1.6}>{l.purpose}</Text>
             </Panel>
           ))}
@@ -318,14 +321,50 @@ function Page() {
         <Box mt={10}><SectionTitle>How the facts relate</SectionTitle></Box>
         <Panel><Erd /></Panel>
 
-        {byLayer.map((l) => (
-          <Box key={l.name} mt={10}>
-            <SectionTitle>{l.name} tables</SectionTitle>
-            <Flex direction="column" gap={3}>
-              {l.tables.map((t) => <TableCard key={t.name} t={t} />)}
-            </Flex>
-          </Box>
-        ))}
+        {byLayer.map((l) => {
+          const next = s.transforms.find((t) => t.frm === l.name);
+          return (
+            <Box key={l.name} mt={10}>
+              <SectionTitle>
+                {l.name} — {l.tables.length} table{l.tables.length === 1 ? "" : "s"}
+              </SectionTitle>
+              <Flex direction="column" gap={3}>
+                {l.tables.map((t) => <TableCard key={t.name} t={t} />)}
+              </Flex>
+              {next && (
+                <Box mt={5}>
+                  <Flex align="center" gap={3} mb={3}>
+                    <Box w="9px" h="9px" borderRadius="2px" bg={LAYER_COLOR[next.frm]} />
+                    <Text fontSize="13px" fontWeight={600} color={T.ink}>
+                      {next.frm} to {next.to}
+                    </Text>
+                    <Box flex="1" h="1px" bg={T.lineSoft} />
+                    <Box w="9px" h="9px" borderRadius="2px" bg={LAYER_COLOR[next.to]} />
+                    <Text fontFamily={MONO} fontSize="10.5px" color={T.dim}>
+                      {next.steps.length} transformations
+                    </Text>
+                  </Flex>
+                  <Grid templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} gap={3}>
+                    {next.steps.map((st, i) => (
+                      <Panel key={st.title}>
+                        <Flex align="baseline" gap={2.5} mb={1.5}>
+                          <Text fontFamily={MONO} fontSize="11px" color={T.dim}>
+                            {String(i + 1).padStart(2, "0")}
+                          </Text>
+                          <Text fontSize="13px" fontWeight={600} color={T.ink}>{st.title}</Text>
+                        </Flex>
+                        <Text fontSize="12.5px" color={T.muted} lineHeight={1.65} mb={2.5}>
+                          {st.detail}
+                        </Text>
+                        <Text fontFamily={MONO} fontSize="11px" color={T.dim}>{st.tables}</Text>
+                      </Panel>
+                    ))}
+                  </Grid>
+                </Box>
+              )}
+            </Box>
+          );
+        })}
 
         <Box mt={10}>
           <SectionTitle>What ships to the browser</SectionTitle>

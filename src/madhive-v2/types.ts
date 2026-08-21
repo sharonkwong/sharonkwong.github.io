@@ -1,7 +1,11 @@
 export type MediaKey = "display" | "email" | "video";
 
 export interface MediaType { key: MediaKey; label: string; color: string }
-export interface Campaign { id: string; name: string; mediaType: MediaKey }
+export interface Campaign {
+  id: string; name: string; mediaType: MediaKey;
+  /** Lifetime flight window, independent of the date filter. */
+  flightStart: string; flightEnd: string;
+}
 
 export interface DailyRow {
   date: string;

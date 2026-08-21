@@ -5,9 +5,10 @@ import Converts from "./Converts";
 import Creatives from "./Creatives";
 import Delivery from "./Delivery";
 import FilterBar from "./Filters";
+import Lifetime from "./Lifetime";
 import TopLine from "./TopLine";
-import { compact, daysBetween, money, nf, useData, useFilters, useView } from "./data";
-import { Label, MONO, SectionTitle, T } from "./ui";
+import { daysBetween, useData, useFilters, useView } from "./data";
+import { MONO, SectionTitle, T } from "./ui";
 
 const theme = extendTheme({
   config: { initialColorMode: "dark", useSystemColorMode: false },
@@ -42,20 +43,6 @@ function Page() {
   }
 
   const days = daysBetween(f.start, f.end);
-  // Lifetime: every campaign, every day on record. Deliberately not filtered —
-  // it is the account's standing total, not a view of the current selection.
-  const life = data.daily.reduce((a, r) => ({
-    impressions: a.impressions + r.impressions,
-    conversions: a.conversions + r.conversions,
-    spend: a.spend + r.spend,
-  }), { impressions: 0, conversions: 0, spend: 0 });
-  const lifetime = [
-    ["Campaigns", nf(data.campaigns.length)],
-    ["Impressions", compact(life.impressions)],
-    ["Conversions", nf(life.conversions)],
-    ["Spend", money(life.spend)],
-  ] as const;
-
   return (
     <Box bg={T.bg} minH="100vh" color={T.ink}>
       <Box maxW="1320px" mx="auto" px={{ base: 4, md: 7 }} pb={24}>
@@ -67,15 +54,13 @@ function Page() {
             <Text fontSize={{ base: "23px", md: "27px" }} fontWeight={650} letterSpacing="-0.022em"
               lineHeight={1.15} color={T.muted}>Ad Performance</Text>
           </Box>
-          <Flex gap={{ base: 5, md: 7 }} wrap="wrap" pt={1}>
-            {lifetime.map(([k, val]) => (
-              <Box key={k} textAlign={{ base: "left", sm: "right" }}>
-                <Label as="div" mb="3px">Lifetime {k}</Label>
-                <Text fontFamily={MONO} fontSize="16px" fontWeight={600} color={T.ink}
-                  sx={{ fontVariantNumeric: "tabular-nums" }}>{val}</Text>
-              </Box>
-            ))}
-          </Flex>
+          <Lifetime data={data} focused={f.campaigns}
+              onFocus={(id) => set({
+                // Focusing one campaign clears the media filter, or the two
+                // could contradict each other in the bar above.
+                campaigns: f.campaigns.length === 1 && f.campaigns[0] === id ? [] : [id],
+                media: [],
+              })} />
         </Flex>
 
         <FilterBar data={data} f={f} set={set} />

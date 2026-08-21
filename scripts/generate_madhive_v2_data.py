@@ -35,17 +35,17 @@ MEDIA = [
 # display buys clicks that do not convert, email converts the few clicks it
 # gets, video barely clicks at all yet carries its weight in conversions.
 CAMPAIGNS = [
-    dict(id="c-dp-1", name="Summer Slice Prospecting", mediaType="display",
+    dict(id="c-dp-1", name="Summer Slice Prospecting", mediaType="display", flight=(0, 180),
          impressions=3_900_000, clicks=13_300, conversions=165, spend=19_100),
-    dict(id="c-dp-2", name="Cart Abandon Retarget", mediaType="display",
+    dict(id="c-dp-2", name="Cart Abandon Retarget", mediaType="display", flight=(12, 168),
          impressions=2_300_000, clicks=8_400, conversions=135, spend=11_900),
-    dict(id="c-em-1", name="Two for Tuesday", mediaType="email",
+    dict(id="c-em-1", name="Two for Tuesday", mediaType="email", flight=(0, 180),
          impressions=340_000, clicks=7_300, conversions=980, spend=8_300),
-    dict(id="c-em-2", name="Win-Back 60 Day", mediaType="email",
+    dict(id="c-em-2", name="Win-Back 60 Day", mediaType="email", flight=(34, 180),
          impressions=200_000, clicks=4_000, conversions=540, spend=5_200),
-    dict(id="c-vd-1", name="Fresh Out The Oven", mediaType="video",
+    dict(id="c-vd-1", name="Fresh Out The Oven", mediaType="video", flight=(6, 180),
          impressions=800_000, clicks=2_050, conversions=610, spend=20_000),
-    dict(id="c-vd-2", name="Family Night", mediaType="video",
+    dict(id="c-vd-2", name="Family Night", mediaType="video", flight=(45, 180),
          impressions=500_000, clicks=1_200, conversions=370, spend=12_500),
 ]
 
@@ -80,10 +80,14 @@ for ci, c in enumerate(CAMPAIGNS):
     w_clk = [w * (1 + 0.11 * math.sin(i * 0.83 + ci)) for i, w in enumerate(w_imp)]
     w_cnv = [w * (1 + 0.17 * math.sin(i * 0.61 + ci * 2.1) + 0.08 * math.cos(i * 1.9)) for i, w in enumerate(w_imp)]
     w_spd = [w * (1 + 0.05 * math.cos(i * 1.11 + ci)) for i, w in enumerate(w_imp)]
-    n = {k: sum(v[DAYS - WINDOW:]) for k, v in
-         dict(imp=w_imp, clk=w_clk, cnv=w_cnv, spd=w_spd).items()}
+    lo, hi = c["flight"]
+    live = lambda i: lo <= i < hi
+    n = {k: sum(x for i, x in enumerate(v) if i >= DAYS - WINDOW and live(i))
+         for k, v in dict(imp=w_imp, clk=w_clk, cnv=w_cnv, spd=w_spd).items()}
     fn = EMAIL_FUNNEL.get(c["id"])
     for i in range(DAYS):
+        if not live(i):
+            continue
         delivered = round(c["impressions"] * w_imp[i] / n["imp"])
         row = dict(
             date=(START + timedelta(days=i)).isoformat(),
@@ -306,8 +310,10 @@ data = dict(
         synthetic=True,
     ),
     mediaTypes=MEDIA,
-    campaigns=[{k: v for k, v in c.items()
-                if k in ("id", "name", "mediaType")} for c in CAMPAIGNS],
+    campaigns=[dict(id=c["id"], name=c["name"], mediaType=c["mediaType"],
+                    flightStart=(START + timedelta(days=c["flight"][0])).isoformat(),
+                    flightEnd=(START + timedelta(days=c["flight"][1] - 1)).isoformat())
+               for c in CAMPAIGNS],
     daily=daily,
     emailFunnel=EMAIL_FUNNEL,
     devices=devices,
