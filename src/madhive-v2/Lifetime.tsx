@@ -111,8 +111,8 @@ export function LifetimeTiles({ data, open, onToggle }: {
 }
 
 /* ----------------------------------------------------------------- table */
-export function LifetimeTable({ data, focused, onFocus }: {
-  data: Data; focused: string[]; onFocus: (id: string) => void;
+export function LifetimeTable({ data, selected, onToggle, onClear }: {
+  data: Data; selected: string[]; onToggle: (id: string) => void; onClear: () => void;
 }) {
   const rows = useRows(data);
 
@@ -129,7 +129,7 @@ export function LifetimeTable({ data, focused, onFocus }: {
   };
 
   const cols: Column<Row>[] = [
-    { key: "name", label: "Campaign name", sort: (r) => r.name, width: "230px",
+    { key: "name", label: "Campaign name", sort: (r) => r.name, width: "252px",
       render: (r) => (
         <Tooltip hasArrow placement="top" openDelay={120} bg={T.raised} color={T.ink}
           border="1px solid" borderColor={T.line} borderRadius="6px" px={3} py={2}
@@ -142,6 +142,13 @@ export function LifetimeTable({ data, focused, onFocus }: {
             </Box>
           }>
           <Flex align="center" gap={2} display="inline-flex">
+            <Box display="inline-flex" alignItems="center" justifyContent="center"
+              w="13px" h="13px" borderRadius="3px" flex="0 0 auto" border="1.5px solid"
+              borderColor={selected.includes(r.id) ? T.focus : T.dim}
+              bg={selected.includes(r.id) ? T.focus : "transparent"}
+              color={T.bg} fontSize="9px" lineHeight="10px" transition="all .12s">
+              {selected.includes(r.id) ? "✓" : ""}
+            </Box>
             <Box w="8px" h="8px" borderRadius="2px" bg={r.color} flex="0 0 auto" />
             <Text as="span" borderBottom="1px dotted" borderColor={T.dim}>{r.name}</Text>
           </Flex>
@@ -177,15 +184,23 @@ export function LifetimeTable({ data, focused, onFocus }: {
     <Panel
       title="All campaigns (lifetime)"
       right={
-        <Text fontFamily={MONO} fontSize="10.5px" color={T.dim}>
-          {rows.length > MAX_ROWS ? `${MAX_ROWS} of ${rows.length} shown · ` : ""}
-          click a row to focus the dashboard
-        </Text>
+        <Flex align="center" gap={3} wrap="wrap">
+          <Text fontFamily={MONO} fontSize="10.5px" color={T.dim}>
+            {rows.length > MAX_ROWS ? `${MAX_ROWS} of ${rows.length} shown · ` : ""}
+            {selected.length
+              ? `${selected.length} of ${rows.length} filtering the dashboard`
+              : "click rows to filter the dashboard"}
+          </Text>
+          {selected.length > 0 && (
+            <Text as="button" onClick={onClear} fontFamily={MONO} fontSize="10.5px"
+              color={T.focus} textDecoration="underline">clear</Text>
+          )}
+        </Flex>
       }>
-      <DataTable columns={cols} rows={rows} rowKey={(r) => r.id} minW="1080px"
+      <DataTable columns={cols} rows={rows} rowKey={(r) => r.id} minW="1100px"
         maxRows={MAX_ROWS} initialSort={{ key: "spend", dir: "desc" }}
-        onRowClick={(r) => onFocus(r.id)}
-        isOpen={(r) => focused.includes(r.id)} />
+        onRowClick={(r) => onToggle(r.id)}
+        isOpen={(r) => selected.includes(r.id)} />
     </Panel>
   );
 }

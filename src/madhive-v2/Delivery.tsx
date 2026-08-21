@@ -313,7 +313,7 @@ export default function Delivery({ v, data, days }: { v: View; data: Data; days:
       <Question>Are your ads delivering each day properly?</Question>
       <Pacing v={v} data={data} days={days} />
       <Box mt={5}>
-        <Question>What does the device distribution look like for your campaign?</Question>
+        <Question>What does the device distribution look like for your campaigns?</Question>
         <Devices v={v} data={data} />
       </Box>
       <Box mt={5}>

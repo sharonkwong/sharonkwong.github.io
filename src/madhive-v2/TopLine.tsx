@@ -196,19 +196,19 @@ function CostDrill({ v, kind }: { v: View; kind: "cpm" | "cpc" | "cpa" }) {
 }
 
 /**
- * The two caveats that belong to the media mix rather than to any one metric,
- * stated once above the cards instead of repeated inside their tooltips.
+ * How to use the cards, plus the two caveats that belong to the media mix
+ * rather than to any one metric — stated once here instead of repeated inside
+ * every tooltip.
  */
-function MediaNote({ v }: { v: View }) {
-  if (v.media.length < 2 && !v.email.present) return null;
+function MediaNote() {
   return (
     <Box bg={T.surface} border="1px solid" borderColor={T.line} borderRadius="6px"
       px={4} py={3} mb={3}>
       <Text fontSize="12.5px" color={T.muted} lineHeight={1.65} maxW="104ch">
-        <Text as="span" color={T.ink} fontWeight={600}>Email has no impression</Text>, so its
-        delivered count sits in the impressions column. Clicks do not compare across media
-        either — email goes to people who opted in, and video mostly converts people who never
-        click at all.
+        <Text as="span" color={T.ink} fontWeight={600}>Note:</Text> click on the cards below to
+        view media type distributions. Email has no impression, so its delivered count sits in
+        the impressions column. Clicks do not compare across media either — email goes to people
+        who opted in, and video mostly converts people who never click at all.
       </Text>
     </Box>
   );
@@ -241,7 +241,7 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
       delta: delta(t.conversions, p.conversions) },
     { id: "reach", label: "Unique Reach", value: compact(reach.unique),
       delta: NaN,
-      tip: "Unique identifiers reached in the selected dates. Modelled, not counted: display and video dedupe on a device id, email on a hashed address, and the two are matched rather than joined. Open the card for the working." },
+      tip: "Unique identifiers reached in the selected dates. Modelled, not counted: display and video dedupe on a device id, email on a hashed address, and the two are matched rather than joined." },
   ];
   const costs: { id: CardId; label: string; value: string; delta: number; lower?: boolean; tip?: string }[] = [
     { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true,
@@ -262,7 +262,7 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
 
   return (
     <Box>
-      <MediaNote v={v} />
+      <MediaNote />
       <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={3}>
         {cards.map((c) => (
           <Card key={c.id} {...c} lowerIsBetter={c.lower} open={open === c.id} onClick={() => toggle(c.id)} />

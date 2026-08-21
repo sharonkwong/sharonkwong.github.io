@@ -61,13 +61,16 @@ function Page() {
         {/* Full page width, unlike the tiles it opens from. */}
         {lifeOpen && (
           <Box mb={7}>
-            <LifetimeTable data={data} focused={f.campaigns}
-              onFocus={(id) => set({
-                // Focusing one campaign clears the media filter, or the two
-                // could contradict each other in the bar below.
-                campaigns: f.campaigns.length === 1 && f.campaigns[0] === id ? [] : [id],
+            <LifetimeTable data={data} selected={f.campaigns}
+              onToggle={(id) => set({
+                campaigns: f.campaigns.includes(id)
+                  ? f.campaigns.filter((c) => c !== id)
+                  : [...f.campaigns, id],
+                // An explicit campaign pick is the more specific instruction, so
+                // it clears the media filter rather than fighting it.
                 media: [],
-              })} />
+              })}
+              onClear={() => set({ campaigns: [] })} />
           </Box>
         )}
 
