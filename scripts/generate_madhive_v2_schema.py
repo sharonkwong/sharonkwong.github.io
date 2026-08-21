@@ -417,6 +417,108 @@ RULES = [
 ]
 
 
+def worked_examples(data):
+    """Three traces through the layers, each ending on a row that really ships.
+
+    The gold rows are lifted straight out of madhive-v2.json. The bronze and
+    silver rows above them are illustrative -- this demo has no event-level
+    data -- and the page says so, because presenting invented rows as observed
+    ones would undo the point of introspecting the rest of the schema.
+    """
+    day = "2026-08-18"
+    disp = next(r for r in data["daily"] if r["campaign"] == "c-dp-1" and r["date"] == day)
+    mail = next(r for r in data["daily"] if r["campaign"] == "c-em-1" and r["date"] == day)
+    cr = next(c for c in data["creatives"] if c["id"] == "cr-01")
+    top = sorted(cr["placements"], key=lambda p: -p["impressionShare"])[:3]
+
+    return [
+        dict(
+            title="An impression that became a conversion",
+            note="Four rows land, one is a restatement of another. What survives is three impressions, one click and one conversion, which roll into a single row on the spine.",
+            steps=[
+                dict(layer="Bronze", table="raw_dsp_delivery",
+                     cols=["impression_id", "event_ts", "campaign_id", "creative_id", "placement_id", "device_type", "is_click"],
+                     rows=[["a91f-0c22", "2026-08-18T18:41:07Z", "c-dp-1", "cr-01", "buzzfeed.com", "PHONE", "false"],
+                           ["a91f-0c31", "2026-08-18T18:41:09Z", "c-dp-1", "cr-01", "reddit.com", "Smartphone", "true"],
+                           ["a91f-0c44", "2026-08-18T18:42:55Z", "c-dp-1", "cr-03", "pinterest.com", "TABLET", "false"],
+                           ["a91f-0c22", "2026-08-18T18:41:07Z", "c-dp-1", "cr-01", "buzzfeed.com", "PHONE", "false"]],
+                     flags=[None, None, None, "restated — same impression_id, dropped"]),
+                dict(layer="Bronze", table="raw_pixel_event",
+                     cols=["event_id", "event_ts", "event_type", "click_id", "user_key"],
+                     rows=[["p-7741", "2026-08-18T19:02:44Z", "purchase", "a91f-0c31", "u_8813"],
+                           ["p-7741", "2026-08-18T19:02:51Z", "purchase", "a91f-0c31", "u_8813"]],
+                     flags=[None, "retry — same event_id, dropped"]),
+                dict(layer="Silver", table="fct_impression",
+                     cols=["impression_sk", "event_date", "campaign_id", "creative_id", "placement_id", "device_type"],
+                     rows=[["1000441827", "2026-08-18", "c-dp-1", "cr-01", "buzzfeed.com", "Mobile"],
+                           ["1000441828", "2026-08-18", "c-dp-1", "cr-01", "reddit.com", "Mobile"],
+                           ["1000441829", "2026-08-18", "c-dp-1", "cr-03", "pinterest.com", "Tablet"]],
+                     flags=[None, None, None],
+                     note="Deduped, dated in local time, and PHONE / Smartphone / TABLET conformed onto one device enum."),
+                dict(layer="Silver", table="fct_conversion",
+                     cols=["conversion_sk", "event_date", "click_sk", "campaign_id", "attribution_model", "window_days"],
+                     rows=[["90002214", "2026-08-18", "5500318", "c-dp-1", "last_touch", "30"]],
+                     flags=[None],
+                     note="One row, not two. The model and window ride on the row so a later change to either is visible."),
+                dict(layer="Gold", table="agg_campaign_daily",
+                     cols=["event_date", "campaign_id", "impressions", "clicks", "conversions", "spend_usd"],
+                     rows=[[day, "c-dp-1", f"{disp['impressions']:,}", f"{disp['clicks']:,}",
+                            f"{disp['conversions']:,}", f"{disp['spend']:,.2f}"]],
+                     flags=[None],
+                     note="The three rows above are part of this total, alongside the rest of that day. This row ships verbatim as daily[].",
+                     real=True),
+            ]),
+        dict(
+            title="Six email events, one recipient",
+            note="The ESP emits a row per lifecycle event. Silver collapses them to one row per recipient per send, which is what makes sends, both open numbers and unsubscribes countable without walking the log again.",
+            steps=[
+                dict(layer="Bronze", table="raw_esp_event",
+                     cols=["event_id", "event_ts", "event_type", "campaign_id", "creative_id", "section_key", "is_mpp_prefetch"],
+                     rows=[["e-4410", "2026-08-18T14:00:02Z", "send", "c-em-1", "cr-06", "", ""],
+                           ["e-4411", "2026-08-18T14:00:09Z", "delivery", "c-em-1", "cr-06", "", ""],
+                           ["e-4412", "2026-08-18T14:00:11Z", "open", "c-em-1", "cr-06", "", "true"],
+                           ["e-4418", "2026-08-18T18:22:40Z", "open", "c-em-1", "cr-06", "", "false"],
+                           ["e-4419", "2026-08-18T18:23:04Z", "click", "c-em-1", "cr-06", "hero", "false"],
+                           ["e-4462", "2026-08-18T18:25:31Z", "unsubscribe", "c-em-1", "cr-06", "footer", ""]],
+                     flags=[None, None, "fired 9s after delivery — Apple MPP prefetch", None, None, None]),
+                dict(layer="Silver", table="fct_email_delivery",
+                     cols=["send_sk", "event_date", "campaign_id", "creative_id", "was_delivered", "open_reported", "open_modelled", "was_unsubscribed"],
+                     rows=[["7700912", "2026-08-18", "c-em-1", "cr-06", "true", "true", "true", "true"]],
+                     flags=[None],
+                     note="Both open columns survive. Reported counts the prefetch; modelled does not. Neither is ever a denominator."),
+                dict(layer="Gold", table="agg_campaign_daily",
+                     cols=["event_date", "campaign_id", "sends", "impressions", "opens_reported", "opens_modelled", "clicks", "unsubscribes"],
+                     rows=[[day, "c-em-1", f"{mail['sends']:,}", f"{mail['impressions']:,}",
+                            f"{mail['opensReported']:,}", f"{mail['opensModelled']:,}",
+                            f"{mail['clicks']:,}", f"{mail['unsubs']:,}"]],
+                     flags=[None],
+                     note=f"impressions carries DELIVERED here: {mail['impressions']:,} of {mail['sends']:,} sends. The gap between the two open columns is {mail['opensReported'] - mail['opensModelled']:,} prefetches.",
+                     real=True),
+            ]),
+        dict(
+            title="Counts become shares",
+            note="A breakdown is divided by its parent on the way into gold, so any filter re-derives it by multiplying back. This is why a placement figure can never disagree with the creative total above it.",
+            steps=[
+                dict(layer="Silver", table="fct_impression (grouped)",
+                     cols=["creative_id", "placement_id", "impressions"],
+                     rows=[["cr-01", "buzzfeed.com", "434,712"],
+                           ["cr-01", "reddit.com", "424,714"],
+                           ["cr-01", "pinterest.com", "386,853"],
+                           ["cr-01", "…9 more placements", "2,326,912"]],
+                     flags=[None, None, None, None]),
+                dict(layer="Gold", table="agg_creative_placement",
+                     cols=["creative_id", "placement_id", "impression_share"],
+                     rows=[["cr-01", "buzzfeed.com", f"{top[0]['impressionShare']}"],
+                           ["cr-01", "reddit.com", f"{top[1]['impressionShare']}"],
+                           ["cr-01", "pinterest.com", f"{top[2]['impressionShare']}"],
+                           ["cr-01", "…9 more placements", f"{round(1 - sum(p['impressionShare'] for p in top), 4)}"]],
+                     flags=[None, None, None, None],
+                     note="Sums to 1. No count is stored, so the same rows serve every date range and every campaign filter.",
+                     real=True),
+            ]),
+    ]
+
+
 def main():
     data = json.load(open(os.path.join(DATA, "madhive-v2.json")))
     shapes = json.load(open(os.path.join(DATA, "madhive-v2-shapes.json")))
@@ -455,6 +557,7 @@ def main():
         window=dict(first=data["meta"]["firstDate"], last=data["meta"]["lastDate"]),
         files=files, layers=LAYERS, collections=collections, rules=RULES,
         transforms=TRANSFORMS,
+        worked=worked_examples(data),
         tables=[dict(layer=t["layer"], name=t["name"], grain=t["grain"],
                      description=t.get("description", ""),
                      columns=[dict(name=c[0], type=c[1], note=c[2]) for c in t["columns"]])

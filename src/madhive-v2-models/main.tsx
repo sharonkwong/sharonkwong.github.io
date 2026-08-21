@@ -20,12 +20,18 @@ interface Collection { name: string; rows: number; description: string; source: 
 interface Table { layer: string; name: string; grain: string; description: string; columns: { name: string; type: string; note: string }[] }
 interface Step { title: string; detail: string; tables: string }
 interface Transform { frm: string; to: string; steps: Step[] }
+interface WorkedStep {
+  layer: string; table: string; cols: string[]; rows: string[][];
+  flags: (string | null)[]; note?: string; real?: boolean;
+}
+interface Worked { title: string; note: string; steps: WorkedStep[] }
 interface Schema {
   generatedAt: string; dashboard: string; advertiser: string;
   window: { first: string; last: string };
   files: { path: string; bytes: number; description: string }[];
   layers: { name: string; short: string; purpose: string }[];
   transforms: Transform[];
+  worked: Worked[];
   tables: Table[];
   collections: Collection[];
   lineage: { section: string; widget: string; reads: string[] }[];
@@ -169,6 +175,96 @@ function Erd() {
         </text>
       </Box>
     </Box>
+  );
+}
+
+/* --------------------------------------------------------- worked example */
+/** One table's worth of rows, with anything dropped or changed called out. */
+function RowGrid({ s }: { s: WorkedStep }) {
+  const dropped = (f: string | null) => !!f && /dropped/.test(f);
+  return (
+    <Box>
+      <Flex align="baseline" gap={2.5} wrap="wrap" mb={2}>
+        <Box as="span" fontFamily={MONO} fontSize="9.5px" letterSpacing="0.08em"
+          textTransform="uppercase" color={LAYER_COLOR[s.layer] ?? T.dim} border="1px solid"
+          borderColor={T.line} borderRadius="full" px={2} py="1px">{s.layer}</Box>
+        <Text fontFamily={MONO} fontSize="12.5px" color={T.ink}>{s.table}</Text>
+        {s.real && (
+          <Text fontFamily={MONO} fontSize="9.5px" color={T.up} border="1px solid"
+            borderColor={T.up} borderRadius="full" px={2} py="1px">ships verbatim</Text>
+        )}
+      </Flex>
+      <Box overflowX="auto" border="1px solid" borderColor={T.line} borderRadius="6px">
+        <Box as="table" w="100%" style={{ borderCollapse: "collapse" }}>
+          <Box as="thead">
+            <Box as="tr">
+              {s.cols.map((c) => (
+                <Box as="th" key={c} textAlign="left" py="6px" px={2.5} bg={T.bg}
+                  borderBottom="1px solid" borderColor={T.line} whiteSpace="nowrap"
+                  fontFamily={MONO} fontSize="9.5px" letterSpacing="0.06em"
+                  textTransform="uppercase" color={T.dim} fontWeight={500}>{c}</Box>
+              ))}
+              <Box as="th" bg={T.bg} borderBottom="1px solid" borderColor={T.line} w="100%" />
+            </Box>
+          </Box>
+          <Box as="tbody">
+            {s.rows.map((r, i) => {
+              const gone = dropped(s.flags[i]);
+              return (
+                <Box as="tr" key={i} opacity={gone ? 0.42 : 1}>
+                  {r.map((v, j) => (
+                    <Box as="td" key={j} py="6px" px={2.5} whiteSpace="nowrap"
+                      borderBottom={i === s.rows.length - 1 ? undefined : "1px solid"}
+                      borderColor={T.lineSoft} fontFamily={MONO} fontSize="11.5px"
+                      color={gone ? T.dim : T.muted}
+                      textDecoration={gone ? "line-through" : undefined}>{v || "—"}</Box>
+                  ))}
+                  <Box as="td" py="6px" px={2.5}
+                    borderBottom={i === s.rows.length - 1 ? undefined : "1px solid"}
+                    borderColor={T.lineSoft}>
+                    {s.flags[i] && (
+                      <Text fontSize="11px" color={gone ? T.down : T.muted} whiteSpace="nowrap">
+                        {s.flags[i]}
+                      </Text>
+                    )}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+      </Box>
+      {s.note && (
+        <Text fontSize="12px" color={T.muted} mt={2} lineHeight={1.6} maxW="94ch">{s.note}</Text>
+      )}
+    </Box>
+  );
+}
+
+function WorkedTrace({ w }: { w: Worked }) {
+  return (
+    <Panel>
+      <Text fontSize="13.5px" fontWeight={600} color={T.ink} mb={1}>{w.title}</Text>
+      <Text fontSize="12.5px" color={T.muted} lineHeight={1.6} mb={4} maxW="94ch">{w.note}</Text>
+      <Flex direction="column" gap={0}>
+        {w.steps.map((s, i) => (
+          <Box key={`${s.layer}-${s.table}-${i}`}>
+            <RowGrid s={s} />
+            {i < w.steps.length - 1 && (
+              <Flex align="center" gap={2} my={3} pl={1}>
+                <Box as="svg" viewBox="0 0 12 20" w="12px" h="20px" flex="0 0 auto">
+                  <line x1="6" y1="0" x2="6" y2="13" stroke={T.dim} strokeWidth="1.2" />
+                  <polygon points="6,20 2.5,13 9.5,13" fill={T.dim} />
+                </Box>
+                <Text fontFamily={MONO} fontSize="10.5px" color={T.dim}>
+                  {w.steps[i + 1].layer === s.layer ? "same layer" : `${s.layer} to ${w.steps[i + 1].layer}`}
+                </Text>
+              </Flex>
+            )}
+          </Box>
+        ))}
+      </Flex>
+    </Panel>
   );
 }
 
@@ -365,6 +461,18 @@ function Page() {
             </Box>
           );
         })}
+
+        <Box mt={10}>
+          <SectionTitle>The same rows, traced through the layers</SectionTitle>
+          <Text fontSize="13px" color={T.muted} maxW="94ch" lineHeight={1.7} mb={4}>
+            Gold rows below are lifted straight out of the shipped JSON. The bronze and silver
+            rows above them are illustrative — this demo carries no event-level data — and are
+            marked as such rather than dressed up as observed.
+          </Text>
+          <Flex direction="column" gap={3}>
+            {s.worked.map((w) => <WorkedTrace key={w.title} w={w} />)}
+          </Flex>
+        </Box>
 
         <Box mt={10}>
           <SectionTitle>What ships to the browser</SectionTitle>

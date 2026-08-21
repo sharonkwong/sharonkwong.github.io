@@ -1,4 +1,4 @@
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Flex, Text, Tooltip } from "@chakra-ui/react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
@@ -47,6 +47,29 @@ export function Panel({ title, right, children, ...rest }: {
       )}
       {children}
     </Box>
+  );
+}
+
+/**
+ * Hover/focus explainer for a metric. A real button, so it opens on keyboard
+ * focus and on tap too -- a hover-only tooltip does not exist on a phone.
+ */
+export function InfoTip({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <Tooltip label={children} hasArrow placement="top" openDelay={120} closeOnClick={false}
+      bg={T.raised} color={T.ink} border="1px solid" borderColor={T.line}
+      fontSize="12px" fontWeight={400} lineHeight={1.6} letterSpacing="0" textTransform="none"
+      px={3} py={2.5} borderRadius="7px" maxW="300px"
+      boxShadow="0 12px 32px -8px rgba(0,0,0,.8)">
+      <Box as="button" type="button" aria-label={`What is ${label}?`}
+        display="inline-flex" alignItems="center" justifyContent="center"
+        w="14px" h="14px" flex="0 0 auto" borderRadius="full"
+        border="1px solid" borderColor={T.line} color={T.dim}
+        fontSize="9.5px" fontWeight={700} fontFamily="serif" lineHeight={1}
+        _hover={{ color: T.ink, borderColor: T.dim }}
+        _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}
+        transition="all .12s">i</Box>
+    </Tooltip>
   );
 }
 

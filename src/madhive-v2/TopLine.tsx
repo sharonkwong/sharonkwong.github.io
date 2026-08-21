@@ -8,7 +8,7 @@ import {
 import { compact, delta, money, nf, pct, seriesByMedia, shortDate } from "./data";
 import type { View } from "./data";
 import type { Data, MediaKey, Metric } from "./types";
-import { Delta, Label, MONO, Panel, T, Tip } from "./ui";
+import { Delta, InfoTip, Label, MONO, Panel, T, Tip } from "./ui";
 
 type CardId = "impressions" | "clicks" | "conversions" | "spend" | "cpm" | "cpc" | "cpa";
 
@@ -16,18 +16,26 @@ const VOLUME: Record<string, Metric> = {
   impressions: "impressions", clicks: "clicks", conversions: "conversions", spend: "spend",
 };
 
-function Card({ label, value, second, delta: d, lowerIsBetter, note, open, onClick }: {
+function Card({ label, value, second, delta: d, lowerIsBetter, note, tip, open, onClick }: {
   label: string; value: string; second?: string; delta: number;
-  lowerIsBetter?: boolean; note?: string; open: boolean; onClick: () => void;
+  lowerIsBetter?: boolean; note?: string; tip?: string; open: boolean; onClick: () => void;
 }) {
   return (
-    <Box as="button" type="button" onClick={onClick} aria-expanded={open} textAlign="left"
+    // The tip is a sibling of the card button, not a child: the card is itself a
+    // button and nesting one inside another is invalid.
+    <Box position="relative" minW={0}>
+    {tip && (
+      <Box position="absolute" top="10px" right="10px" zIndex={1}>
+        <InfoTip label={label}>{tip}</InfoTip>
+      </Box>
+    )}
+    <Box as="button" type="button" onClick={onClick} aria-expanded={open} textAlign="left" w="100%"
       bg={open ? T.raised : T.surface} border="1px solid"
       borderColor={open ? T.focus : T.line} borderRadius="8px" px={3.5} py={3}
       _hover={{ borderColor: open ? T.focus : T.dim }}
       _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}
       transition="border-color .12s, background .12s" minW={0}>
-      <Label as="div" mb={2} noOfLines={1}>{label}</Label>
+      <Label as="div" mb={2} noOfLines={1} pr={tip ? 5 : 0}>{label}</Label>
       <Flex align="baseline" gap={2} wrap="wrap">
         <Text fontSize="21px" fontWeight={650} color={T.ink} letterSpacing="-0.02em"
           sx={{ fontVariantNumeric: "tabular-nums" }} lineHeight={1.1}>{value}</Text>
@@ -41,6 +49,7 @@ function Card({ label, value, second, delta: d, lowerIsBetter, note, open, onCli
       {note && (
         <Text fontFamily={MONO} fontSize="10px" color={T.dim} mt="3px" noOfLines={1}>{note}</Text>
       )}
+    </Box>
     </Box>
   );
 }
@@ -144,31 +153,38 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
   // whatever is actually in scope rather than averaging two different events
   // under one word.
   const mixedEmail = v.email.present && !v.email.only;
-  const cards: { id: CardId; label: string; value: string; second?: string; delta: number; lower?: boolean; note?: string }[] = [
+  const cards: { id: CardId; label: string; value: string; second?: string; delta: number; lower?: boolean; note?: string; tip?: string }[] = [
     { id: "impressions",
       label: v.email.only ? "Total Delivered" : "Total Impressions",
       value: compact(t.impressions),
       note: mixedEmail ? "email counted as delivered" : undefined,
+      tip: "Times an ad was served. Email has no impression, so a delivered email sits in this column instead — when email is the only thing in scope the card says Delivered. Measured, not derived.",
       delta: delta(t.impressions, p.impressions) },
     { id: "clicks", label: "Total Clicks / Click Rate", value: nf(t.clicks),
       second: pct(rate(t.clicks, t.impressions), 2),
       // On delivered for email, never on opens: Apple MPP inflates opens, and
       // click-to-open inherits the problem through its denominator.
       note: v.email.only ? "of delivered" : undefined,
+      tip: "Clicks on an ad, or on a link inside an email, with clicks ÷ impressions beside it. Not comparable across media: email reaches people who asked to hear from you, display does not, and video mostly converts people who never click at all.",
       delta: delta(t.clicks, p.clicks) },
     { id: "conversions", label: "Total Conversions / Conversion Rate", value: nf(t.conversions),
       second: pct(rate(t.conversions, t.clicks), 1),
+      tip: "Conversions credited to the last ad seen, inside a 30-day window, with conversions ÷ clicks beside it. That rate only counts people who clicked, so it flatters email and undersells video.",
       delta: delta(t.conversions, p.conversions) },
-    { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true },
+    { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true,
+      tip: "Media cost across everything in scope. Measured — this comes off the invoices, not from a model." },
   ];
-  const costs: { id: CardId; label: string; value: string; delta: number; note?: string }[] = [
+  const costs: { id: CardId; label: string; value: string; delta: number; note?: string; tip?: string }[] = [
     { id: "cpm", label: v.email.only ? "Cost per Mille Delivered" : "Cost per Mille",
       note: mixedEmail ? "email per 1,000 delivered" : undefined,
+      tip: "Spend ÷ impressions × 1,000. Derived. This is the price of the media itself, before any question of whether it worked. For email it is per thousand delivered.",
       value: money(cost(t.spend, t.impressions) * 1000, 2),
       delta: delta(cost(t.spend, t.impressions), cost(p.spend, p.impressions)) },
     { id: "cpc", label: "Cost per Click", value: money(cost(t.spend, t.clicks), 2),
+      tip: "Spend ÷ clicks. Derived. Cheap clicks and cheap conversions are different things — display buys the cheapest clicks here and the dearest conversions.",
       delta: delta(cost(t.spend, t.clicks), cost(p.spend, p.clicks)) },
     { id: "cpa", label: "Cost per Conversion", value: money(cost(t.spend, t.conversions), 2),
+      tip: "Spend ÷ conversions. Derived. It is the average across everything in scope, so a mixed selection blends three very different costs into one figure — the by-media panel below separates them.",
       delta: delta(cost(t.spend, t.conversions), cost(p.spend, p.conversions)) },
   ];
 
