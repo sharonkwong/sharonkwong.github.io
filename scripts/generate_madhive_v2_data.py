@@ -96,22 +96,44 @@ IDENTIFIERS = {
 }
 
 # ------------------------------------------------------------------- daily
-def shape(seed, i, media):
+def walk(seed, n, sigma, pull=0.055, floor=0.45):
+    """A mean-reverting random walk: today is yesterday plus a small step.
+
+    Daily campaign numbers are autocorrelated -- a budget, an audience and a
+    bid landscape all persist -- so the line should meander and then come back,
+    not oscillate. An earlier version used sine terms with 3- to 13-day periods,
+    which produced a ripple at frequencies nothing in an account runs at.
+
+    Seeded, so a rebuild reproduces the same series.
+    """
+    rng = random.Random(seed)
+    out, x = [], 1.0
+    for _ in range(n):
+        x += rng.gauss(0, sigma) - pull * (x - 1.0)
+        out.append(max(floor, x))
+    return out
+
+
+def shape(i, media, noise):
     weekly = [1.02, 0.96, 0.94, 0.98, 1.05, 1.16, 1.19][i % 7]
     drift = {"display": 1 - i * 0.0016, "email": 1 + i * 0.0009, "video": 1 + i * 0.0035}[media]
-    wobble = 1 + 0.07 * math.sin(i * 1.31 + seed) + 0.04 * math.cos(i * 0.47 + seed)
-    base = weekly * drift * wobble
+    base = weekly * drift * noise[i]
     if media == "email":                       # email lands on send days only
         base *= 1.0 if i % 7 in (1, 4) else 0.10
     return max(base, 0.02)
 
 daily = []
 for ci, c in enumerate(CAMPAIGNS):
-    w_imp = [shape(ci * 1.7, i, c["mediaType"]) for i in range(DAYS)]
-    # clicks and conversions get their own wobble, or every rate is a flat line
-    w_clk = [w * (1 + 0.11 * math.sin(i * 0.83 + ci)) for i, w in enumerate(w_imp)]
-    w_cnv = [w * (1 + 0.17 * math.sin(i * 0.61 + ci * 2.1) + 0.08 * math.cos(i * 1.9)) for i, w in enumerate(w_imp)]
-    w_spd = [w * (1 + 0.05 * math.cos(i * 1.11 + ci)) for i, w in enumerate(w_imp)]
+    w_imp = [shape(i, c["mediaType"], walk(1000 + ci, DAYS, 0.040)) for i in range(DAYS)]
+    # Each metric takes its own slow walk on top, so the rates derived from them
+    # drift rather than sitting flat -- a shared shape would make every rate a
+    # straight line by construction, which is an artefact and not a finding.
+    r_clk = walk(2000 + ci, DAYS, 0.030)
+    r_cnv = walk(3000 + ci, DAYS, 0.055)       # conversions are the noisiest, being the rarest
+    r_spd = walk(4000 + ci, DAYS, 0.015)       # spend is paced, so it moves least
+    w_clk = [w * r_clk[i] for i, w in enumerate(w_imp)]
+    w_cnv = [w * r_cnv[i] for i, w in enumerate(w_imp)]
+    w_spd = [w * r_spd[i] for i, w in enumerate(w_imp)]
     lo, hi = c["flight"]
     live = lambda i: lo <= i < hi
     n = {k: sum(x for i, x in enumerate(v) if i >= DAYS - WINDOW and live(i))
