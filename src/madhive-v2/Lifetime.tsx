@@ -1,14 +1,17 @@
 /**
- * The lifetime tiles in the masthead, and the campaign table they open.
+ * The lifetime totals in the masthead, and the campaign table they open.
  *
  * Deliberately unfiltered. These are the account's standing totals across every
  * campaign and every day on record, so the table ignores the filter bar --
  * otherwise "lifetime" would mean something different depending on what
  * happened to be selected. Clicking a row is the one place it works the other
  * way: it focuses the dashboard on that campaign.
+ *
+ * Tiles and table are separate exports because they live in different places:
+ * the tiles sit in the masthead's right-hand column, the table spans the page.
  */
 import { Box, Flex, Text, Tooltip } from "@chakra-ui/react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { compact, daysBetween, money, nf } from "./data";
 import type { Data } from "./types";
 import { DataTable, Label, MONO, Panel, T } from "./ui";
@@ -24,14 +27,11 @@ interface Row {
 const shortDay = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
 
-export default function Lifetime({ data, focused, onFocus }: {
-  data: Data;
-  focused: string[];
-  onFocus: (id: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
+/** Rows visible before the table body scrolls. The header stays put. */
+export const MAX_ROWS = 12;
 
-  const rows: Row[] = useMemo(() => {
+function useRows(data: Data): Row[] {
+  return useMemo(() => {
     const acc: Record<string, { impressions: number; clicks: number; conversions: number; spend: number }> = {};
     for (const c of data.campaigns) acc[c.id] = { impressions: 0, clicks: 0, conversions: 0, spend: 0 };
     for (const r of data.daily) {
@@ -53,11 +53,55 @@ export default function Lifetime({ data, focused, onFocus }: {
       };
     });
   }, [data]);
+}
 
+/* ----------------------------------------------------------------- tiles */
+export function LifetimeTiles({ data, open, onToggle }: {
+  data: Data; open: boolean; onToggle: () => void;
+}) {
+  const rows = useRows(data);
   const totals = rows.reduce((s, r) => ({
-    impressions: s.impressions + r.impressions, clicks: s.clicks + r.clicks,
-    conversions: s.conversions + r.conversions, spend: s.spend + r.spend,
-  }), { impressions: 0, clicks: 0, conversions: 0, spend: 0 });
+    impressions: s.impressions + r.impressions,
+    conversions: s.conversions + r.conversions,
+    spend: s.spend + r.spend,
+  }), { impressions: 0, conversions: 0, spend: 0 });
+
+  const tiles = [
+    { label: "Campaigns", value: nf(data.campaigns.length) },
+    { label: "Impressions", value: compact(totals.impressions) },
+    { label: "Conversions", value: nf(totals.conversions) },
+    { label: "Spend", value: money(totals.spend) },
+  ];
+
+  // One card, not four. The whole group opens the same table, so hovering it
+  // should read as a single target rather than four competing ones.
+  return (
+    <Box as="button" type="button" aria-expanded={open} onClick={onToggle}
+      aria-label="Lifetime totals. Opens the campaign table."
+      px={3.5} py={2.5} borderRadius="8px" border="1px solid"
+      borderColor={open ? T.focus : "transparent"}
+      bg={open ? T.raised : "transparent"}
+      _hover={{ bg: T.raised, borderColor: open ? T.focus : T.line }}
+      _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}
+      transition="all .12s">
+      <Flex gap={{ base: 4, md: 6 }} wrap="wrap">
+        {tiles.map((t) => (
+          <Box key={t.label} textAlign={{ base: "left", sm: "right" }}>
+            <Label as="div" mb="3px" color={open ? T.muted : T.dim}>Lifetime {t.label}</Label>
+            <Text fontFamily={MONO} fontSize="16px" fontWeight={600} color={T.ink}
+              sx={{ fontVariantNumeric: "tabular-nums" }}>{t.value}</Text>
+          </Box>
+        ))}
+      </Flex>
+    </Box>
+  );
+}
+
+/* ----------------------------------------------------------------- table */
+export function LifetimeTable({ data, focused, onFocus }: {
+  data: Data; focused: string[]; onFocus: (id: string) => void;
+}) {
+  const rows = useRows(data);
 
   /* Conditional fill on cost per conversion. Cheapest is strongest, because on
      a cost column lower is better. It varies by intensity within one column
@@ -70,13 +114,6 @@ export default function Lifetime({ data, focused, onFocus }: {
     const t = hi > lo ? (hi - v) / (hi - lo) : 1;      // 1 = cheapest
     return `rgba(63, 185, 80, ${(0.10 + t * 0.42).toFixed(3)})`;
   };
-
-  const tiles = [
-    { label: "Campaigns", value: nf(data.campaigns.length) },
-    { label: "Impressions", value: compact(totals.impressions) },
-    { label: "Conversions", value: nf(totals.conversions) },
-    { label: "Spend", value: money(totals.spend) },
-  ];
 
   const cols: Column<Row>[] = [
     { key: "name", label: "Campaign name", sort: (r) => r.name, width: "230px",
@@ -124,41 +161,18 @@ export default function Lifetime({ data, focused, onFocus }: {
   ];
 
   return (
-    <>
-      <Flex gap={{ base: 4, md: 5 }} wrap="wrap" pt={1}>
-        {tiles.map((t) => (
-          <Box key={t.label} as="button" type="button" aria-expanded={open}
-            aria-label={`Lifetime ${t.label}. Opens the campaign table.`}
-            onClick={() => setOpen((o) => !o)}
-            textAlign={{ base: "left", sm: "right" }} px={2} py={1.5} borderRadius="6px"
-            border="1px solid" borderColor={open ? T.focus : "transparent"}
-            bg={open ? T.raised : "transparent"}
-            _hover={{ bg: open ? T.raised : T.surface }}
-            _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}
-            transition="all .12s">
-            <Label as="div" mb="3px" color={open ? T.muted : T.dim}>Lifetime {t.label}</Label>
-            <Text fontFamily={MONO} fontSize="16px" fontWeight={600} color={T.ink}
-              sx={{ fontVariantNumeric: "tabular-nums" }}>{t.value}</Text>
-          </Box>
-        ))}
-      </Flex>
-
-      {open && (
-        <Box mt={5}>
-          <Panel
-            title="All campaigns, lifetime"
-            right={
-              <Text fontFamily={MONO} fontSize="10.5px" color={T.dim}>
-                click a row to focus the dashboard
-              </Text>
-            }>
-            <DataTable columns={cols} rows={rows} rowKey={(r) => r.id} minW="1080px"
-              initialSort={{ key: "spend", dir: "desc" }}
-              onRowClick={(r) => onFocus(r.id)}
-              isOpen={(r) => focused.includes(r.id)} />
-          </Panel>
-        </Box>
-      )}
-    </>
+    <Panel
+      title="All campaigns (lifetime)"
+      right={
+        <Text fontFamily={MONO} fontSize="10.5px" color={T.dim}>
+          {rows.length > MAX_ROWS ? `${MAX_ROWS} of ${rows.length} shown · ` : ""}
+          click a row to focus the dashboard
+        </Text>
+      }>
+      <DataTable columns={cols} rows={rows} rowKey={(r) => r.id} minW="1080px"
+        maxRows={MAX_ROWS} initialSort={{ key: "spend", dir: "desc" }}
+        onRowClick={(r) => onFocus(r.id)}
+        isOpen={(r) => focused.includes(r.id)} />
+    </Panel>
   );
 }

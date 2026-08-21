@@ -172,7 +172,7 @@ export interface Column<R> {
  * direction when active, and hints on hover when not.
  */
 export function DataTable<R>({
-  columns, rows, rowKey, initialSort, minW, onRowClick, isOpen, expanded,
+  columns, rows, rowKey, initialSort, minW, onRowClick, isOpen, expanded, maxRows,
 }: {
   columns: Column<R>[];
   rows: R[];
@@ -182,6 +182,8 @@ export function DataTable<R>({
   onRowClick?: (row: R) => void;
   isOpen?: (row: R) => boolean;
   expanded?: (row: R) => ReactNode;
+  /** Rows visible before the body scrolls. The header stays put. */
+  maxRows?: number;
 }) {
   const [sort, setSort] = useState(initialSort ?? { key: columns[0].key, dir: "asc" as const });
   const col = columns.find((c) => c.key === sort.key);
@@ -202,16 +204,21 @@ export function DataTable<R>({
       : { key: c.key, dir: c.numeric ? "desc" : "asc" });
   };
 
+  const capped = maxRows !== undefined && rows.length > maxRows;
   return (
-    <Box overflowX="auto">
+    <Box overflowX="auto" overflowY={capped ? "auto" : undefined}
+      maxH={capped ? `${maxRows * 39 + 34}px` : undefined}
+      sx={capped ? { "&::-webkit-scrollbar": { width: "9px", height: "9px" },
+                     "&::-webkit-scrollbar-thumb": { background: T.line, borderRadius: "4px" } } : undefined}>
       <Box as="table" w="100%" minW={minW} style={{ borderCollapse: "collapse" }}>
-        <Box as="thead">
+        <Box as="thead" position={capped ? "sticky" : undefined} top={0} zIndex={1}>
           <Box as="tr">
             {columns.map((c) => {
               const on = sort.key === c.key && !!c.sort;
               return (
                 <Box as="th" key={c.key} textAlign={c.align ?? "left"} w={c.width}
                   py={2} px={2.5} borderBottom="1px solid" borderColor={T.line}
+                  bg={capped ? T.surface : undefined}
                   whiteSpace="nowrap" role={c.sort ? "columnheader" : undefined}
                   aria-sort={on ? (sort.dir === "asc" ? "ascending" : "descending") : undefined}>
                   <Box as={c.sort ? "button" : "span"}

@@ -1,11 +1,11 @@
 import { Box, ChakraProvider, Flex, Spinner, Text, extendTheme } from "@chakra-ui/react";
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import Converts from "./Converts";
 import Creatives from "./Creatives";
 import Delivery from "./Delivery";
 import FilterBar from "./Filters";
-import Lifetime from "./Lifetime";
+import { LifetimeTable, LifetimeTiles } from "./Lifetime";
 import TopLine from "./TopLine";
 import { daysBetween, useData, useFilters, useView } from "./data";
 import { MONO, SectionTitle, T } from "./ui";
@@ -21,6 +21,7 @@ const theme = extendTheme({
 });
 
 function Page() {
+  const [lifeOpen, setLifeOpen] = useState(false);
   const { data, error } = useData();
   const [f, set] = useFilters(data);
   const v = useView(data, f);
@@ -54,14 +55,21 @@ function Page() {
             <Text fontSize={{ base: "23px", md: "27px" }} fontWeight={650} letterSpacing="-0.022em"
               lineHeight={1.15} color={T.muted}>Ad Performance</Text>
           </Box>
-          <Lifetime data={data} focused={f.campaigns}
+          <LifetimeTiles data={data} open={lifeOpen} onToggle={() => setLifeOpen((o) => !o)} />
+        </Flex>
+
+        {/* Full page width, unlike the tiles it opens from. */}
+        {lifeOpen && (
+          <Box mb={7}>
+            <LifetimeTable data={data} focused={f.campaigns}
               onFocus={(id) => set({
                 // Focusing one campaign clears the media filter, or the two
-                // could contradict each other in the bar above.
+                // could contradict each other in the bar below.
                 campaigns: f.campaigns.length === 1 && f.campaigns[0] === id ? [] : [id],
                 media: [],
               })} />
-        </Flex>
+          </Box>
+        )}
 
         <FilterBar data={data} f={f} set={set} />
 
