@@ -201,6 +201,9 @@ export interface Column<R> {
   numeric?: boolean;
 }
 
+/** Rows a long table shows before its body scrolls. */
+export const TABLE_ROWS = 10;
+
 /**
  * Sortable table. Every column that declares `sort` is clickable, shows its
  * direction when active, and hints on hover when not.

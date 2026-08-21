@@ -8,7 +8,7 @@ import { compact, defaultGrain, flightEvents, GRAIN_OPTIONS, deviceTotals, geoAl
 import type { Grain, View } from "./data";
 import type { Data, ShareMetric } from "./types";
 import GeoMap from "./GeoMap";
-import { DataTable, Label, Legend, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
+import { DataTable, Label, Legend, MONO, Panel, Question, T, TABLE_ROWS, Tip, Toggle } from "./ui";
 import type { Column } from "./ui";
 
 const METRIC_OPTS = [
@@ -320,7 +320,7 @@ function ZipTable({ v, data }: { v: View; data: Data }) {
   return (
     <Panel>
       <DataTable columns={columns} rows={rows} rowKey={(r) => r.zip} minW="700px"
-        initialSort={{ key: "impressions", dir: "desc" }} />
+        maxRows={TABLE_ROWS} initialSort={{ key: "impressions", dir: "desc" }} />
     </Panel>
   );
 }

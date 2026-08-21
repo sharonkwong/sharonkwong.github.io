@@ -247,7 +247,7 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
     { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true,
       tip: "Media cost across everything in scope. Straight off the invoices." },
     { id: "cpm", label: v.email.only ? "Cost per Mille Delivered" : "Cost per Mille",
-      tip: "Spend ÷ impressions × 1,000.",
+      tip: "Spend per 1,000 impressions.",
       value: money(cost(t.spend, t.impressions) * 1000, 2),
       delta: delta(cost(t.spend, t.impressions), cost(p.spend, p.impressions)) },
     { id: "cpc", label: "Cost per Click", value: money(cost(t.spend, t.clicks), 2),

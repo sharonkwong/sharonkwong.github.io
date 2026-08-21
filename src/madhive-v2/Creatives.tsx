@@ -6,7 +6,7 @@ import {
 import { compact, creativeReach, creativeTotals, nf, pct, placementTotals } from "./data";
 import type { View } from "./data";
 import type { Data, ShareMetric } from "./types";
-import { DataTable, Label, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
+import { DataTable, Label, MONO, Panel, Question, T, TABLE_ROWS, Tip, Toggle } from "./ui";
 import type { Column } from "./ui";
 
 export type Row = ReturnType<typeof creativeTotals>[number];
@@ -359,7 +359,7 @@ export default function Creatives({ v, data }: { v: View; data: Data }) {
       }>
         <DataTable
           columns={columns} rows={rows} rowKey={(r) => r.id} minW="860px"
-          initialSort={{ key: "conversions", dir: "desc" }}
+          maxRows={TABLE_ROWS} initialSort={{ key: "conversions", dir: "desc" }}
           onRowClick={(r) => toggle(r.id)}
           isOpen={(r) => open.includes(r.id)} />
       </Panel>
