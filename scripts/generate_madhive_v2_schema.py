@@ -304,6 +304,7 @@ TABLES = [
                   ("event_date", "date", ""),
                   ("campaign_id", "string", ""),
                   ("creative_id", "string", ""),
+                  ("identifier", "string", "Hashed email. Resolves through fct_identity_map to the same person a device id resolves to, which is what stops one person being counted twice for seeing a banner and opening a send."),
                   ("was_delivered", "boolean", "False on bounce or suppression."),
                   ("open_reported", "boolean", "Any open event, MPP included."),
                   ("open_modelled", "boolean", "Opens with the MPP prefetch flag removed."),
