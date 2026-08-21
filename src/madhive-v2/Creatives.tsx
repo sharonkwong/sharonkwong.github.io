@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { compact, creativeTotals, nf, pct, placementTotals } from "./data";
+import { compact, creativeReach, creativeTotals, nf, pct, placementTotals } from "./data";
 import type { View } from "./data";
 import type { Data, ShareMetric } from "./types";
 import { DataTable, Label, MONO, Panel, Question, T, Tip, Toggle } from "./ui";
@@ -227,6 +227,7 @@ function EmailFunnelBlock({ row, v, color }: { row: Row; v: View; color: string 
 /* ---------------------------------------------------------------- detail */
 function Detail({ row, data, v }: { row: Row; data: Data; v: View }) {
   const [metric, setMetric] = useState<ShareMetric>("impressions");
+  const reach = creativeReach(v, data, row.campaign, row.impressionShare);
   const color = data.mediaTypes.find(
     (m) => m.key === data.campaigns.find((c) => c.id === row.campaign)!.mediaType)!.color;
   const places = placementTotals(row, metric);
@@ -254,7 +255,14 @@ function Detail({ row, data, v }: { row: Row; data: Data; v: View }) {
           <Box mt={5}><EmailFunnelBlock row={row} v={v} color={color} /></Box>
         ) : (
           <Flex gap={5} mt={4} wrap="wrap">
-            {[["Impressions", compact(row.impressions)], ["Clicks", nf(row.clicks)],
+            {[["Impressions", compact(row.impressions)],
+              // Email's audience is the list, which is a different thing from a
+              // reached device pool, so reach is shown for display and video only.
+              ...(row.sections ? [] : [
+                ["Unique reach", compact(reach.reach)] as [string, string],
+                ["Avg frequency", `${reach.frequency.toFixed(1)}x`] as [string, string],
+              ]),
+              ["Clicks", nf(row.clicks)],
               ["Conversions", nf(row.conversions)],
               ["CTR", pct(row.clicks / row.impressions, 2)],
               ["CVR", pct(row.conversions / row.clicks, 1)]].map(([k, val]) => (

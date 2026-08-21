@@ -30,6 +30,18 @@ const shortDay = (iso: string) =>
 /** Rows visible before the table body scrolls. The header stays put. */
 export const MAX_ROWS = 12;
 
+/**
+ * Lifetime reach: the full flight, so frequency needs no window scaling -- the
+ * stored figure already covers the whole run. The cross-media discount applies
+ * because every media type is in scope by definition here.
+ */
+function lifetimeReach(data: Data, rows: Row[]) {
+  const freq = Object.fromEntries(data.campaigns.map((c) => [c.id, c.frequency]));
+  const raw = rows.reduce((s, r) => s + (freq[r.id] > 0 ? r.impressions / freq[r.id] : 0), 0);
+  const media = new Set(data.campaigns.map((c) => c.mediaType)).size;
+  return raw * (1 - (data.reach.overlapByMediaCount[String(media)] ?? 0));
+}
+
 function useRows(data: Data): Row[] {
   return useMemo(() => {
     const acc: Record<string, { impressions: number; clicks: number; conversions: number; spend: number }> = {};
@@ -69,6 +81,7 @@ export function LifetimeTiles({ data, open, onToggle }: {
   const tiles = [
     { label: "Campaigns", value: nf(data.campaigns.length) },
     { label: "Impressions", value: compact(totals.impressions) },
+    { label: "Reach", value: compact(lifetimeReach(data, rows)) },
     { label: "Conversions", value: nf(totals.conversions) },
     { label: "Spend", value: money(totals.spend) },
   ];
@@ -84,7 +97,7 @@ export function LifetimeTiles({ data, open, onToggle }: {
       _hover={{ bg: T.raised, borderColor: open ? T.focus : T.line }}
       _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}
       transition="all .12s">
-      <Flex gap={{ base: 4, md: 6 }} wrap="wrap">
+      <Flex gap={{ base: 4, md: 5 }} wrap="wrap">
         {tiles.map((t) => (
           <Box key={t.label} textAlign={{ base: "left", sm: "right" }}>
             <Label as="div" mb="3px" color={open ? T.muted : T.dim}>Lifetime {t.label}</Label>

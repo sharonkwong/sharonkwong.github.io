@@ -64,11 +64,15 @@ export function InfoTip({ label, children }: { label: string; children: ReactNod
       <Box as="button" type="button" aria-label={`What is ${label}?`}
         display="inline-flex" alignItems="center" justifyContent="center"
         w="14px" h="14px" flex="0 0 auto" borderRadius="full"
+        // Nudged up: the label beside it is uppercase, whose optical centre
+        // sits above the line box the circle would otherwise centre on.
+        position="relative" top="-1.5px"
         border="1px solid" borderColor={T.line} color={T.dim}
         fontSize="9.5px" fontWeight={700} fontFamily="serif" lineHeight={1}
+        sx={{ "& > span": { position: "relative", top: "0.5px" } }}
         _hover={{ color: T.ink, borderColor: T.dim }}
         _focusVisible={{ outline: "2px solid", outlineColor: T.focus, outlineOffset: "1px" }}
-        transition="all .12s">i</Box>
+        transition="all .12s"><Box as="span">i</Box></Box>
     </Tooltip>
   );
 }

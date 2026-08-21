@@ -271,6 +271,29 @@ export function reachOf(v: View, data: Data) {
   return { unique: raw * (1 - overlap), raw, overlap, perCampaign };
 }
 
+/**
+ * Reach and frequency for one creative, inside the current window.
+ *
+ * A creative is shown to a subset of the people its campaign reached, so its
+ * frequency is lower than the campaign's -- fewer impressions spread over
+ * nearly the same pool. The same sub-linear shape applies, on the creative's
+ * share of impressions rather than on elapsed days:
+ *
+ *     f_creative = 1 + (f_campaign_window - 1) * share ^ 0.5
+ *
+ * A creative with 42% of the impressions therefore reaches around 63% of the
+ * people, which is the right side of both bounds: more than its share, less
+ * than all of them. Creative reaches deliberately do not sum -- the same person
+ * sees more than one -- so they are never totalled.
+ */
+export function creativeReach(v: View, data: Data, campaignId: string, impressionShare: number) {
+  const camp = reachOf(v, data).perCampaign[campaignId];
+  const imps = (v.byCampaign[campaignId]?.impressions ?? 0) * impressionShare;
+  if (!camp || camp.freq <= 0 || imps <= 0) return { reach: 0, frequency: 0 };
+  const freq = Math.max(1, 1 + (camp.freq - 1) * impressionShare ** FREQ_EXPONENT);
+  return { reach: imps / freq, frequency: freq };
+}
+
 /** Daily series, one key per media type, for the selected window. */
 export function seriesByMedia(v: View, data: Data, metric: Metric): MediaSeriesRow[] {
   const media = Object.fromEntries(data.campaigns.map((c) => [c.id, c.mediaType]));
