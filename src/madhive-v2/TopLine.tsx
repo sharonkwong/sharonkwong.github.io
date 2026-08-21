@@ -237,7 +237,7 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
       delta: delta(t.clicks, p.clicks) },
     { id: "conversions", label: "Total Conversions / Conversion Rate", value: nf(t.conversions),
       second: pct(rate(t.conversions, t.clicks), 1),
-      tip: "Conversions credited to the last ad seen, within 30 days. Rate is conversions ÷ clicks.",
+      tip: "Purchases. Conversions credited to the last ad seen, within 30 days. Rate is conversions ÷ clicks.",
       delta: delta(t.conversions, p.conversions) },
     { id: "reach", label: "Unique Reach", value: compact(reach.unique),
       delta: NaN,
