@@ -17,6 +17,12 @@ export const T = {
   focus: "#58a6ff",
   /* Sequential ramp for the geo map: one hue, monotonic lightness. */
   ramp: ["#141b26", "#173355", "#1f4d7a", "#2b6cb0", "#4a91d8", "#79c0ff"],
+  /* Highlight for "biggest bucket in this group". No hue was available: the
+     media and device sets already occupy blue, amber, magenta, teal, violet and
+     orange, and the one region left -- green -- sits within 3.8-7.6 of the amber
+     media colour under protanopia and deuteranopia. Separating by brightness
+     instead holds for every viewer in every mode. */
+  highlight: "#f0f6fc",
   /* Devices are their own categorical dimension, so they get their own hues --
      deliberately not the media-type set, which means something else on this
      page. Every pair clears CVD separation on this surface. */

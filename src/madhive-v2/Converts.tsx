@@ -13,21 +13,29 @@ function DemoBars({ title, rows, color }: {
   title: string; rows: { label: string; share: number }[]; color: string;
 }) {
   const max = Math.max(...rows.map((r) => r.share));
+  // First index only, so a tie highlights one bar rather than two.
+  const top = rows.findIndex((r) => r.share === max);
   return (
     <Box>
       <Label as="div" mb={2}>{title}</Label>
       <Flex direction="column" gap="7px">
-        {rows.map((r) => (
-          <Flex key={r.label} align="center" gap={2.5}>
-            <Text fontSize="11.5px" color={T.muted} w="94px" flex="0 0 auto" noOfLines={1}>{r.label}</Text>
-            <Box flex="1" bg={T.bg} borderRadius="3px" h="14px" overflow="hidden" minW={0}>
-              <Box h="100%" bg={color} borderRadius="0 3px 3px 0"
-                w={`${(r.share / max) * 100}%`} opacity={0.85} transition="width .25s" />
-            </Box>
-            <Text fontFamily={MONO} fontSize="11.5px" color={T.ink} w="38px" textAlign="right"
-              flex="0 0 auto" sx={{ fontVariantNumeric: "tabular-nums" }}>{pct(r.share, 0)}</Text>
-          </Flex>
-        ))}
+        {rows.map((r, i) => {
+          const lead = i === top;
+          return (
+            <Flex key={r.label} align="center" gap={2.5}>
+              <Text fontSize="11.5px" color={lead ? T.ink : T.muted} fontWeight={lead ? 600 : 400}
+                w="94px" flex="0 0 auto" noOfLines={1}>{r.label}</Text>
+              <Box flex="1" bg={T.bg} borderRadius="3px" h="14px" overflow="hidden" minW={0}>
+                <Box h="100%" bg={lead ? T.highlight : color} borderRadius="0 3px 3px 0"
+                  w={`${(r.share / max) * 100}%`} opacity={lead ? 1 : 0.55}
+                  transition="width .25s" />
+              </Box>
+              <Text fontFamily={MONO} fontSize="11.5px" color={lead ? T.ink : T.muted}
+                fontWeight={lead ? 700 : 400} w="38px" textAlign="right" flex="0 0 auto"
+                sx={{ fontVariantNumeric: "tabular-nums" }}>{pct(r.share, 0)}</Text>
+            </Flex>
+          );
+        })}
       </Flex>
     </Box>
   );
