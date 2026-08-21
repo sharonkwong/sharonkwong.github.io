@@ -196,31 +196,21 @@ function CostDrill({ v, kind }: { v: View; kind: "cpm" | "cpc" | "cpa" }) {
 }
 
 /**
- * The three caveats that used to be spread across four tooltips. They are
- * properties of the media mix rather than of any one metric, so they belong
- * once, above the cards, instead of repeated inside them.
+ * The two caveats that belong to the media mix rather than to any one metric,
+ * stated once above the cards instead of repeated inside their tooltips.
  */
 function MediaNote({ v }: { v: View }) {
-  const notes = [
-    ["Email has no impression", "its delivered count sits in the impressions column"],
-    ["Clicks do not compare across media", "email goes to people who opted in, and video mostly converts people who never click"],
-    ["Reach is modelled", "display and video dedupe on a device id, email on a hashed address, and the two are matched rather than joined"],
-  ].filter((_, i) => (i === 0 || i === 1 ? v.media.length > 1 || v.email.present : true));
-  if (!notes.length) return null;
+  if (v.media.length < 2 && !v.email.present) return null;
   return (
-    <Flex bg={T.surface} border="1px solid" borderColor={T.line} borderLeft="2px solid"
-      borderLeftColor={T.ramp[4]} borderRadius="6px" px={3.5} py={2.5} mb={3}
-      gap={{ base: 2, lg: 6 }} direction={{ base: "column", lg: "row" }} wrap="wrap">
-      {notes.map(([head, tail]) => (
-        <Flex key={head} gap={2} align="baseline" flex="1" minW="220px">
-          <Box w="4px" h="4px" borderRadius="full" bg={T.dim} flex="0 0 auto"
-            position="relative" top="-3px" />
-          <Text fontSize="12px" color={T.muted} lineHeight={1.55}>
-            <Text as="span" color={T.ink} fontWeight={600}>{head}</Text> — {tail}.
-          </Text>
-        </Flex>
-      ))}
-    </Flex>
+    <Box bg={T.surface} border="1px solid" borderColor={T.line} borderRadius="6px"
+      px={4} py={3} mb={3}>
+      <Text fontSize="12.5px" color={T.muted} lineHeight={1.65} maxW="104ch">
+        <Text as="span" color={T.ink} fontWeight={600}>Email has no impression</Text>, so its
+        delivered count sits in the impressions column. Clicks do not compare across media
+        either — email goes to people who opted in, and video mostly converts people who never
+        click at all.
+      </Text>
+    </Box>
   );
 }
 
@@ -251,7 +241,7 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
       delta: delta(t.conversions, p.conversions) },
     { id: "reach", label: "Unique Reach", value: compact(reach.unique),
       delta: NaN,
-      tip: "Unique identifiers reached in the selected dates. Modelled, not counted — open the card for the working." },
+      tip: "Unique identifiers reached in the selected dates. Modelled, not counted: display and video dedupe on a device id, email on a hashed address, and the two are matched rather than joined. Open the card for the working." },
   ];
   const costs: { id: CardId; label: string; value: string; delta: number; lower?: boolean; tip?: string }[] = [
     { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true,

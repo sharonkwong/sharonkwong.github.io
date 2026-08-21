@@ -413,7 +413,7 @@ LINEAGE = [
     ("Delivery", "ZIP table", ["geo", "daily"]),
     ("Creative", "Creative table", ["creatives", "daily", "campaigns"]),
     ("Creative", "Email section breakdown", ["creatives.sections", "daily"]),
-    ("Creative", "Email funnel", ["daily.sends", "daily.opensReported", "daily.opensModelled", "daily.unsubs"]),
+    ("Creative", "Email funnel", ["daily.sends", "daily.opensReported", "daily.unsubs"]),
     ("Creative", "Video completion drop-off", ["creatives.quartiles"]),
     ("Creative", "Site placements", ["creatives.placements", "daily"]),
 ]
