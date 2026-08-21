@@ -422,12 +422,144 @@ export const delta = (cur: number, prv: number) => (prv > 0 ? (cur / prv - 1) * 
 export const shortDate = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-export function toCsv(rows: DailyRow[], campaigns: Campaign[]) {
-  const name = Object.fromEntries(campaigns.map((c) => [c.id, c.name]));
-  const media = Object.fromEntries(campaigns.map((c) => [c.id, c.mediaType]));
-  const head = "date,campaign,media_type,impressions,clicks,conversions,spend";
-  const body = rows.map((r) =>
-    [r.date, `"${name[r.campaign] ?? r.campaign}"`, media[r.campaign],
-     r.impressions, r.clicks, r.conversions.toFixed(2), r.spend.toFixed(2)].join(","));
-  return [head, ...body].join("\n");
+/**
+ * One file, several tables.
+ *
+ * CSV has no notion of a sheet, so each dimension is written as its own block
+ * with a `## table:` marker, its own header row and a blank line after it.
+ * Excel and Sheets both import that cleanly, and the markers make it trivial to
+ * split into real sheets on the other side. Everything respects the filters
+ * that were on screen, and the daily block is the full grain the dashboard
+ * itself reads -- nothing is pre-aggregated away.
+ */
+export function toCsv(v: View, data: Data, f: Filters) {
+  const q = (s: unknown) => {
+    const t = String(s ?? "");
+    return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+  };
+  const out: string[] = [];
+  const block = (name: string, cols: string[], rows: unknown[][]) => {
+    out.push(`## table: ${name}`, cols.join(","),
+             ...rows.map((r) => r.map(q).join(",")), "");
+  };
+
+  const camp = Object.fromEntries(data.campaigns.map((c) => [c.id, c]));
+  const mediaLabel = Object.fromEntries(data.mediaTypes.map((m) => [m.key, m.label]));
+  const nameOf = (id: string) => camp[id]?.name ?? id;
+  const mediaOf = (id: string) => mediaLabel[camp[id]?.mediaType] ?? "";
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const r4 = (n: number) => Math.round(n * 10000) / 10000;
+
+  out.push(`# ${data.meta.advertiser} — ad performance export`,
+           `# dates,${f.start},${f.end}`,
+           `# media,${f.media.length ? f.media.map((m) => mediaLabel[m]).join(" | ") : "all"}`,
+           `# campaigns,${v.campaigns.length} of ${data.campaigns.length}`,
+           `# note,every block below is filtered to the selection above`, "");
+
+  block("daily_by_campaign",
+    ["date", "campaign_id", "campaign", "media_type", "impressions", "clicks", "conversions",
+     "spend", "sends", "opens_reported", "opens_modelled", "unsubscribes"],
+    [...v.rows].sort((a, b) => a.date.localeCompare(b.date) || a.campaign.localeCompare(b.campaign))
+      .map((r) => [r.date, r.campaign, nameOf(r.campaign), mediaOf(r.campaign),
+                   r.impressions, r.clicks, r2(r.conversions), r2(r.spend),
+                   r.sends ?? "", r.opensReported ?? "", r.opensModelled ?? "", r.unsubs ?? ""]));
+
+  const reach = reachOf(v, data);
+  block("campaign_summary",
+    ["campaign_id", "campaign", "media_type", "flight_start", "flight_end", "days_in_range",
+     "impressions", "clicks", "conversions", "spend", "unique_reach", "frequency",
+     "cpm", "cpc", "cpa"],
+    v.campaigns.map((c) => {
+      const t = v.byCampaign[c.id], rc = reach.perCampaign[c.id];
+      return [c.id, c.name, mediaLabel[c.mediaType], c.flightStart, c.flightEnd,
+              v.daysByCampaign[c.id] ?? 0, t.impressions, t.clicks, r2(t.conversions), r2(t.spend),
+              Math.round(rc?.reach ?? 0), r2(rc?.freq ?? 0),
+              r2(t.impressions ? (t.spend / t.impressions) * 1000 : 0),
+              r2(t.clicks ? t.spend / t.clicks : 0),
+              r2(t.conversions ? t.spend / t.conversions : 0)];
+    }));
+
+  block("media_type_summary",
+    ["media_type", "impressions", "clicks", "conversions", "spend", "cpm", "cpc", "cpa"],
+    v.media.map((m) => {
+      const t = v.byMedia[m.key];
+      return [m.label, t.impressions, t.clicks, r2(t.conversions), r2(t.spend),
+              r2(t.impressions ? (t.spend / t.impressions) * 1000 : 0),
+              r2(t.clicks ? t.spend / t.clicks : 0),
+              r2(t.conversions ? t.spend / t.conversions : 0)];
+    }));
+
+  block("geo_by_zip",
+    ["zip", "area", "impressions", "clicks", "conversions", "ctr", "cvr", "population",
+     "median_income", "median_age", "degree_share", "share_mobile", "share_desktop",
+     "share_tablet", "share_ios", "share_android"],
+    geoAll(v, data.geo).sort((a, b) => b.impressions - a.impressions).map((g) => {
+      const src = data.geo.find((x) => x.zip === g.zip)!;
+      return [g.zip, g.name, Math.round(g.impressions), Math.round(g.clicks),
+              r2(g.conversions), r4(g.ctr), r4(g.cvr), src.population,
+              g.medianIncome, g.medianAge, r4(g.degreeShare),
+              r4(src.devices.Mobile ?? 0), r4(src.devices.Desktop ?? 0), r4(src.devices.Tablet ?? 0),
+              r4(src.os.iOS ?? 0), r4(src.os.Android ?? 0)];
+    }));
+
+  block("device_by_campaign",
+    ["campaign_id", "campaign", "device", "impressions", "clicks", "conversions"],
+    data.devices.filter((d) => v.ids.has(d.campaign)).map((d) => {
+      const t = v.byCampaign[d.campaign];
+      return [d.campaign, nameOf(d.campaign), d.device,
+              Math.round(t.impressions * d.impressionShare),
+              Math.round(t.clicks * d.clickShare),
+              r2(t.conversions * d.conversionShare)];
+    }));
+
+  const creatives = creativeTotals(v, data.creatives);
+  block("creative",
+    ["creative_id", "creative", "campaign", "media_type", "format", "dimensions", "seconds",
+     "impressions", "clicks", "conversions", "ctr", "cvr", "unique_reach", "frequency"],
+    creatives.map((c) => {
+      const cr = creativeReach(v, data, c.campaign, c.impressionShare);
+      const isEmail = !!c.sections;
+      return [c.id, c.name, nameOf(c.campaign), mediaOf(c.campaign), c.format, c.dimensions,
+              c.seconds ?? "", Math.round(c.impressions), Math.round(c.clicks), r2(c.conversions),
+              r4(c.impressions ? c.clicks / c.impressions : 0),
+              r4(c.clicks ? c.conversions / c.clicks : 0),
+              isEmail ? "" : Math.round(cr.reach), isEmail ? "" : r2(cr.frequency)];
+    }));
+
+  block("creative_placement",
+    ["creative_id", "creative", "campaign", "placement", "impressions", "clicks", "conversions"],
+    creatives.flatMap((c) => c.placements.map((pl) => [
+      c.id, c.name, nameOf(c.campaign), pl.site,
+      Math.round(c.impressions * pl.impressionShare),
+      Math.round(c.clicks * pl.clickShare),
+      r2(c.conversions * pl.conversionShare)])));
+
+  block("creative_section_email",
+    ["creative_id", "creative", "section", "clicks", "click_share"],
+    creatives.filter((c) => c.sections).flatMap((c) => c.sections!.map((s) => [
+      c.id, c.name, s.label, Math.round(c.clicks * s.clickShare), r4(s.clickShare)])));
+
+  block("video_completion",
+    ["creative_id", "creative", "start", "q25", "q50", "q75", "q100"],
+    creatives.filter((c) => c.quartiles).map((c) => [c.id, c.name, ...c.quartiles!]));
+
+  block("converter_profile",
+    ["media_type", "dimension", "bucket", "share"],
+    v.media.flatMap((m) => (["income", "age", "education", "device"] as const).flatMap((dim) =>
+      data.demographics[m.key][dim].map((b) => [m.label, dim, b.label, r4(b.share)]))));
+
+  const e = v.email.totals;
+  if (v.email.present) {
+    block("email_funnel",
+      ["stage", "count", "rate_of_previous"],
+      [["sends", Math.round(e.sends), ""],
+       ["delivered", Math.round(e.delivered), r4(e.sends ? e.delivered / e.sends : 0)],
+       ["opens_reported", Math.round(e.opensReported), r4(e.delivered ? e.opensReported / e.delivered : 0)],
+       ["opens_modelled", Math.round(e.opensModelled), r4(e.delivered ? e.opensModelled / e.delivered : 0)],
+       ["clicks", Math.round(e.clicks), r4(e.delivered ? e.clicks / e.delivered : 0)],
+       ["conversions", r2(e.conversions), r4(e.clicks ? e.conversions / e.clicks : 0)],
+       ["unsubscribes", r2(e.unsubs), r4(e.delivered ? e.unsubs / e.delivered : 0)]]);
+  }
+
+  return out.join("\n");
 }

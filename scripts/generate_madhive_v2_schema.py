@@ -119,6 +119,7 @@ NOTES = {
         "col": "Legacy tile-grid column. No longer read by the UI.",
         "row": "Legacy tile-grid row. No longer read by the UI.",
         "shares": "Object keyed by campaign id, each holding the three share fields.",
+        "population": "Area profile. Modelled, not a Census count — the Census API needs a key we do not hold.",
         "medianIncome": "Area profile. Modelled.",
         "medianAge": "Area profile. Modelled.",
         "degreeShare": "Bachelor's or higher. Modelled.",

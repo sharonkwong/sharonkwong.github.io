@@ -2,7 +2,7 @@ import { Box, Flex, Text } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import DateRange from "./DateRange";
 import { toCsv } from "./data";
-import type { Filters as F } from "./data";
+import type { Filters as F, View } from "./data";
 import type { Data, MediaKey } from "./types";
 import { Button, Label, T } from "./ui";
 
@@ -173,8 +173,8 @@ function Schedule() {
   );
 }
 
-export default function FilterBar({ data, f, set }: {
-  data: Data; f: F; set: (p: Partial<F>) => void;
+export default function FilterBar({ data, f, set, v }: {
+  data: Data; f: F; set: (p: Partial<F>) => void; v: View;
 }) {
   const campaignOptions = data.campaigns
     .filter((c) => !f.media.length || f.media.includes(c.mediaType))
@@ -184,12 +184,7 @@ export default function FilterBar({ data, f, set }: {
     }));
 
   const exportCsv = () => {
-    const rows = data.daily.filter((r) =>
-      r.date >= f.start && r.date <= f.end &&
-      data.campaigns.some((c) => c.id === r.campaign &&
-        (!f.media.length || f.media.includes(c.mediaType)) &&
-        (!f.campaigns.length || f.campaigns.includes(c.id))));
-    const blob = new Blob([toCsv(rows, data.campaigns)], { type: "text/csv" });
+    const blob = new Blob([toCsv(v, data, f)], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = window.URL.createObjectURL(blob);
     a.download = `elite-pizza_${f.start}_${f.end}.csv`;

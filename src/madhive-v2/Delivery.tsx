@@ -257,7 +257,8 @@ function Geo({ v, data }: { v: View; data: Data }) {
               <SplitBars rows={Object.entries(detail.os)} color={T.device.Mobile} />
               <Label as="div" mt={4} mb={2}>Area profile</Label>
               <Flex direction="column" gap={2}>
-                {[["Median income", `$${detail.medianIncome.toLocaleString("en-US")}`],
+                {[["Population", detail.population.toLocaleString("en-US")],
+                  ["Median income", `$${detail.medianIncome.toLocaleString("en-US")}`],
                   ["Median age", detail.medianAge.toFixed(1)],
                   ["Bachelor's or higher", pct(detail.degreeShare, 0)]].map(([k, val]) => (
                   <Flex key={k} justify="space-between" align="baseline">

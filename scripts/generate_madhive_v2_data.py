@@ -179,30 +179,34 @@ demographics = {k: {dim: [dict(label=l, share=s) for l, s in rows]
 # south, east and west in the right places. Reading a tile grid does not depend
 # on area, which is what makes a small dense inner city legible next to a large
 # outer one.
+# Population is MODELLED, like the rest of the area profile beside it. The
+# Census API needs a key we do not have, and inventing a number that looks like
+# an official count would be worse than saying plainly that it is not one.
+# Magnitudes are set to what a Portland ZCTA plausibly holds.
 ZIPS = [
-    # zip,   col, row, name,                 weight, median income, median age, degree share
-    ("97203", 0, 0, "St Johns",            0.72,  61_400, 34.1, .29),
-    ("97217", 1, 0, "Kenton",              0.94,  68_900, 35.4, .36),
-    ("97211", 2, 0, "Woodlawn",            1.08,  76_200, 36.0, .45),
-    ("97218", 3, 0, "Cully",               0.66,  63_800, 34.8, .28),
-    ("97220", 4, 0, "Parkrose",            0.58,  59_100, 36.2, .24),
-    ("97229", 0, 1, "Bethany",             0.81, 118_400, 39.6, .61),
-    ("97210", 1, 1, "Northwest",           1.02,  92_700, 35.1, .58),
-    ("97227", 2, 1, "Eliot",               0.88,  71_500, 33.7, .42),
-    ("97212", 3, 1, "Irvington",           1.21,  98_300, 38.4, .59),
-    ("97213", 4, 1, "Hollywood",           0.97,  84_600, 37.9, .49),
-    ("97221", 0, 2, "Sylvan",              0.63, 131_200, 44.2, .67),
-    ("97205", 1, 2, "Goose Hollow",        1.14,  74_800, 34.0, .55),
-    ("97209", 2, 2, "Pearl",               1.44,  96_100, 35.8, .63),
-    ("97232", 3, 2, "Lloyd",               1.07,  79_400, 36.6, .51),
-    ("97215", 4, 2, "Mt Tabor",            0.92,  86_900, 38.1, .52),
-    ("97239", 0, 3, "South Waterfront",    0.86,  89_700, 37.2, .57),
-    ("97201", 1, 3, "Downtown",            1.32,  70_300, 33.2, .53),
-    ("97214", 2, 3, "Buckman",             1.51,  73_900, 33.9, .54),
-    ("97202", 3, 3, "Sellwood",            1.18,  88_100, 37.5, .56),
-    ("97206", 4, 3, "Foster-Powell",       0.94,  67_200, 35.6, .38),
-    ("97219", 1, 4, "Multnomah Village",   0.79,  99_800, 41.3, .58),
-    ("97266", 3, 4, "Lents",               0.61,  57_600, 34.4, .22),
+    # zip,   col, row, name,                 weight, median income, median age, degree share, population
+    ("97203", 0, 0, "St Johns",            0.72,  61_400, 34.1, .29, 26400),
+    ("97217", 1, 0, "Kenton",              0.94,  68_900, 35.4, .36, 35200),
+    ("97211", 2, 0, "Woodlawn",            1.08,  76_200, 36.0, .45, 30100),
+    ("97218", 3, 0, "Cully",               0.66,  63_800, 34.8, .28, 16300),
+    ("97220", 4, 0, "Parkrose",            0.58,  59_100, 36.2, .24, 24100),
+    ("97229", 0, 1, "Bethany",             0.81, 118_400, 39.6, .61, 61800),
+    ("97210", 1, 1, "Northwest",           1.02,  92_700, 35.1, .58, 17400),
+    ("97227", 2, 1, "Eliot",               0.88,  71_500, 33.7, .42, 9200),
+    ("97212", 3, 1, "Irvington",           1.21,  98_300, 38.4, .59, 22300),
+    ("97213", 4, 1, "Hollywood",           0.97,  84_600, 37.9, .49, 26600),
+    ("97221", 0, 2, "Sylvan",              0.63, 131_200, 44.2, .67, 11900),
+    ("97205", 1, 2, "Goose Hollow",        1.14,  74_800, 34.0, .55, 8100),
+    ("97209", 2, 2, "Pearl",               1.44,  96_100, 35.8, .63, 16200),
+    ("97232", 3, 2, "Lloyd",               1.07,  79_400, 36.6, .51, 13400),
+    ("97215", 4, 2, "Mt Tabor",            0.92,  86_900, 38.1, .52, 18100),
+    ("97239", 0, 3, "South Waterfront",    0.86,  89_700, 37.2, .57, 21300),
+    ("97201", 1, 3, "Downtown",            1.32,  70_300, 33.2, .53, 17800),
+    ("97214", 2, 3, "Buckman",             1.51,  73_900, 33.9, .54, 27400),
+    ("97202", 3, 3, "Sellwood",            1.18,  88_100, 37.5, .56, 39800),
+    ("97206", 4, 3, "Foster-Powell",       0.94,  67_200, 35.6, .38, 40200),
+    ("97219", 1, 4, "Multnomah Village",   0.79,  99_800, 41.3, .58, 34900),
+    ("97266", 3, 4, "Lents",               0.61,  57_600, 34.4, .22, 28300),
 ]
 # Device and mobile-OS profile per ZIP. Modelled, not measured: the tilt is
 # seeded off median income and then reconciled by iterative proportional
@@ -213,7 +217,7 @@ DEVICES = ["Mobile", "Desktop", "Tablet"]
 
 def zip_device_matrix(zips, target_share, row_weight):
     tilt = []
-    for (_z, _c, _r, _n, _w, inc, _age, _deg) in zips:
+    for (_z, _c, _r, _n, _w, inc, _age, _deg, _p) in zips:
         lean = (inc - 82_000) / 82_000          # richer areas skew to desktop
         tilt.append([max(0.05, 1 - 0.45 * lean), max(0.05, 1 + 0.80 * lean), 1.0])
     m = [[t[j] * target_share[DEVICES[j]] for j in range(3)] for t in tilt]
@@ -229,7 +233,7 @@ def zip_device_matrix(zips, target_share, row_weight):
     return m
 
 _imp_by_zip = []
-for z, col, row, name, w, inc, age, deg in ZIPS:
+for z, col, row, name, w, inc, age, deg, pop in ZIPS:
     _imp_by_zip.append(w)
 _tot_w = sum(_imp_by_zip)
 _row_weight = [x / _tot_w for x in _imp_by_zip]
@@ -240,7 +244,7 @@ _target = {d: v / _bt for d, v in _blend.items()}
 _matrix = zip_device_matrix(ZIPS, _target, _row_weight)
 
 geo = []
-for zi, (z, col, row, name, w, inc, age, deg) in enumerate(ZIPS):
+for zi, (z, col, row, name, w, inc, age, deg, pop) in enumerate(ZIPS):
     shares = {}
     for c in CAMPAIGNS:
         jitter = 1 + random.uniform(-0.22, 0.22)
@@ -257,7 +261,7 @@ for zi, (z, col, row, name, w, inc, age, deg) in enumerate(ZIPS):
     ios = min(0.78, max(0.34, 0.52 + (inc - 82_000) / 82_000 * 0.30
                         + random.uniform(-0.035, 0.035)))
     geo.append(dict(zip=z, name=name, col=col, row=row, shares=shares,
-                    medianIncome=inc, medianAge=age, degreeShare=deg,
+                    population=pop, medianIncome=inc, medianAge=age, degreeShare=deg,
                     devices={d: round(dev_row[j] / dev_tot, 4) for j, d in enumerate(DEVICES)},
                     os={"iOS": round(ios, 4), "Android": round(1 - ios, 4)}))
 for field in ("impressionShare", "clickShare", "conversionShare"):

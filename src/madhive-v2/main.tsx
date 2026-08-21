@@ -71,7 +71,7 @@ function Page() {
           </Box>
         )}
 
-        <FilterBar data={data} f={f} set={set} />
+        <FilterBar data={data} f={f} set={set} v={v} />
 
         <SectionTitle>Top Line Metrics</SectionTitle>
         <TopLine v={v} data={data} />

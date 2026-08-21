@@ -195,6 +195,35 @@ function CostDrill({ v, kind }: { v: View; kind: "cpm" | "cpc" | "cpa" }) {
   );
 }
 
+/**
+ * The three caveats that used to be spread across four tooltips. They are
+ * properties of the media mix rather than of any one metric, so they belong
+ * once, above the cards, instead of repeated inside them.
+ */
+function MediaNote({ v }: { v: View }) {
+  const notes = [
+    ["Email has no impression", "its delivered count sits in the impressions column"],
+    ["Clicks do not compare across media", "email goes to people who opted in, and video mostly converts people who never click"],
+    ["Reach is modelled", "display and video dedupe on a device id, email on a hashed address, and the two are matched rather than joined"],
+  ].filter((_, i) => (i === 0 || i === 1 ? v.media.length > 1 || v.email.present : true));
+  if (!notes.length) return null;
+  return (
+    <Flex bg={T.surface} border="1px solid" borderColor={T.line} borderLeft="2px solid"
+      borderLeftColor={T.ramp[4]} borderRadius="6px" px={3.5} py={2.5} mb={3}
+      gap={{ base: 2, lg: 6 }} direction={{ base: "column", lg: "row" }} wrap="wrap">
+      {notes.map(([head, tail]) => (
+        <Flex key={head} gap={2} align="baseline" flex="1" minW="220px">
+          <Box w="4px" h="4px" borderRadius="full" bg={T.dim} flex="0 0 auto"
+            position="relative" top="-3px" />
+          <Text fontSize="12px" color={T.muted} lineHeight={1.55}>
+            <Text as="span" color={T.ink} fontWeight={600}>{head}</Text> — {tail}.
+          </Text>
+        </Flex>
+      ))}
+    </Flex>
+  );
+}
+
 export default function TopLine({ v, data }: { v: View; data: Data }) {
   const [open, setOpen] = useState<CardId | null>(null);
   const t = v.totals, p = v.priorTotals;
@@ -210,34 +239,32 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
     { id: "impressions",
       label: v.email.only ? "Total Delivered" : "Total Impressions",
       value: compact(t.impressions),
-      tip: "Times an ad was served. Email has no impression, so a delivered email sits in this column instead — when email is the only thing in scope the card says Delivered. Measured, not derived.",
+      tip: "Times an ad was served. Email counts a delivered email instead.",
       delta: delta(t.impressions, p.impressions) },
     { id: "clicks", label: "Total Clicks / Click Rate", value: nf(t.clicks),
       second: pct(rate(t.clicks, t.impressions), 2),
-      // On delivered for email, never on opens: Apple MPP inflates opens, and
-      // click-to-open inherits the problem through its denominator.
-      tip: "Clicks on an ad, or on a link inside an email, with clicks ÷ impressions beside it. Not comparable across media: email reaches people who asked to hear from you, display does not, and video mostly converts people who never click at all.",
+      tip: "Clicks, and clicks ÷ impressions beside it.",
       delta: delta(t.clicks, p.clicks) },
     { id: "conversions", label: "Total Conversions / Conversion Rate", value: nf(t.conversions),
       second: pct(rate(t.conversions, t.clicks), 1),
-      tip: "Conversions credited to the last ad seen, inside a 30-day window, with conversions ÷ clicks beside it. That rate only counts people who clicked, so it flatters email and undersells video.",
+      tip: "Conversions credited to the last ad seen, within 30 days. Rate is conversions ÷ clicks.",
       delta: delta(t.conversions, p.conversions) },
     { id: "reach", label: "Unique Reach", value: compact(reach.unique),
       delta: NaN,
-      tip: `Unique identifiers reached inside the selected dates, not impressions. Each campaign's impressions in the window are divided by its frequency for a window that length — a shorter range reaches nearly the same people fewer times each — and then ${pct(reach.overlap, 0)} comes off for the people the selected media share. Display and video dedupe on a device id, email on a hashed address, and the two are matched probabilistically rather than joined, so this is a modelled figure and not a count. No period comparison, because the overlap is a property of the selection rather than of the window.` },
+      tip: "Unique identifiers reached in the selected dates. Modelled, not counted — open the card for the working." },
   ];
   const costs: { id: CardId; label: string; value: string; delta: number; lower?: boolean; tip?: string }[] = [
     { id: "spend", label: "Total Spend", value: money(t.spend), delta: delta(t.spend, p.spend), lower: true,
-      tip: "Media cost across everything in scope. Measured — this comes off the invoices, not from a model." },
+      tip: "Media cost across everything in scope. Straight off the invoices." },
     { id: "cpm", label: v.email.only ? "Cost per Mille Delivered" : "Cost per Mille",
-      tip: "Spend ÷ impressions × 1,000. Derived. This is the price of the media itself, before any question of whether it worked. For email it is per thousand delivered.",
+      tip: "Spend ÷ impressions × 1,000.",
       value: money(cost(t.spend, t.impressions) * 1000, 2),
       delta: delta(cost(t.spend, t.impressions), cost(p.spend, p.impressions)) },
     { id: "cpc", label: "Cost per Click", value: money(cost(t.spend, t.clicks), 2),
-      tip: "Spend ÷ clicks. Derived. Cheap clicks and cheap conversions are different things — display buys the cheapest clicks here and the dearest conversions.",
+      tip: "Spend ÷ clicks.",
       delta: delta(cost(t.spend, t.clicks), cost(p.spend, p.clicks)) },
     { id: "cpa", label: "Cost per Conversion", value: money(cost(t.spend, t.conversions), 2),
-      tip: "Spend ÷ conversions. Derived. It is the average across everything in scope, so a mixed selection blends three very different costs into one figure — the by-media panel below separates them.",
+      tip: "Spend ÷ conversions.",
       delta: delta(cost(t.spend, t.conversions), cost(p.spend, p.conversions)) },
   ];
 
@@ -245,6 +272,7 @@ export default function TopLine({ v, data }: { v: View; data: Data }) {
 
   return (
     <Box>
+      <MediaNote v={v} />
       <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={3}>
         {cards.map((c) => (
           <Card key={c.id} {...c} lowerIsBetter={c.lower} open={open === c.id} onClick={() => toggle(c.id)} />

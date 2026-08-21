@@ -42,6 +42,8 @@ export interface GeoZip {
   col: number;
   row: number;
   shares: Record<string, ShareRow>;
+  /** Modelled, not a Census count. */
+  population: number;
   medianIncome: number;
   medianAge: number;
   degreeShare: number;
