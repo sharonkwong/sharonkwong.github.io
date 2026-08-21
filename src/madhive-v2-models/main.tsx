@@ -25,7 +25,12 @@ interface WorkedStep {
   flags: (string | null)[]; note?: string; real?: boolean;
 }
 interface Worked { title: string; note: string; steps: WorkedStep[] }
-interface GoldErd { spine: string; edges: Record<string, { via: string; note: string }> }
+interface GoldDim { name: string; via: string }
+interface GoldErd {
+  spine: string;
+  identity: { name: string; via: string; note: string }[];
+  rows: { agg: string; via: string; note: string; dims: GoldDim[] }[];
+}
 interface Schema {
   generatedAt: string; dashboard: string; advertiser: string;
   window: { first: string; last: string };
@@ -96,8 +101,12 @@ function Erd() {
     { n: "dim_placement", fk: "placement_id" },
     { n: "dim_device", fk: "device_type" },
     { n: "dim_geo_zip", fk: "zcta5" },
+    // Not a dimension, but it keys into the impression exactly like one: the
+    // identifier an impression arrives with resolves to a person here, which
+    // is what lets reach be a distinct count instead of a sum of rows.
+    { n: "fct_identity_map", fk: "identifier" },
   ];
-  const DW = 190, DGAP = (W - DW * 5) / 4, DY = 14, DH = 40;
+  const DW = (W - 14 * 5) / 6, DGAP = 14, DY = 14, DH = 40;
   const FX = 150, FW = 420, FH = 44;
   const rows = [
     { n: "fct_impression", y: 140 },
@@ -109,13 +118,13 @@ function Erd() {
   // claim a parent-child link that does not exist.
   const side = [
     { n: "fct_email_delivery", x: 690, y: 140, w: 300,
-      note: "parallel fact — email has no impression", dashed: true },
+      note: "parallel fact", dashed: true },
     { n: "dim_creative_section", x: 690, y: 246, w: 300, note: "section_key", dashed: false },
   ];
   return (
     <Box as="figure" m={0}>
       <Box as="svg" viewBox={`0 0 ${W} ${H}`} w="100%" h="auto" display="block" role="img"
-        aria-label="Five dimensions key into the impression fact; impressions lead to clicks and clicks to conversions; email delivery and creative sections sit alongside.">
+        aria-label="Five dimensions and the identity map key into the impression fact; impressions lead to clicks and clicks to conversions; email delivery and creative sections sit alongside.">
         <defs>
           <marker id="ea" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
             orient="auto-start-reverse">
@@ -131,11 +140,11 @@ function Erd() {
             <g key={d.n}>
               <rect x={x} y={DY} width={DW} height={DH} rx={5} fill={T.surface}
                 stroke={T.ramp[3]} strokeWidth={1.1} />
-              <text x={cx} y={DY + 25} textAnchor="middle" fontFamily={MONO} fontSize={11.5}
+              <text x={cx} y={DY + 25} textAnchor="middle" fontFamily={MONO} fontSize={11}
                 fill={T.ink}>{d.n}</text>
               <path d={`M${cx},${DY + DH} C${cx},${DY + DH + 42} ${tx},${rows[0].y - 46} ${tx},${rows[0].y}`}
                 fill="none" stroke={T.line} strokeWidth={1} markerEnd="url(#ea)" />
-              <text x={cx + (i < 2 ? -6 : 6)} y={DY + DH + 26} textAnchor={i < 2 ? "end" : "start"}
+              <text x={cx + (i < 3 ? -6 : 6)} y={DY + DH + 26} textAnchor={i < 3 ? "end" : "start"}
                 fontFamily={MONO} fontSize={9.5} fill={T.dim}>{d.fk}</text>
             </g>
           );
@@ -172,8 +181,11 @@ function Erd() {
           </g>
         ))}
 
-        <text x={FX} y={430} fontSize={11.5} fill={T.muted}>
+        <text x={FX} y={424} fontSize={11.5} fill={T.muted}>
           Every fact carries its own date, so a filter never has to walk the chain to find one.
+        </text>
+        <text x={FX} y={444} fontSize={11.5} fill={T.muted}>
+          Email sits beside the chain rather than under it — a send has no impression to hang off.
         </text>
       </Box>
     </Box>
@@ -193,24 +205,51 @@ function Erd() {
  * cannot show a column the card does not.
  */
 function GoldErd({ tables, erd }: { tables: Table[]; erd: GoldErd }) {
-  const spine = tables.find((t) => t.name === erd.spine);
-  const sats = tables.filter((t) => t.name !== erd.spine && erd.edges[t.name]);
-  if (!spine || !sats.length) return null;
+  const by = (n: string) => tables.find((t) => t.name === n);
+  const spine = by(erd.spine);
+  if (!spine) return null;
 
-  const ROW_H = 15, HEAD = 30, PAD = 10;
+  const ROW_H = 15, HEAD = 30, PAD = 10, GAP_Y = 24;
   const boxH = (t: Table) => HEAD + t.columns.length * ROW_H + PAD;
 
-  /* One stack rather than a grid. A grid puts a box between the spine and the
-     boxes further out, so every edge to a far column crosses a near one and
-     every label lands on top of something. Stacked, no edge crosses anything
-     and the labels sit in the gap. */
-  const W = 1240, SW = 330, SX = 0, GAP_Y = 18, CX = 580, CW = W - CX;
-  const tops: number[] = [];
-  let cursor = 8;
-  for (const t of sats) { tops.push(cursor); cursor += boxH(t) + GAP_Y; }
-  const H = Math.max(cursor, 260);
-  const SY = Math.max(8, (H - boxH(spine)) / 2);
+  /* Three columns, left to right: the one table that holds counts, the tables
+     that hold shares of it, and the dimensions each of those joins for its
+     labels. A panel needs both halves -- the campaign filter needs names and
+     flight dates, the map needs ZIP names and boundaries -- so leaving the
+     dimensions off would draw a warehouse the dashboard could not run on. */
+  const W = 1280, LX = 0, LW = 300, MX = 465, MW = 340, RX = 970, RW = 310;
 
+  const rows = erd.rows.map((r) => ({ ...r, t: by(r.agg) })).filter((r) => r.t);
+  const ident = erd.identity.map((d) => ({ ...d, t: by(d.name) })).filter((d) => d.t);
+
+  const TOP = 30;
+  const mid: number[] = [];
+  let cur = TOP;
+  for (const r of rows) { mid.push(cur); cur += boxH(r.t!) + GAP_Y; }
+
+  /* Each dimension is drawn once and every table that keys to it gets an edge,
+     so a dimension two tables share reads as shared rather than duplicated.
+     Placed at its first caller's row, or just below whatever is already there. */
+  const placed = new Map<string, { t: Table; y: number }>();
+  let rc = TOP;
+  rows.forEach((r, i) => r.dims.forEach((d) => {
+    if (placed.has(d.name)) return;
+    const t = by(d.name);
+    if (!t) return;
+    const y = Math.max(mid[i], rc);
+    placed.set(d.name, { t, y });
+    rc = y + boxH(t) + 18;
+  }));
+
+  const H = Math.max(cur, rc, 300);
+  const IGAP = 46, ILINE = LX + LW - 46;
+  const identH = ident.reduce((a, d) => a + boxH(d.t!) + IGAP, 0) + boxH(spine);
+  const SY = Math.max(TOP, (H - identH) / 2);
+  const identY: number[] = [];
+  let ic = SY + boxH(spine) + IGAP;
+  for (const d of ident) { identY.push(ic); ic += boxH(d.t!) + IGAP; }
+
+  const KEY = /_id$|^zcta5$|^event_date$|^media_type$|^device_type$|^section_key$|^media_types$/;
   const box = (t: Table, x: number, y: number, w: number, accent: string, bold = false) => (
     <g key={t.name}>
       <rect x={x} y={y} width={w} height={boxH(t)} rx={6} fill={bold ? T.raised : T.surface}
@@ -221,9 +260,7 @@ function GoldErd({ tables, erd }: { tables: Table[]; erd: GoldErd }) {
       {t.columns.map((c, i) => (
         <g key={c.name}>
           <text x={x + 12} y={y + HEAD + 11 + i * ROW_H} fontFamily={MONO} fontSize={9.5}
-            fill={/_id$|^zcta5$|^event_date$|^media_type$|^device_type$|^section_key$|^placement_id$/.test(c.name) ? T.ink : T.muted}>
-            {c.name}
-          </text>
+            fill={KEY.test(c.name) ? T.ink : T.muted}>{c.name}</text>
           <text x={x + w - 12} y={y + HEAD + 11 + i * ROW_H} textAnchor="end" fontFamily={MONO}
             fontSize={8.5} fill={T.dim}>{c.type}</text>
         </g>
@@ -231,39 +268,72 @@ function GoldErd({ tables, erd }: { tables: Table[]; erd: GoldErd }) {
     </g>
   );
 
+  const edge = (k: string, x1: number, y1: number, x2: number, y2: number,
+                via: string, note?: string) => {
+    const mx = (x1 + x2) / 2;
+    return (
+      <g key={k}>
+        <path d={`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2 - 7},${y2}`}
+          fill="none" stroke={T.line} strokeWidth={1} markerEnd="url(#ga)" />
+        <text x={x2 - 16} y={note ? y2 - 6 : y2 - 4} textAnchor="end" fontFamily={MONO}
+          fontSize={9.5} fill={T.muted}>{via}</text>
+        {note && (
+          <text x={x2 - 16} y={y2 + 7} textAnchor="end" fontFamily={MONO} fontSize={8.5}
+            fill={T.dim}>{note}</text>
+        )}
+      </g>
+    );
+  };
+
+  const GOLD = LAYER_COLOR.Gold ?? T.dim;
   return (
     <Box as="figure" m={0}>
       <Box as="svg" viewBox={`0 0 ${W} ${H}`} w="100%" h="auto" display="block" role="img"
-        aria-label="The gold layer: one table of counts, and six tables of shares that multiply against it.">
+        aria-label="The gold layer the dashboard queries: one table of counts, six tables of shares that multiply against it, and the dimensions each joins for names, formats and boundaries.">
         <defs>
           <marker id="ga" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
             orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill={T.dim} />
           </marker>
         </defs>
-        {sats.map((t, i) => {
-          const e = erd.edges[t.name];
-          const from = { x: SX + SW, y: SY + boxH(spine) / 2 };
-          const to = { x: CX, y: tops[i] + boxH(t) / 2 };
-          const mx = (from.x + to.x) / 2;
-          return (
-            <g key={`e-${t.name}`}>
-              <path d={`M${from.x},${from.y} C${mx},${from.y} ${mx},${to.y} ${to.x - 7},${to.y}`}
-                fill="none" stroke={T.line} strokeWidth={1} markerEnd="url(#ga)" />
-              <text x={to.x - 16} y={to.y - 6} textAnchor="end" fontFamily={MONO} fontSize={9.5}
-                fill={T.muted}>{e.via}</text>
-              <text x={to.x - 16} y={to.y + 7} textAnchor="end" fontFamily={MONO} fontSize={8.5}
-                fill={T.dim}>{e.note}</text>
-            </g>
-          );
-        })}
-        {box(spine, SX, SY, SW, T.ramp[5], true)}
-        <text x={SX} y={SY - 12} fontFamily={MONO} fontSize={10} fill={T.ramp[5]}>
+
+        {rows.map((r, i) => edge(`m-${r.agg}`, LX + LW, SY + boxH(spine) / 2,
+          MX, mid[i] + boxH(r.t!) / 2, r.via, r.note))}
+
+        {rows.flatMap((r, i) => r.dims.map((d) => {
+          const p = placed.get(d.name);
+          return p ? edge(`d-${r.agg}-${d.name}`, MX + MW, mid[i] + boxH(r.t!) / 2,
+            RX, p.y + boxH(p.t) / 2, d.via) : null;
+        }))}
+
+        {ident.map((d, i) => (
+          <g key={`i-${d.name}`}>
+            <line x1={ILINE} y1={i === 0 ? SY + boxH(spine) : identY[i - 1] + boxH(ident[i - 1].t!)}
+              x2={ILINE} y2={identY[i] - 4} stroke={T.line} strokeWidth={1}
+              markerEnd="url(#ga)" />
+            <text x={LX} y={identY[i] - 24} fontFamily={MONO} fontSize={9.5}
+              fill={T.muted}>{d.via}</text>
+            <text x={LX} y={identY[i] - 11} fontFamily={MONO} fontSize={8.5}
+              fill={T.dim}>{d.note}</text>
+          </g>
+        ))}
+
+        {box(spine, LX, SY, LW, T.ramp[5], true)}
+        <text x={LX} y={SY - 12} fontFamily={MONO} fontSize={10} fill={T.ramp[5]}>
           COUNTS — the spine
         </text>
-        {sats.map((t, i) => box(t, CX, tops[i], CW, LAYER_COLOR.Gold ?? T.dim))}
-        <text x={CX} y={tops[0] - 12} fontFamily={MONO} fontSize={10} fill={LAYER_COLOR.Gold ?? T.dim}>
+        {ident.map((d, i) => box(d.t!, LX, identY[i], LW, LAYER_COLOR.Silver ?? T.dim))}
+
+        {rows.map((r, i) => box(r.t!, MX, mid[i], MW, GOLD))}
+        <text x={MX} y={mid[0] - 12} fontFamily={MONO} fontSize={10} fill={GOLD}>
           SHARES — multiplied back against the spine
+        </text>
+
+        {[...placed.values()].map((p) => box(p.t, RX, p.y, RW,
+          p.t.layer === "Gold" ? GOLD : LAYER_COLOR.Silver ?? T.dim))}
+        <text x={RX} y={[...placed.values()][0].y - 12} fontFamily={MONO} fontSize={10}
+          fill={LAYER_COLOR.Silver ?? T.dim}>
+          LABELS — joined for names, formats, boundaries
         </text>
       </Box>
     </Box>
@@ -512,9 +582,11 @@ function Page() {
         <Box mt={10}>
           <SectionTitle>The gold layer, which is what the dashboard queries</SectionTitle>
           <Text fontSize="13px" color={T.muted} maxW="94ch" lineHeight={1.7} mb={4}>
-            One table holds counts and the rest hold shares of it. A filter sums the spine and
-            multiplies the shares back, which is why a breakdown cannot disagree with the total
-            above it — it is derived from that total rather than computed beside it.
+            Every table a panel reads. One holds counts and the rest hold shares of it: a filter
+            sums the spine and multiplies the shares back, which is why a breakdown cannot
+            disagree with the total above it — it is derived from that total rather than computed
+            beside it. The dimensions on the right are what turn those keys into something
+            readable, and a panel needs both halves.
           </Text>
           <Panel><GoldErd tables={s.tables} erd={s.goldErd} /></Panel>
         </Box>

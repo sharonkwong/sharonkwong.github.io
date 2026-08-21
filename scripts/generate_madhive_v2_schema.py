@@ -277,6 +277,7 @@ TABLES = [
                   ("placement_id", "string", "FK dim_placement."),
                   ("device_type", "string", "FK dim_device."),
                   ("zcta5", "string", "FK dim_geo_zip."),
+                  ("identifier", "string", "Device id or hashed email. Resolves to a person through fct_identity_map, which is what makes reach a distinct count rather than a sum."),
                   ("media_cost_usd", "numeric", "")]),
     dict(layer="Silver", name="fct_click", grain="One row per click",
          description="Display and video clicks from the DSP log, email clicks from the ESP, conformed to one shape so the dashboard never branches on source.",
@@ -329,6 +330,11 @@ TABLES = [
          columns=[("creative_id", "string", "FK."), ("section_key", "string", "PK with creative_id."),
                   ("label", "string", ""), ("x", "numeric", "Fraction of the creative."),
                   ("y", "numeric", ""), ("w", "numeric", ""), ("h", "numeric", "")]),
+    dict(layer="Silver", name="dim_media_type", grain="One row per media type",
+         description="Display, email and online video, with the identifier each dedupes on and the colour the dashboard draws it in.",
+         columns=[("media_type", "string", "PK."), ("media_label", "string", ""),
+                  ("identifier_type", "string", "Device id, or hashed email."),
+                  ("chart_colour", "string", "Validated for CVD separation on the dark surface.")]),
     dict(layer="Silver", name="dim_placement", grain="One row per site, app or mail client",
          columns=[("placement_id", "string", "PK."), ("placement_name", "string", ""),
                   ("channel", "string", "web, ctv, app, inbox.")]),
@@ -354,8 +360,11 @@ TABLES = [
          columns=[("campaign_id", "string", ""),
                   ("unique_identifiers", "bigint", "Distinct person keys over the flight."),
                   ("frequency", "numeric", "Impressions / unique_identifiers."),
-                  ("overlap_by_media_count", "map<int,numeric>", "Share of people double-counted when 1, 2 or 3 media types are in scope."),
                   ("flight_days", "integer", "Denominator for scaling frequency to a shorter window.")]),
+    dict(layer="Gold", name="dim_reach_overlap", grain="One row per count of media types in scope",
+         description="How much the selected media share people. A lookup rather than a column on the reach table, because it is a property of the selection and not of any one campaign.",
+         columns=[("media_types", "integer", "PK. 1, 2 or 3 in scope."),
+                  ("overlap_share", "numeric", "Deducted from the summed per-campaign reach.")]),
     dict(layer="Gold", name="agg_creative_placement", grain="creative x placement",
          description="Stored as shares of the parent creative rather than counts, so a date or campaign filter re-derives it without a second pass over the facts.",
          columns=[("creative_id", "string", ""), ("placement_id", "string", ""),
@@ -401,15 +410,36 @@ TABLES = [
 # How the gold tables hang together. The columns are not repeated here -- the
 # diagram reads them off TABLES, so it cannot show a column the table card on
 # the same page does not.
+# Everything the dashboard reads. The aggregates carry the numbers, the
+# dimensions carry the labels, and no panel works without both -- the campaign
+# filter needs names and flight dates, the map needs ZIP names and boundaries,
+# the creative table needs formats and sizes.
 GOLD_SPINE = "agg_campaign_daily"
-GOLD_EDGES = {
-    "agg_campaign_reach":     dict(via="campaign_id", note="impressions / frequency"),
-    "agg_device_campaign":    dict(via="campaign_id", note="x impression, click, conversion"),
-    "agg_geo_zip":            dict(via="campaign_id", note="x impression, click, conversion"),
-    "agg_creative_placement": dict(via="creative_id -> campaign_id", note="share of a share"),
-    "agg_creative_section":   dict(via="creative_id -> campaign_id", note="x clicks"),
-    "agg_converter_profile":  dict(via="media_type", note="profile only, no counts"),
-}
+# Campaign identity sits beside the spine because every table on the diagram
+# keys to it; drawing all seven of those edges would be noise, so the note says
+# it instead.
+GOLD_IDENTITY = [
+    dict(name="dim_campaign", via="campaign_id",
+         note="every share table keys here too"),
+    dict(name="dim_media_type", via="media_type",
+         note="how agg_converter_profile resolves"),
+]
+GOLD_ROWS = [
+    dict(agg="agg_campaign_reach", via="campaign_id", note="impressions / frequency",
+         dims=[dict(name="dim_reach_overlap", via="media_types in scope")]),
+    dict(agg="agg_device_campaign", via="campaign_id", note="x impression, click, conversion",
+         dims=[dict(name="dim_device", via="device_type")]),
+    dict(agg="agg_geo_zip", via="campaign_id", note="x impression, click, conversion",
+         dims=[dict(name="dim_geo_zip", via="zcta5")]),
+    dict(agg="agg_creative_placement", via="creative_id", note="share of a share",
+         dims=[dict(name="dim_creative", via="creative_id"),
+               dict(name="dim_placement", via="placement_id")]),
+    dict(agg="agg_creative_section", via="creative_id", note="x clicks",
+         dims=[dict(name="dim_creative", via="creative_id"),
+               dict(name="dim_creative_section", via="creative_id, section_key")]),
+    dict(agg="agg_converter_profile", via="media_type", note="profile only, no counts",
+         dims=[]),
+]
 
 LINEAGE = [
     ("Top Line Metrics", "Seven cards and their drill-downs", ["daily", "campaigns", "mediaTypes"]),
@@ -591,7 +621,7 @@ def main():
         window=dict(first=data["meta"]["firstDate"], last=data["meta"]["lastDate"]),
         files=files, layers=LAYERS, collections=collections, rules=RULES,
         transforms=TRANSFORMS,
-        goldErd=dict(spine=GOLD_SPINE, edges=GOLD_EDGES),
+        goldErd=dict(spine=GOLD_SPINE, identity=GOLD_IDENTITY, rows=GOLD_ROWS),
         worked=worked_examples(data),
         tables=[dict(layer=t["layer"], name=t["name"], grain=t["grain"],
                      description=t.get("description", ""),
