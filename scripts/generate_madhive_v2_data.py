@@ -333,10 +333,10 @@ for cid, camp, name, fmt, dims, secs, (si, sc, sv) in CREATIVES:
         id=cid, campaign=camp, name=name, format=fmt, dimensions=dims, seconds=secs,
         impressionShare=si, clickShare=sc, conversionShare=sv,
         assetKind="video" if fmt == "Video" else "image",
-        # The page lives at /madhive/v2/, so assets at the site root are two up.
-        asset=("../../madhive-v2-assets/video-creative.mp4" if fmt == "Video"
-               else f"../../madhive-v2-assets/{cid}.svg"),
-        poster="../../madhive-v2-assets/video-poster.svg" if fmt == "Video" else None,
+        # Root-absolute, so the dashboard can be served from any depth.
+        asset=("/madhive-v2-assets/video-creative.mp4" if fmt == "Video"
+               else f"/madhive-v2-assets/{cid}.svg"),
+        poster="/madhive-v2-assets/video-poster.svg" if fmt == "Video" else None,
         quartiles=QUARTILES.get(cid),
         # Where inside the email the clicks landed. Boxes come from the same
         # spec the creative is drawn from, so a leader line cannot point at the

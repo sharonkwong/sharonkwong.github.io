@@ -11,10 +11,12 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
+        // The dashboard lives at /madhive/. /madhive/v2/ is a redirect kept so
+        // links shared while it lived there still resolve.
         madhive: 'madhive/index.html',
-        modeling: 'madhive/modeling/index.html',
         madhiveV2: 'madhive/v2/index.html',
         madhiveModels: 'madhive/models/index.html',
+        modeling: 'madhive/modeling/index.html',
       },
     },
   },

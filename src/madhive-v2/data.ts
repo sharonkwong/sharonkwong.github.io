@@ -3,8 +3,8 @@ import type {
   Campaign, Creative, Data, DailyRow, GeoZip, MediaKey, Metric, ShareMetric,
 } from "./types";
 
-const URL = "../../data/madhive-v2.json";
-const SHAPES_URL = "../../data/madhive-v2-shapes.json";
+const URL = "/data/madhive-v2.json";
+const SHAPES_URL = "/data/madhive-v2-shapes.json";
 
 export function useData() {
   const [data, setData] = useState<Data | null>(null);

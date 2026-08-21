@@ -137,7 +137,7 @@ NOTES = {
         "clickShare": "Share of the campaign's clicks. Sums to 1 per campaign.",
         "conversionShare": "Share of the campaign's conversions. Sums to 1 per campaign.",
         "assetKind": "image or video. Picks the preview element.",
-        "asset": "Path relative to the page, so /madhive/v2/ resolves two levels up.",
+        "asset": "Root-absolute, so the dashboard can be served from any depth.",
         "poster": "Video poster frame. Null for images.",
         "quartiles": "Percent still playing at start, 25, 50, 75, 100. Null for non-video.",
         "sections": "Email only. The clickable bands of the creative.",

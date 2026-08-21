@@ -1,7 +1,7 @@
 import { Box, Flex, Grid, Text } from "@chakra-ui/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  CartesianGrid, Line, LineChart, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { compact, defaultGrain, GRAIN_OPTIONS, money, nf, pct, rollup, seriesByMedia, shortDate } from "./data";
 import type { Grain, View } from "./data";
@@ -57,6 +57,40 @@ export default function Converts({ v, data, days }: { v: View; data: Data; days:
   const demo = picked ? data.demographics[picked] : null;
 
   const series = rollup(seriesByMedia(v, data, metric), grain);
+
+  /* Launches and endings, pinned to the line they belong to. The marker sits at
+     the media type's own value on that date, so an event reads against the
+     series it changed rather than floating on the axis. Snapped to the bucket
+     containing the date, since a weekly or monthly view has no 14th of June. */
+  const events = useMemo(() => {
+    const buckets = series.map((r) => r.date);
+    const snap = (iso: string) => {
+      let hit: string | null = null;
+      for (const b of buckets) if (b <= iso) hit = b; else break;
+      return hit;
+    };
+    const out: { key: string; date: string; y: number; color: string; label: string;
+                 anchor: "start" | "middle" | "end" }[] = [];
+    for (const c of v.campaigns) {
+      const m = v.media.find((x) => x.key === c.mediaType);
+      if (!m) continue;
+      for (const [when, verb] of [[c.flightStart, "launched"], [c.flightEnd, "ended"]] as const) {
+        // An end on the last day on record is the flight still running, not an end.
+        if (verb === "ended" && when >= data.meta.lastDate) continue;
+        const b = snap(when);
+        if (!b || when < buckets[0] || when > v.dates[v.dates.length - 1]) continue;
+        const row = series.find((r) => r.date === b);
+        if (!row) continue;
+        // A centred label runs off the plot when its dot is near an edge, so
+        // the anchor follows where the dot sits along the axis.
+        const at = buckets.indexOf(b) / Math.max(1, buckets.length - 1);
+        out.push({ key: `${c.id}-${verb}`, date: b, y: row[m.key], color: m.color,
+                   label: `${c.name} ${verb}`,
+                   anchor: at < 0.2 ? "start" : at > 0.8 ? "end" : "middle" });
+      }
+    }
+    return out;
+  }, [series, v, data.meta.lastDate]);
   const fmt = metric === "spend" ? (n: number) => money(n) : compact;
 
   return (
@@ -144,7 +178,6 @@ export default function Converts({ v, data, days }: { v: View; data: Data; days:
                 options={[
                   { value: "clicks" as Metric, label: "Clicks" },
                   { value: "conversions" as Metric, label: "Conversions" },
-                  { value: "impressions" as Metric, label: "Impressions" },
                 ]} />
               <Toggle ariaLabel="Granularity" value={grain} onChange={setGrain} options={GRAIN_OPTIONS} />
             </Flex>
@@ -167,6 +200,27 @@ export default function Converts({ v, data, days }: { v: View; data: Data; days:
                 {v.media.map((m) => (
                   <Line key={m.key} dataKey={m.key} type="monotone" stroke={m.color}
                     strokeWidth={2} dot={false} activeDot={{ r: 3.5 }} isAnimationActive={false} />
+                ))}
+                {/* Recharts' ReferenceDot props are typed narrowly; the label
+                    shape it accepts at runtime is wider than the declaration. */}
+                {events.map((e: (typeof events)[number], i: number) => (
+                  <ReferenceDot key={e.key} {...({
+                    x: e.date, y: e.y, r: 4.5,
+                    fill: e.color, stroke: T.bg, strokeWidth: 2,
+                    label: {
+                      content: ({ viewBox }: { viewBox?: { x?: number; y?: number } }) => (
+                        <text
+                          x={(viewBox?.x ?? 0)
+                            + (e.anchor === "start" ? 8 : e.anchor === "end" ? -8 : 0)}
+                          // Stagger, or two events a few buckets apart print on
+                          // top of each other.
+                          y={(viewBox?.y ?? 0) - 10 - (i % 2) * 14}
+                          textAnchor={e.anchor} fontSize={10} fill={T.muted} fontFamily={MONO}>
+                          {e.label}
+                        </text>
+                      ),
+                    },
+                  } as Record<string, unknown>)} />
                 ))}
               </LineChart>
             </ResponsiveContainer>

@@ -311,7 +311,7 @@ function Page() {
   const [s, setS] = useState<Schema | null>(null);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
-    fetch("../../data/madhive-v2-schema.json")
+    fetch("/data/madhive-v2-schema.json")
       .then((r) => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); })
       .then(setS)
       .catch((e: Error) => setErr(e.message));
@@ -390,7 +390,7 @@ function Page() {
 
         <Text fontSize="13px" color={T.muted} maxW="90ch" lineHeight={1.7} mb={2}>
           Everything behind{" "}
-          <Text as="a" href="../v2/" color={T.focus} textDecoration="underline">the dashboard</Text>:
+          <Text as="a" href="/madhive/" color={T.focus} textDecoration="underline">the dashboard</Text>:
           the warehouse tables that would produce it, the exact shape of the JSON the browser
           fetches, and which panel reads what. The field tables below are introspected from the
           shipped files rather than written by hand, so they cannot drift from what is live.

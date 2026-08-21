@@ -63,6 +63,16 @@ const W = 760, INSET_W = 168, INSET_H = 104;
    speck — the conventional locator crop is the right call, not a shortcut. */
 const CONUS = { lon: [-125, -66.5], lat: [24, 49.5] };
 
+/**
+ * A five-digit code in a monospace face runs about 0.62em per character, so it
+ * needs roughly 3.1x the font size in width and a little over 1x in height.
+ * Shrink to fit rather than hide: a ZIP with no code on it is the one a reader
+ * most wants named. Floored at 5.5px, below which it is not legible anyway and
+ * the hover tooltip has to carry it.
+ */
+const labelSize = (w: number, h: number) =>
+  Math.max(5.5, Math.min(11, w / 3.1, h / 1.15));
+
 export default function GeoMap({ shapes, colorFor, labelFor, isBright, selected, onHover, onSelect }: {
   shapes: Shapes;
   colorFor: (zip: string) => string;
@@ -88,7 +98,9 @@ export default function GeoMap({ shapes, colorFor, labelFor, isBright, selected,
       const ys = biggest.map((p) => project(p)[1]);
       return {
         zip: z.zip, d: toPath(rings, project), cx, cy,
-        room: Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)),
+        // Fit the label to the polygon rather than hiding it: a ZIP with no
+        // code on it is the one a reader most wants named.
+        font: labelSize(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)),
       };
     });
 
@@ -126,11 +138,9 @@ export default function GeoMap({ shapes, colorFor, labelFor, isBright, selected,
                 onClick={() => onSelect(z.zip)}>
                 <title>{`${z.zip} — ${labelFor(z.zip)}`}</title>
               </path>
-              {z.room > 34 && (
-                <text x={z.cx} y={z.cy + 3.5} textAnchor="middle" pointerEvents="none"
-                  fontFamily={MONO} fontSize={10.5} fontWeight={600}
-                  fill={isBright(z.zip) ? T.bg : T.ink}>{z.zip}</text>
-              )}
+              <text x={z.cx} y={z.cy + z.font * 0.34} textAnchor="middle" pointerEvents="none"
+                fontFamily={MONO} fontSize={z.font} fontWeight={600}
+                fill={isBright(z.zip) ? T.bg : T.ink}>{z.zip}</text>
             </g>
           );
         })}
