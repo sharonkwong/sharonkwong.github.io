@@ -26,7 +26,14 @@ export const T = {
   /* Devices are their own categorical dimension, so they get their own hues --
      deliberately not the media-type set, which means something else on this
      page. Every pair clears CVD separation on this surface. */
-  device: { Mobile: "#56d4dd", Desktop: "#a78bfa", Tablet: "#fb923c" } as Record<string, string>,
+  device: {
+    Mobile: "#56d4dd", Desktop: "#a78bfa", Tablet: "#fb923c",
+    // Other is a residual, not a category to compare, so it takes a neutral
+    // rather than a fourth hue competing with the three that mean something.
+    // Lighter greys collapse against the violet under tritanopia; this one
+    // separates from all three by lightness in every mode.
+    Other: "#6e7681",
+  } as Record<string, string>,
 };
 
 export const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";

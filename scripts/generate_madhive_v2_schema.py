@@ -108,7 +108,7 @@ NOTES = {
     },
     "devices": {
         "campaign": "FK to campaigns.id.",
-        "device": "Mobile, Desktop or Tablet.",
+        "device": "Mobile, Desktop, Tablet, or Other where the user agent did not identify one.",
         "impressionShare": "Share of that campaign's impressions. Sums to 1 per campaign.",
         "clickShare": "Share of that campaign's clicks. Sums to 1 per campaign.",
         "conversionShare": "Share of that campaign's conversions. Sums to 1 per campaign.",
@@ -431,6 +431,8 @@ RULES = [
          body="A stored reach number would sit beside the impression total and drift from it the moment a filter moved. Frequency is stored instead, so reach is impressions divided by frequency and stays tied to the number above it. Frequency itself is scaled to the selected window, because a month of impressions reaches nearly the same people as six months does, just fewer times each. The cross-media discount goes on top, and the card says it is modelled rather than counted -- a device id and a hashed email are matched, not joined."),
     dict(title="Fitted, not assumed, where two things must agree",
          body="The ZIP device profile is reconciled to the campaign-level device split by iterative proportional fitting. Without that step the map and the device pies would be two numbers that must agree and quietly would not."),
+    dict(title="Inference keeps its residual",
+         body="Device and OS are read off a user agent, and a user agent does not always say. Every device breakdown therefore carries an Other bucket rather than distributing the unknown across the three that are known. It is largest on video, where connected-TV devices frequently do not identify themselves, and on email, where a proxying client reports its own agent instead of the reader's."),
     dict(title="Geometry is real",
          body="ZCTA and national outlines come from the US Census 2020 Cartographic Boundary Files, simplified with Douglas-Peucker and rounded to five decimal places. Nothing on the map is drawn by hand."),
 ]

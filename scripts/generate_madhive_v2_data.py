@@ -143,10 +143,18 @@ def norm(d):
     t = sum(d.values())
     return {k: round(v / t, 4) for k, v in d.items()}
 
+# Device is inferred -- from the user agent on a bid request, or from the one
+# the open pixel reports -- and inference has a residual. Every real report
+# carries an Other bucket, so this one does too. It is largest on video, where
+# connected-TV devices frequently do not identify themselves, and on email,
+# where a proxying client reports its own agent rather than the reader's.
 DEVICE_SPLIT = {          # impressions / clicks / conversions each get a share
-    "display": dict(Mobile=(0.63, 0.68, 0.55), Desktop=(0.27, 0.24, 0.36), Tablet=(0.10, 0.08, 0.09)),
-    "email":   dict(Mobile=(0.71, 0.66, 0.52), Desktop=(0.22, 0.28, 0.42), Tablet=(0.07, 0.06, 0.06)),
-    "video":   dict(Mobile=(0.48, 0.55, 0.41), Desktop=(0.39, 0.35, 0.49), Tablet=(0.13, 0.10, 0.10)),
+    "display": dict(Mobile=(0.610, 0.660, 0.535), Desktop=(0.262, 0.233, 0.350),
+                    Tablet=(0.097, 0.078, 0.087), Other=(0.031, 0.029, 0.028)),
+    "email":   dict(Mobile=(0.664, 0.622, 0.489), Desktop=(0.206, 0.264, 0.395),
+                    Tablet=(0.065, 0.057, 0.056), Other=(0.065, 0.057, 0.060)),
+    "video":   dict(Mobile=(0.446, 0.516, 0.383), Desktop=(0.363, 0.328, 0.458),
+                    Tablet=(0.121, 0.094, 0.093), Other=(0.070, 0.062, 0.066)),
 }
 devices = [
     dict(campaign=c["id"], device=dev,
@@ -213,20 +221,22 @@ ZIPS = [
 # fitting so that, weighted by impressions, the ZIP-level device split adds
 # back up to the campaign-level one. Without that step the map and the device
 # chart would be two numbers that must agree and quietly do not.
-DEVICES = ["Mobile", "Desktop", "Tablet"]
+DEVICES = ["Mobile", "Desktop", "Tablet", "Other"]
 
 def zip_device_matrix(zips, target_share, row_weight):
+    n = len(DEVICES)
     tilt = []
     for (_z, _c, _r, _n, _w, inc, _age, _deg, _p) in zips:
         lean = (inc - 82_000) / 82_000          # richer areas skew to desktop
-        tilt.append([max(0.05, 1 - 0.45 * lean), max(0.05, 1 + 0.80 * lean), 1.0])
-    m = [[t[j] * target_share[DEVICES[j]] for j in range(3)] for t in tilt]
+        # Other does not lean: an unidentified device is unidentified everywhere.
+        tilt.append([max(0.05, 1 - 0.45 * lean), max(0.05, 1 + 0.80 * lean), 1.0, 1.0])
+    m = [[t[j] * target_share[DEVICES[j]] for j in range(n)] for t in tilt]
     for _ in range(60):                          # rows to impressions, columns to target
         for i, r in enumerate(m):
             s = sum(r) or 1
-            for j in range(3):
+            for j in range(n):
                 m[i][j] *= row_weight[i] / s
-        for j in range(3):
+        for j in range(n):
             s = sum(m[i][j] for i in range(len(m))) or 1
             for i in range(len(m)):
                 m[i][j] *= target_share[DEVICES[j]] / s
@@ -263,7 +273,9 @@ for zi, (z, col, row, name, w, inc, age, deg, pop) in enumerate(ZIPS):
     geo.append(dict(zip=z, name=name, col=col, row=row, shares=shares,
                     population=pop, medianIncome=inc, medianAge=age, degreeShare=deg,
                     devices={d: round(dev_row[j] / dev_tot, 4) for j, d in enumerate(DEVICES)},
-                    os={"iOS": round(ios, 4), "Android": round(1 - ios, 4)}))
+                    # A small share of mobile traffic reports neither.
+                    os={"iOS": round(ios * 0.982, 4), "Android": round((1 - ios) * 0.982, 4),
+                        "Other": round(0.018, 4)}))
 for field in ("impressionShare", "clickShare", "conversionShare"):
     for c in CAMPAIGNS:
         t = sum(g["shares"][c["id"]][field] for g in geo)
