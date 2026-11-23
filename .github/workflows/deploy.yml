@@ -29,12 +29,15 @@ jobs:
 
       # Reuses the deploy script, so CI keeps its --add flag: old hashed
       # bundles stay on gh-pages for browsers holding a cached index.html.
+      # The bot identity goes in git config, not --user: gh-pages parses
+      # --user as an RFC 5322 address and rejects the [bot] brackets.
       - name: Build and push to gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >
-          npm run deploy --
-          --repo "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          --silent
-          --user "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-          --message "Deploy main@${GITHUB_SHA}"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm run deploy -- \
+            --repo "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            --silent \
+            --message "Deploy main@${GITHUB_SHA}"
