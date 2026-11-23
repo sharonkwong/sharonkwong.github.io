@@ -10,19 +10,28 @@ interface ExperienceItem {
     logoSize?: string;
     link?: string;
     linkLabel?: string;
-    location: string;
+    location?: string;
     duration: string;
     highlights: string[];
 }
 
 const experiences: ExperienceItem[] = [
     {
+        title: "Product Analyst",
+        company: "Lambda",
+        logo: "/lambda.svg",
+        link: "lambda.ai",
+        location: "San Jose, CA",
+        duration: "October 2026 – Present",
+        highlights: [],
+    },
+    {
         title: "Associate Product Manager",
         company: "Madhive",
         logo: "/madhive-fq.png",
         link: "madhive.com",
         location: "Mountain View, CA",
-        duration: "July 2024 – Present",
+        duration: "July 2024 – October 2026",
         highlights: [
             "Led a complete revamp of the reporting architecture, enhancing scalability and reducing future developer effort by 13x, driving consensus across sales, client success, operations, engineering, and product",
             "Drove the launch of Digital Out-of-Home across 6 teams, covering the full product cycle from campaign insertion order to reporting, contributing to $19M+ in revenue and growing",
@@ -160,27 +169,31 @@ export default function Experience() {
                                         <Text fontSize="sm" color="gray.500">
                                             {exp.duration}
                                         </Text>
-                                        <Text fontSize="sm" color="gray.400">
-                                            {exp.location}
-                                        </Text>
+                                        {exp.location && (
+                                            <Text fontSize="sm" color="gray.400">
+                                                {exp.location}
+                                            </Text>
+                                        )}
                                     </Box>
                                 </HStack>
 
-                                <List spacing={2} mt={4}>
-                                    {exp.highlights.map((highlight, idx) => (
-                                        <ListItem
-                                            key={idx}
-                                            display="flex"
-                                            alignItems="flex-start"
-                                            fontSize="sm"
-                                            color="gray.600"
-                                            lineHeight="1.6"
-                                        >
-                                            <ListIcon as={BsDot} color="gray.400" fontSize="2xl" mt="-2px" flexShrink={0} />
-                                            {highlight}
-                                        </ListItem>
-                                    ))}
-                                </List>
+                                {exp.highlights.length > 0 && (
+                                    <List spacing={2} mt={4}>
+                                        {exp.highlights.map((highlight, idx) => (
+                                            <ListItem
+                                                key={idx}
+                                                display="flex"
+                                                alignItems="flex-start"
+                                                fontSize="sm"
+                                                color="gray.600"
+                                                lineHeight="1.6"
+                                            >
+                                                <ListIcon as={BsDot} color="gray.400" fontSize="2xl" mt="-2px" flexShrink={0} />
+                                                {highlight}
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                )}
                             </Box>
                         </motion.div>
                     ))}

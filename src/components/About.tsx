@@ -76,7 +76,7 @@ export default function About() {
                                 With experience in product management, software development, and data analysis, I bring a unique blend of technical and strategic skills to every project I work on.
                             </Text>
                             <Text fontSize="lg">
-                                Currently, I'm working at Frequence (acquired by Madhive) where I lead product initiatives and manage a high-performing development team. I'm also the co-founder of Kalendir and ReferralHub, where I've built successful SaaS products from the ground up.
+                                Currently, I'm a Product Analyst at Lambda. Before that, I was at Frequence (acquired by Madhive), where I led product initiatives and managed a high-performing development team. I'm also the co-founder of Kalendir and ReferralHub, where I've built successful SaaS products from the ground up.
                             </Text>
                             <Text fontSize="lg">
                                 When I'm not coding or managing products, you can find me working on my hojicha brand, Kuroha Hojicha, where I'm combining my love for tea with my entrepreneurial spirit.
