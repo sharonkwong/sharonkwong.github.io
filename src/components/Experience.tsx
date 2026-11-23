@@ -79,8 +79,9 @@ const consultingTags = [
 
 export default function Experience() {
     return (
-        <Container maxW="4xl" id="experience" pt={{ base: 40, md: 56 }} pb={{ base: 16, md: 24 }}>
-            <VStack spacing={12} alignItems="stretch" w="100%">
+        <Container maxW="4xl" pt={{ base: 40, md: 56 }} pb={{ base: 16, md: 24 }}>
+            {/* The id sits inside the top padding so the nav link lands on the heading. */}
+            <VStack id="experience" spacing={12} alignItems="stretch" w="100%">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
