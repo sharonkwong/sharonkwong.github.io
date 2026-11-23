@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the data-model reference for /madhive/models.
+"""Build the data-model reference for /adtech-dashboard/models.
 
 The field-level schema is INTROSPECTED from the JSON the dashboard actually
 fetches, not hand-written, so it cannot drift from what ships. The warehouse

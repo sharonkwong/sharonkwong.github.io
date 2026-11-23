@@ -11,16 +11,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        // The dashboard lives at /adtech-dashboard/. Everything under
-        // /madhive/ (its old home, and /madhive/v2/ before that) is a redirect
-        // kept so links shared while it lived there still resolve.
         adtechDashboard: 'adtech-dashboard/index.html',
         adtechDashboardModels: 'adtech-dashboard/models/index.html',
         modeling: 'adtech-dashboard/modeling/index.html',
-        madhive: 'madhive/index.html',
-        madhiveV2: 'madhive/v2/index.html',
-        madhiveModels: 'madhive/models/index.html',
-        madhiveModeling: 'madhive/modeling/index.html',
       },
     },
   },

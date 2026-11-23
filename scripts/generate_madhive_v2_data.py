@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dataset for the Elite Pizza ad-performance dashboard (/madhive/v2).
+"""Dataset for the Elite Pizza ad-performance dashboard (/adtech-dashboard/).
 
 One source of truth: daily rows at (date x campaign) grain. Everything else --
 geo, device, demographics, creatives, placements -- is stored as a *share* of

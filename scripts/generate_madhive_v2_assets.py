@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Placeholder creatives for /madhive/v2, rendered locally at their real sizes.
+"""Placeholder creatives for /adtech-dashboard/, rendered locally at their real sizes.
 
 Nothing is fetched at runtime -- a demo that 404s because someone else's
 placeholder host went away is worse than no image.
