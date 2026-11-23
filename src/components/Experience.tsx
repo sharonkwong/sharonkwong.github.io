@@ -61,7 +61,7 @@ const experiences: ExperienceItem[] = [
         logo: "/referralhub.png",
         link: "referralhub.dev",
         location: "Cupertino, CA",
-        duration: "December 2023 – June 2024",
+        duration: "December 2023 – Present",
         highlights: [
             "Co-founded and scaled a platform from 0 to 1, achieving 200% average weekly user growth and generating thousands in sales within the first month (featured by Bloomberg!)",
             "Developed customer-facing features using React, TypeScript, and Python, including in-chat payments, user onboarding, and marketplace features",
