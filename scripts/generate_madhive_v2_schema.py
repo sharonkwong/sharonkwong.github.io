@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the data-model reference for /madhive/models.
+"""Build the data-model reference for /adtech-dashboard/models.
 
 The field-level schema is INTROSPECTED from the JSON the dashboard actually
 fetches, not hand-written, so it cannot drift from what ships. The warehouse
@@ -631,7 +631,7 @@ def main():
 
     out = dict(
         generatedAt="2026-08-20T06:00:00-07:00",
-        dashboard="/madhive/v2/",
+        dashboard="/adtech-dashboard/",
         advertiser=data["meta"]["advertiser"],
         window=dict(first=data["meta"]["firstDate"], last=data["meta"]["lastDate"]),
         files=files, layers=LAYERS, collections=collections, rules=RULES,

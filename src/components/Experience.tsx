@@ -10,19 +10,28 @@ interface ExperienceItem {
     logoSize?: string;
     link?: string;
     linkLabel?: string;
-    location: string;
+    location?: string;
     duration: string;
     highlights: string[];
 }
 
 const experiences: ExperienceItem[] = [
     {
+        title: "Product Analyst",
+        company: "Lambda",
+        logo: "/lambda.svg",
+        link: "lambda.ai",
+        location: "San Jose, CA",
+        duration: "October 2026 – Present",
+        highlights: [],
+    },
+    {
         title: "Associate Product Manager",
         company: "Madhive",
         logo: "/madhive-fq.png",
         link: "madhive.com",
         location: "Mountain View, CA",
-        duration: "July 2024 – Present",
+        duration: "July 2024 – October 2026",
         highlights: [
             "Led a complete revamp of the reporting architecture, enhancing scalability and reducing future developer effort by 13x, driving consensus across sales, client success, operations, engineering, and product",
             "Drove the launch of Digital Out-of-Home across 6 teams, covering the full product cycle from campaign insertion order to reporting, contributing to $19M+ in revenue and growing",
@@ -52,7 +61,7 @@ const experiences: ExperienceItem[] = [
         logo: "/referralhub.png",
         link: "referralhub.dev",
         location: "Cupertino, CA",
-        duration: "December 2023 – June 2024",
+        duration: "December 2023 – Present",
         highlights: [
             "Co-founded and scaled a platform from 0 to 1, achieving 200% average weekly user growth and generating thousands in sales within the first month (featured by Bloomberg!)",
             "Developed customer-facing features using React, TypeScript, and Python, including in-chat payments, user onboarding, and marketplace features",
@@ -79,8 +88,9 @@ const consultingTags = [
 
 export default function Experience() {
     return (
-        <Container maxW="4xl" id="experience" pt={{ base: 40, md: 56 }} pb={{ base: 16, md: 24 }}>
-            <VStack spacing={12} alignItems="stretch" w="100%">
+        <Container maxW="4xl" pt={{ base: 40, md: 56 }} pb={{ base: 16, md: 24 }}>
+            {/* The id sits inside the top padding so the nav link lands on the heading. */}
+            <VStack id="experience" spacing={12} alignItems="stretch" w="100%">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -159,27 +169,31 @@ export default function Experience() {
                                         <Text fontSize="sm" color="gray.500">
                                             {exp.duration}
                                         </Text>
-                                        <Text fontSize="sm" color="gray.400">
-                                            {exp.location}
-                                        </Text>
+                                        {exp.location && (
+                                            <Text fontSize="sm" color="gray.400">
+                                                {exp.location}
+                                            </Text>
+                                        )}
                                     </Box>
                                 </HStack>
 
-                                <List spacing={2} mt={4}>
-                                    {exp.highlights.map((highlight, idx) => (
-                                        <ListItem
-                                            key={idx}
-                                            display="flex"
-                                            alignItems="flex-start"
-                                            fontSize="sm"
-                                            color="gray.600"
-                                            lineHeight="1.6"
-                                        >
-                                            <ListIcon as={BsDot} color="gray.400" fontSize="2xl" mt="-2px" flexShrink={0} />
-                                            {highlight}
-                                        </ListItem>
-                                    ))}
-                                </List>
+                                {exp.highlights.length > 0 && (
+                                    <List spacing={2} mt={4}>
+                                        {exp.highlights.map((highlight, idx) => (
+                                            <ListItem
+                                                key={idx}
+                                                display="flex"
+                                                alignItems="flex-start"
+                                                fontSize="sm"
+                                                color="gray.600"
+                                                lineHeight="1.6"
+                                            >
+                                                <ListIcon as={BsDot} color="gray.400" fontSize="2xl" mt="-2px" flexShrink={0} />
+                                                {highlight}
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                )}
                             </Box>
                         </motion.div>
                     ))}
