@@ -4,32 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-    <title>How the numbers are built — Bella Vita Pizza</title>
-    <meta name="description" content="Source files to ingestion to bronze, silver, gold and the cached reporting layer — traced through the lift metric." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <meta name="color-scheme" content="dark" />
+    <title>Moved — Elite Pizza ad performance</title>
+    <meta http-equiv="refresh" content="0; url=/adtech-dashboard/modeling/" />
+    <style>
+      html, body { background: #0d1117; color: #8b949e; margin: 0; height: 100%; }
+      body { display: grid; place-items: center;
+             font: 14px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      a { color: #58a6ff; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <p>This dashboard now lives at <a href="/adtech-dashboard/modeling/">/adtech-dashboard/modeling/</a>.</p>
     <script>
-      (function () {
-        var KEY = "mh-stale-reload";
-        window.addEventListener("error", function (e) {
-          var t = e.target;
-          if (t && t.tagName === "SCRIPT" && !sessionStorage.getItem(KEY)) {
-            sessionStorage.setItem(KEY, "1");
-            location.replace(location.pathname + "?r=" + Date.now());
-          }
-        }, true);
-        window.addEventListener("load", function () {
-          if (document.getElementById("root").childElementCount > 0) {
-            sessionStorage.removeItem(KEY);
-          }
-        });
-      })();
+      // Carry the query string across, so a shared link keeps its filters.
+      location.replace("/adtech-dashboard/modeling/" + location.search + location.hash);
     </script>
-    <script type="module" src="/src/madhive/modeling.tsx"></script>
   </body>
 </html>

@@ -631,7 +631,7 @@ def main():
 
     out = dict(
         generatedAt="2026-08-20T06:00:00-07:00",
-        dashboard="/madhive/v2/",
+        dashboard="/adtech-dashboard/",
         advertiser=data["meta"]["advertiser"],
         window=dict(first=data["meta"]["firstDate"], last=data["meta"]["lastDate"]),
         files=files, layers=LAYERS, collections=collections, rules=RULES,

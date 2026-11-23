@@ -552,7 +552,7 @@ function Page() {
 
         <Text fontSize="13px" color={T.muted} maxW="90ch" lineHeight={1.7} mb={2}>
           Everything behind{" "}
-          <Text as="a" href="/madhive/" color={T.focus} textDecoration="underline">the dashboard</Text>:
+          <Text as="a" href="/adtech-dashboard/" color={T.focus} textDecoration="underline">the dashboard</Text>:
           the warehouse tables that would produce it, the exact shape of the JSON the browser
           fetches, and which panel reads what. The field tables below are introspected from the
           shipped files rather than written by hand, so they cannot drift from what is live.
